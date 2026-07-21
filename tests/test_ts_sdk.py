@@ -98,7 +98,7 @@ def test_generator_writes_valid_typescript_strict(regenerated_sdk: Path) -> None
         _TSC,
         "--noEmit",
         "--target", "es2020",
-        "--moduleResolution", "node",
+        "--moduleResolution", "bundler",
         "--strict",
         "--lib", "es2020,dom",
         "--ignoreDeprecations", "6.0",
