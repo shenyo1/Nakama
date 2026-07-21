@@ -31,8 +31,10 @@ from .routers import history as history_router
 from .routers import comic_fallback as comic_fallback_router
 from .routers import outages as outages_router
 from .routers import analytics as analytics_router
+from .routers import auth as auth_router
 from .routers import ws as ws_router
 from .routers import sources as sources_router
+from .audit import router as audit_router
 from .schemas import ApiResponse
 from .sources import list_anime_sources, list_comic_sources, list_novel_sources
 
@@ -93,11 +95,12 @@ app.add_middleware(
 )
 
 
-# --- API key authentication middleware -------------------------------------
-# When Settings.api_key is set (env API_KEY), every request whose path starts
-# with /anime, /comic, or /novel must carry header `X-API-Key: *** Public paths
-# (/health, /, /docs, /redoc, /openapi.json) are always exempt. When API_KEY is
-# unset, auth is disabled — preserving open access for local/dev/offline use.
+# --- API key / JWT authentication middleware -------------------------------
+# Protected routes: /anime, /comic, /novel, /search, /history
+# Accept either:
+#   * X-API-Key matching Settings.api_key (service key, unlimited quota)
+#   * Authorization: Bearer <access_jwt> from /auth/login (per-user quota)
+# Public: health/docs/stats/sources/outages/analytics/auth/metrics
 _PUBLIC_PREFIXES = (
     "/health",
     "/docs",
@@ -108,8 +111,12 @@ _PUBLIC_PREFIXES = (
     "/sources/health",
     "/outages",
     "/analytics",
+    "/audit",
+    "/auth",
     "/metrics",
 )
+
+_METERED_PREFIXES = ("/anime", "/comic", "/novel", "/search", "/history")
 
 # Cache-Control policy table. Cloudflare Free honours Cache-Control on the
 # origin response; nginx already forwards the header untouched. Paths not
@@ -121,6 +128,8 @@ _CACHE_RULES = (
     ("/sources/health", 0, True, True),
     ("/outages", 0, True, True),
     ("/analytics", 0, True, True),
+    ("/audit", 0, True, True),
+    ("/auth", 0, True, True),
     ("/openapi.json", 300, False, False),
     ("/anime/", 60, False, False),
     ("/comic/", 60, False, False),
@@ -132,27 +141,98 @@ _CACHE_RULES = (
 @app.middleware("http")
 async def api_key_auth(request: Request, call_next):
     s = get_settings()
-    if s.api_key:
-        path = request.url.path
-        is_public = (
-            path == "/"
-            or path in _PUBLIC_PREFIXES
-            or path.startswith("/sources/health")
-            or path.startswith("/outages")
-            or path.startswith("/analytics")
-        )
-        if not is_public and (
-            path.startswith("/anime")
-            or path.startswith("/comic")
-            or path.startswith("/novel")
-        ):
-            provided = request.headers.get("X-API-Key", "")
-            if provided != s.api_key:
+    path = request.url.path
+    is_public = (
+        path == "/"
+        or path in _PUBLIC_PREFIXES
+        or path.startswith("/sources/health")
+        or path.startswith("/outages")
+        or path.startswith("/analytics")
+        or path.startswith("/audit")
+        or path.startswith("/auth")
+        or path.startswith("/docs")
+        or path.startswith("/redoc")
+    )
+    is_metered = any(path.startswith(p) for p in _METERED_PREFIXES)
+
+    principal = "anon"
+    plan = "free"
+    auth_method = "none"
+
+    if is_metered and not is_public:
+        # Prefer Bearer JWT, then X-API-Key.
+        auth_header = request.headers.get("Authorization") or ""
+        api_key_hdr = request.headers.get("X-API-Key", "")
+        ok = False
+        if auth_header.lower().startswith("bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
+            try:
+                from .security import decode_token
+
+                data = decode_token(token, expected_type="access")
+                principal = f"user:{data.get('sub')}"
+                plan = data.get("plan") or "free"
+                auth_method = "jwt"
+                ok = True
+            except Exception:
+                ok = False
+        if not ok and s.api_key and api_key_hdr == s.api_key:
+            principal = "apikey"
+            plan = "unlimited"
+            auth_method = "api_key"
+            ok = True
+        if not ok and s.api_key:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "ok": False,
+                    "error": "Unauthorized",
+                    "detail": "Provide X-API-Key or Authorization: Bearer <access_token>.",
+                },
+            )
+        # If API_KEY unset, allow open access but still meter as anon free.
+        if ok or not s.api_key:
+            from .quota import check_and_increment
+
+            q = await check_and_increment(principal if ok else "anon", plan if ok else "free")
+            if not q["allowed"]:
                 return JSONResponse(
-                    status_code=401,
-                    content={"ok": False, "error": "Unauthorized", "detail": "Missing or invalid X-API-Key header."},
+                    status_code=429,
+                    content={
+                        "ok": False,
+                        "error": "Quota exceeded",
+                        "detail": f"Daily quota {q['limit']} exceeded for plan={q['plan']}.",
+                        "quota": q,
+                    },
                 )
-    return await call_next(request)
+            request.state.auth_principal = principal if ok else "anon"
+            request.state.auth_plan = plan if ok else "free"
+            request.state.auth_method = auth_method if ok else "open"
+            request.state.quota = q
+
+    response = await call_next(request)
+
+    # Audit metered authenticated traffic (best-effort).
+    if is_metered and getattr(request.state, "auth_method", None) in ("jwt", "api_key"):
+        try:
+            from .audit import write_audit
+
+            write_audit(
+                {
+                    "event": "request",
+                    "method": request.method,
+                    "path": path,
+                    "status": response.status_code,
+                    "principal": getattr(request.state, "auth_principal", None),
+                    "plan": getattr(request.state, "auth_plan", None),
+                    "auth_method": getattr(request.state, "auth_method", None),
+                    "quota_used": (getattr(request.state, "quota", None) or {}).get("used"),
+                    "client": request.client.host if request.client else None,
+                }
+            )
+        except Exception:
+            pass
+    return response
 
 
 # --- Prometheus metrics middleware ---------------------------------------
@@ -224,6 +304,8 @@ app.include_router(ws_router.router)
 app.include_router(comic_fallback_router.router)
 app.include_router(outages_router.router)
 app.include_router(analytics_router.router)
+app.include_router(auth_router.router)
+app.include_router(audit_router)
 app.include_router(sources_router.router)
 
 

@@ -141,12 +141,12 @@ async def test_get_history_filters_by_content_type(tmp_db):
 
 @pytest.mark.asyncio
 async def test_get_history_requires_user_id(tmp_db):
-    """GET /history without user_id returns 422 (validation error)."""
+    """GET /history without user_id (no JWT, no service key) returns 400."""
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
         r = await client.get("/history")
-    assert r.status_code == 422
+    assert r.status_code == 400
 
 
 @pytest.mark.asyncio

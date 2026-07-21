@@ -36,15 +36,17 @@ class Settings:
         # --- Infrastructure (optional) -------------------------------------
         # Redis cache backend. When unset, an in-memory dict cache is used.
         self.redis_url: str | None = os.getenv("REDIS_URL") or None
-        # API key auth. When set, requests to /anime/* and /comic/* must send
-        # `X-API-Key: <value>`; otherwise a 401 is returned. When unset, auth
-        # is disabled (open access) — the default for local/dev/offline use.
+        # API key auth. When set, protected data routes require either
+        # `X-API-Key` or a valid `Authorization: Bearer <jwt>` from /auth.
+        # When unset, open access (local/dev/offline default).
         self.api_key: str | None = os.getenv("API_KEY") or None
+        # JWT signing secret. Falls back to API_KEY when unset.
+        self.jwt_secret: str | None = os.getenv("JWT_SECRET") or None
+        # Default daily quota for free-plan JWT users (0 = unlimited).
+        self.default_daily_quota: int = int(os.getenv("DEFAULT_DAILY_QUOTA", "1000"))
         # Rate limit (requests per minute per client IP) applied via slowapi.
-        # Format is "<count>/<period>" — e.g. "60/minute". Defaults to 60/min.
         self.rate_limit: str = os.getenv("RATE_LIMIT", "60/minute")
         # Optional FlareSolverr endpoint for Cloudflare-managed sites.
-        # Example: http://host.docker.internal:8191/v1 or http://172.17.0.1:8191/v1
         self.flaresolverr_url: str | None = os.getenv("FLARESOLVERR_URL") or None
         # Source base URL overrides (mirrors change often).
         self.kiryuu_base_url: str = (

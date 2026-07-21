@@ -60,9 +60,12 @@ export interface ApiResponse_NovelDetail { "ok"?: boolean; "source"?: string; "d
 export interface BroadcastBody { "event": Record<string, unknown> }
 export interface ComicDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> }
 export interface HTTPValidationError { "detail"?: Array<{ "loc": Array<string | number>; "msg": string; "type": string; "input"?: unknown; "ctx"?: Record<string, unknown> }> }
-export interface HistoryCreate { "user_id": number; "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "chapter_id": string }
+export interface HistoryCreate { "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "chapter_id": string; "user_id"?: number }
 export interface HistoryEntry { "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }
+export interface LoginBody { "username": string; "password": string }
 export interface NovelDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "status"?: string; "rating"?: string; "latest_chapter"?: string; "author"?: string; "synopsis"?: string; "genres"?: Array<string>; "chapters"?: Array<Record<string, unknown>> }
+export interface RefreshBody { "refresh_token": string }
+export interface RegisterBody { "username": string; "password": string }
 export interface ValidationError { "loc": Array<string | number>; "msg": string; "type": string; "input"?: unknown; "ctx"?: Record<string, unknown> }
 
 // -- Endpoint groups --------------------------------------------------
@@ -706,11 +709,8 @@ export class History {
   /**
    * List reading history for a user
    * @see GET /history
-   * Return up to ``limit`` history rows for ``user_id``, newest first.
-   * 
-   * Optional ``content_type`` filter narrows to a single medium.
    */
-  async get(params?: { "user_id": number; "content_type"?: "anime" | "comic" | "novel"; "limit"?: number }): Promise<Array<{ "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }>> {
+  async get(params?: { "user_id"?: number; "content_type"?: "anime" | "comic" | "novel"; "limit"?: number }): Promise<Array<{ "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }>> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.user_id !== undefined) search.set("user_id", String(p.user_id));
@@ -735,9 +735,8 @@ export class History {
   /**
    * Record a reading event
    * @see POST /history
-   * Insert a new reading-history row and return it.
    */
-  async post(params?: { body: { "user_id": number; "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "chapter_id": string } }): Promise<{ "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }> {
+  async post(params?: { body: { "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "chapter_id": string; "user_id"?: number } }): Promise<{ "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }> {
     const p: any = (params as any) ?? {};
     const suffix = "";
     const url = `${this._client.baseUrl}/history${suffix}`;
@@ -796,6 +795,161 @@ export class Stats {
   private readonly _client: NakamaApiClient;
   constructor(client: NakamaApiClient) {
     this._client = client;
+  }
+
+  /**
+   * Cache + cost guard analytics
+   * @see GET /analytics
+   * Lightweight ops analytics for Tier 3.
+   * 
+   * * request rate (last 60s / 5m) from this process
+   * * CF cache status histogram from recent samples (if any)
+   * * process uptime / worker count / memory if available
+   */
+  async analytics(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/analytics${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Recent audit log entries
+   * @see GET /audit
+   */
+  async audit(params?: { "limit"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/audit${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Login and get JWT pair
+   * @see POST /auth/login
+   */
+  async login(params?: { body: { "username": string; "password": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/auth/login${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Current user from Bearer token
+   * @see GET /auth/me
+   */
+  async me(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/auth/me${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Quota remaining for current principal
+   * @see GET /auth/quota
+   */
+  async quota(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/auth/quota${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Refresh access token
+   * @see POST /auth/refresh
+   */
+  async refresh(params?: { body: { "refresh_token": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/auth/refresh${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Register a user
+   * @see POST /auth/register
+   */
+  async register(params?: { body: { "username": string; "password": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/auth/register${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
 
   /**
@@ -926,10 +1080,10 @@ export class Stats {
   /**
    * Source health scoreboard
    * @see GET /sources/health
-   * Return per-source health from in-process counters.
+   * Return per-source health from Redis/memory counters.
    * 
-   * Without ``probe=true`` this is pure memory (fast). With ``probe=true`` the
-   * API hits each source's home listing once and updates the scoreboard.
+   * Without ``probe=true`` this is pure counter reads (fast). With
+   * ``probe=true`` the API hits each source home once and updates the board.
    */
   async sources(params?: { "probe"?: boolean }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};

@@ -1,17 +1,10 @@
-"""Reading-history endpoints: POST/GET /history.
-
-These are intentionally unauthenticated for now — same posture as the rest
-of the API (auth is opt-in via ``API_KEY`` env var, and only the data
-sources are gated). When real user accounts land, the ``user_id`` body field
-will be derived from the authenticated session instead of trusted from the
-client.
-"""
+"""Reading-history endpoints: POST/GET /history (JWT-aware)."""
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,16 +20,15 @@ ContentType = Literal["anime", "comic", "novel"]
 class HistoryCreate(BaseModel):
     """Body schema for POST /history."""
 
-    user_id: int = Field(..., ge=1, description="Numeric user id (FK to users.id)")
     source: str = Field(..., min_length=1, max_length=64, examples=["otakudesu"])
     content_id: str = Field(..., min_length=1, max_length=128, examples=["boruto"])
     content_type: ContentType = Field(..., examples=["anime"])
     chapter_id: str = Field(..., min_length=1, max_length=128, examples=["episode-1"])
+    # Optional when using service API key; required/overridden for JWT users.
+    user_id: Optional[int] = Field(None, ge=1, description="Only for service API key callers")
 
 
 class HistoryEntry(BaseModel):
-    """Response shape for a single reading-history row."""
-
     id: int
     user_id: int
     source: str
@@ -58,6 +50,16 @@ def _to_entry(row: ReadingHistory) -> HistoryEntry:
     )
 
 
+def _jwt_user_id(request: Request) -> Optional[int]:
+    principal = getattr(request.state, "auth_principal", None) or ""
+    if principal.startswith("user:"):
+        try:
+            return int(principal.split(":", 1)[1])
+        except ValueError:
+            return None
+    return None
+
+
 @router.post(
     "/history",
     response_model=HistoryEntry,
@@ -66,11 +68,16 @@ def _to_entry(row: ReadingHistory) -> HistoryEntry:
 )
 async def post_history(
     payload: HistoryCreate,
+    request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> HistoryEntry:
-    """Insert a new reading-history row and return it."""
+    uid = _jwt_user_id(request)
+    if uid is None:
+        if payload.user_id is None:
+            raise HTTPException(status_code=400, detail="user_id required without JWT")
+        uid = payload.user_id
     row = ReadingHistory(
-        user_id=payload.user_id,
+        user_id=uid,
         source=payload.source,
         content_id=payload.content_id,
         content_type=payload.content_type,
@@ -88,20 +95,22 @@ async def post_history(
     summary="List reading history for a user",
 )
 async def get_history(
-    user_id: int = Query(..., ge=1, description="Numeric user id"),
+    request: Request,
+    user_id: Optional[int] = Query(None, ge=1, description="Numeric user id (service key only)"),
     content_type: Optional[ContentType] = Query(
         None, description="Filter by content type (anime/comic/novel)"
     ),
     limit: int = Query(100, ge=1, le=500),
     session: AsyncSession = Depends(get_session),
 ) -> list[HistoryEntry]:
-    """Return up to ``limit`` history rows for ``user_id``, newest first.
-
-    Optional ``content_type`` filter narrows to a single medium.
-    """
+    uid = _jwt_user_id(request)
+    if uid is None:
+        if user_id is None:
+            raise HTTPException(status_code=400, detail="user_id required without JWT")
+        uid = user_id
     stmt = (
         select(ReadingHistory)
-        .where(ReadingHistory.user_id == user_id)
+        .where(ReadingHistory.user_id == uid)
         .order_by(ReadingHistory.read_at.desc(), ReadingHistory.id.desc())
         .limit(limit)
     )
@@ -111,12 +120,3 @@ async def get_history(
     result = await session.execute(stmt)
     rows = result.scalars().all()
     return [_to_entry(r) for r in rows]
-
-
-# Guard so HEAD/OPTIONS etc. don't blow up if anyone hits the path bare.
-@router.get("/history/", include_in_schema=False)
-async def _history_index() -> dict:
-    raise HTTPException(
-        status_code=400,
-        detail="GET /history requires ?user_id=<int>. Use POST /history to record.",
-    )
