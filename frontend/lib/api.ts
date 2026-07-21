@@ -1,27 +1,56 @@
 /**
- * Thin fetch wrapper against SankaApi.
- * Base URL from NEXT_PUBLIC_API_BASE (default http://localhost:8000).
+ * Server-side fetch wrapper against Nakama / SankaApi.
+ *
+ * - Browser never sees API_KEY (server-only env).
+ * - Server components call the internal Docker URL when set
+ *   (API_INTERNAL_URL=http://api:8000), otherwise NEXT_PUBLIC_API_BASE.
+ * - Client-only helper wsUrl() points at the public API; /ws is not
+ *   covered by the anime/comic/novel API-key middleware.
  */
 import type { ApiEnvelope, ApiKind, SearchResults, Stats } from "./types";
 
-export const API_BASE =
+/** Public browser-facing API origin (for WS / display). */
+export const PUBLIC_API_BASE =
   process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || "http://localhost:8000";
 
+/**
+ * Server-side base URL. Prefer the internal compose service so the
+ * Next server does not hairpin through Cloudflare.
+ */
+function serverApiBase(): string {
+  const internal = process.env.API_INTERNAL_URL?.replace(/\/$/, "");
+  if (internal) return internal;
+  return PUBLIC_API_BASE;
+}
+
+function serverApiKey(): string {
+  // Never NEXT_PUBLIC_ — must stay off the client bundle.
+  return process.env.API_KEY || "";
+}
+
+/** Client-side WebSocket URL (no secret in the query string). */
 export function wsUrl(): string {
-  const base = API_BASE;
+  const base = PUBLIC_API_BASE;
   if (base.startsWith("https://")) return base.replace("https://", "wss://") + "/ws";
   if (base.startsWith("http://")) return base.replace("http://", "ws://") + "/ws";
   return "ws://localhost:8000/ws";
 }
 
+function authHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  const key = serverApiKey();
+  if (key) headers["X-API-Key"] = key;
+  return headers;
+}
+
 async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${serverApiBase()}${path}`, {
     ...init,
     headers: {
-      Accept: "application/json",
+      ...authHeaders(),
       ...(init?.headers || {}),
     },
-    // Server components: always revalidate frequently for demo freshness.
+    // Server components: revalidate frequently for demo freshness.
     next: { revalidate: 30 },
   });
   if (!res.ok) {
@@ -60,8 +89,9 @@ export async function fetchSourceSearch(
   source: string,
   q: string
 ): Promise<unknown[]> {
+  // Backend routes use path param: /{kind}/{source}/search/{query}
   const body = await getJson<ApiEnvelope<unknown[]>>(
-    `/${kind}/${source}/search?q=${encodeURIComponent(q)}`
+    `/${kind}/${source}/search/${encodeURIComponent(q)}`
   );
   return Array.isArray(body.data) ? body.data : [];
 }
@@ -88,3 +118,6 @@ export const COMIC_SOURCES = [
   "shinigami",
 ] as const;
 export const NOVEL_SOURCES = ["sakuranovel"] as const;
+
+// Back-compat alias used by older imports / docs.
+export const API_BASE = PUBLIC_API_BASE;

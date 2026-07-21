@@ -10,23 +10,19 @@ jobs:
   test:
     name: pytest (offline)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
 
-      - name: Create virtualenv
-        run: python -m venv .venv
-
       - name: Install dependencies
         run: |
+          python -m venv .venv
           source .venv/bin/activate
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -37,4 +33,53 @@ jobs:
           PYTHONPATH: .
         run: |
           source .venv/bin/activate
-          python -m pytest tests/ -v
+          python -m pytest tests/ -v --tb=short
+
+  frontend-typecheck:
+    name: frontend typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci || npm install
+      - run: npm run typecheck
+        env:
+          NEXT_PUBLIC_API_BASE: https://mynakama.web.id
+
+  deploy:
+    name: deploy VPS
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 30
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.NAKAMA_VPS_HOST }}
+          username: ${{ secrets.NAKAMA_VPS_USER }}
+          key: ${{ secrets.NAKAMA_VPS_SSH_KEY }}
+          port: ${{ secrets.NAKAMA_VPS_PORT }}
+          script_stop: true
+          command_timeout: 25m
+          script: |
+            set -euo pipefail
+            cd /home/ubuntu/projects/nakama
+            git remote -v
+            GIT_SSH_COMMAND='ssh -i /home/ubuntu/.ssh/nakama_deploy -o IdentitiesOnly=yes' git fetch origin main
+            GIT_SSH_COMMAND='ssh -i /home/ubuntu/.ssh/nakama_deploy -o IdentitiesOnly=yes' git reset --hard origin/main
+            /home/ubuntu/projects/nakama/deploy/restart.sh
+            # smoke
+            curl -fsS -H 'Host: mynakama.web.id' http://127.0.0.1/health | head -c 200
+            echo
+            code=$(curl -sS -o /dev/null -w '%{http_code}' -H 'Host: mynakama.web.id' http://127.0.0.1/anime/otakudesu/home || true)
+            test "$code" = "401"
+            echo "smoke ok (health 200, protected 401)"

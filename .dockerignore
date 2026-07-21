@@ -27,11 +27,12 @@ sankadb.sqlite
 .gitignore
 .github/
 
-# Docker build outputs
-Dockerfile
+# Docker compose / test helpers (keep main Dockerfile for builds)
 docker-compose.yml
+docker-compose.prod.yml
 .dockerignore
 Dockerfile.test
+Dockerfile.cloudflare
 
 # OS junk
 .DS_Store

@@ -1,4 +1,6 @@
 # Multi-stage Next.js 14 frontend for Nakama / SankaApi demo
+# API_KEY is NOT baked into the client bundle — only injected at runtime
+# for Server Components + /api/backend BFF routes.
 
 FROM node:20-alpine AS deps
 WORKDIR /app
@@ -10,7 +12,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-ARG NEXT_PUBLIC_API_BASE=http://localhost:8000
+# Public origin only (safe to expose — no secrets)
+ARG NEXT_PUBLIC_API_BASE=https://mynakama.web.id
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 RUN npm run build
 
