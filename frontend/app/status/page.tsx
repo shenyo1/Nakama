@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { fetchSourceHealth } from "../../lib/api";
+import AutoRefresh from "./auto-refresh";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ export default async function StatusPage({
 
   return (
     <div className="space-y-8">
+      <AutoRefresh probe={probe} />
       <header className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sakura-400">
           Operations
