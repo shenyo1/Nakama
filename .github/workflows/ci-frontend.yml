@@ -24,7 +24,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm install -g npm@9
-      - run: npm ci --no-audit --no-fund --registry=https://registry.npmjs.org/
+      - run: npm install --no-audit --no-fund --registry=https://registry.npmjs.org/
       - run: npm run lint || true
       - run: npm run build
         env:
