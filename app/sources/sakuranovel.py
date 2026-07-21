@@ -28,6 +28,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
+from ..config import get_settings
 from ..http import fetch_soup, fetch_text
 from ..schemas import (
     ChapterText,
@@ -37,11 +38,15 @@ from ..schemas import (
 )
 from .base import NovelSource, SourceError
 
-BASE = "https://sakuranovel.id"
+def _base() -> str:
+    return get_settings().sakuranovel_base_url
+
+
+BASE = "https://sakuranovel.id"  # kept for fixtures / offline path hashes
 
 
 def _abs(url: str) -> str:
-    return urljoin(BASE, url) if url else url
+    return urljoin(_base() + "/", url) if url else url
 
 
 def _clean(text: str) -> str:
@@ -339,21 +344,23 @@ def _parse_chapter_nav(soup: BeautifulSoup) -> tuple[Optional[str], Optional[str
 
 class SakuranovelSource(NovelSource):
     name = "sakuranovel"
-    base_url = BASE
+
+    @property
+    def base_url(self) -> str:  # type: ignore[override]
+        return _base()
 
     # -- listing helpers ---------------------------------------------------- #
 
     @staticmethod
     def _parse_listing(soup: BeautifulSoup) -> List[dict]:
-        """Parse a generic listing page into NovelSummary dicts.
-
-        Tries the common card containers in order; returns the first non-empty
-        batch so a partial page (e.g. JS-rendered) still yields something.
-        """
+        """Parse a generic listing page into NovelSummary dicts."""
         out: List[dict] = []
-        # The homepage/genre pages wrap cards in several containers. Try them
-        # in priority order; the .listupd .box / .flexbox shapes are most common.
+        seen: set[str] = set()
+
+        # Current sakuranovel home uses flexbox / flexbox3 cards.
         for sel in (
+            "div.flexbox3-item",
+            "div.flexbox-item",
             "div.listupd .box",
             "div.flexbox",
             "div.bigcontent",
@@ -364,20 +371,71 @@ class SakuranovelSource(NovelSource):
             "div.utao",
         ):
             for el in soup.select(sel):
-                card = _parse_list_card(el)
-                if card.title:
-                    out.append(card.model_dump())
-            if out:
+                a = el.select_one("a[href*='/series/']") or el.select_one("a[href]")
+                if not a:
+                    continue
+                href = a.get("href") or ""
+                if "/series/" not in href and sel.startswith("div.flexbox"):
+                    continue
+                title = a.get("title") or ""
+                if not title:
+                    t_el = el.select_one(
+                        ".title, .flexbox-title, .flexbox3-content .title, h3, h4"
+                    )
+                    title = _clean(t_el.get_text()) if t_el else _clean(a.get_text())
+                if not title:
+                    continue
+                slug = _slug_from(href)
+                if not slug or slug in seen:
+                    continue
+                if "/series/" not in href:
+                    continue
+                seen.add(slug)
+                img = el.select_one("img")
+                thumb = None
+                if img:
+                    thumb = img.get("src") or img.get("data-src") or img.get("data-lazy-src")
+                    if thumb:
+                        thumb = thumb.split("?")[0]
+                latest = None
+                ch_el = el.select_one(".chapter, .lsch, a.chapter")
+                if ch_el:
+                    latest = _clean(ch_el.get_text())
+                type_ = None
+                type_el = el.select_one(".type, .stype, .types")
+                if type_el:
+                    type_ = _clean(type_el.get_text())
+                status = None
+                status_el = el.select_one(".status, .stat, .st")
+                if status_el:
+                    status = _clean(status_el.get_text())
+                rating = None
+                rating_el = el.select_one(".score, .rating, .numscore")
+                if rating_el:
+                    rating = _clean(rating_el.get_text())
+                card = NovelSummary(
+                    title=_clean(title),
+                    slug=slug,
+                    url=_abs(href),
+                    thumbnail=_abs(thumb) if thumb else None,
+                    type=type_,
+                    status=status,
+                    rating=rating,
+                    latest_chapter=latest,
+                )
+                out.append(card.model_dump())
+            # Prefer flexbox results when present; otherwise keep scanning.
+            if out and sel.startswith("div.flexbox"):
+                break
+            if out and sel in ("div.listupd .box", "article", ".searchbox"):
                 break
         return out
 
     # -- NovelSource implementation ---------------------------------------- #
 
     async def home(self, page: int = 1) -> List[dict]:
-        if page and page > 1:
-            url = f"{BASE}/page/{page}/"
-        else:
-            url = f"{BASE}/"
+        base = _base()
+        url = f"{base}/page/{page}/" if page and page > 1 else f"{base}/"
         soup = await fetch_soup(url, source=self.name)
         out = self._parse_listing(soup)
         if not out:
@@ -385,36 +443,21 @@ class SakuranovelSource(NovelSource):
         return out
 
     async def search(self, query: str) -> List[dict]:
-        """Search novels.
-
-        sakuranovel uses a WordPress admin-ajax `data_fetch` action (POST) for
-        live search. We avoid requiring POST plumbing in the HTTP layer by
-        trying the standard `?s=` query-string search, which many WP themes
-        answer with server-rendered ``.searchbox`` cards. If that yields
-        nothing we fall back to the homepage listing so the endpoint never
-        hard-fails (consistent with how the komiku adapter treats JS search).
-        """
-        out: List[dict] = []
-        soup = await fetch_soup(f"{BASE}/", params={"s": query}, source=self.name)
-        out = self._parse_listing(soup)
-        return out
+        soup = await fetch_soup(f"{_base()}/", params={"s": query}, source=self.name)
+        return self._parse_listing(soup)
 
     async def detail(self, slug: str) -> dict:
-        url = f"{BASE}/series/{slug}/"
+        url = f"{_base()}/series/{slug}/"
         text = await fetch_text(url, source=self.name)
         soup = BeautifulSoup(text, "lxml")
 
-        # The series block holds everything: cover, title, info, synopsis,
-        # genres, and the chapter list.
         series = soup.select_one(".series") or soup.select_one("div.series") or soup
         left = series.select_one(".series-flexleft, .series-flex-left") or series
         right = series.select_one(".series-flexright, .series-flex-right") or series
 
-        # Title — prefer the series-titlex h2, then h1, then slug.
         title_el = left.select_one(".series-titlex h2, .series-title h2, h1, h2")
         title = _clean(title_el.get_text()) if title_el else slug
 
-        # Thumbnail.
         img = left.select_one("img")
         thumbnail = None
         if img:
@@ -424,10 +467,7 @@ class SakuranovelSource(NovelSource):
 
         info = _parse_series_info(left) | _parse_series_info(right)
         synopsis = _parse_synopsis(right) or _parse_synopsis(series)
-        chapters = _parse_chapter_list(right)
-        if not chapters:
-            # chapter list sometimes lives in the series block root
-            chapters = _parse_chapter_list(series)
+        chapters = _parse_chapter_list(right) or _parse_chapter_list(series)
 
         return NovelDetail(
             title=title,
@@ -438,21 +478,19 @@ class SakuranovelSource(NovelSource):
             status=info.get("status"),
             rating=info.get("rating"),
             author=info.get("author"),
+            genres=info.get("genres") or [],
             synopsis=synopsis,
-            genres=list(info.get("genres", [])),
             chapters=chapters,
         ).model_dump()
 
     async def chapter(self, slug: str) -> dict:
-        url = f"{BASE}/{slug}/"
+        url = f"{_base()}/{slug}/"
         text = await fetch_text(url, source=self.name)
         soup = BeautifulSoup(text, "lxml")
 
         chapter_title = _parse_chapter_title(soup)
         paragraphs = _parse_chapter_paragraphs(soup, text)
 
-        # Derive the novel title from the chapter title: strip trailing
-        # "Chapter N" if present. e.g. "Novel X Chapter 1 — Login" -> "Novel X".
         novel_title = None
         if chapter_title:
             novel_title = re.sub(
@@ -475,14 +513,13 @@ class SakuranovelSource(NovelSource):
         ).model_dump()
 
     async def genres(self) -> List[dict]:
-        soup = await fetch_soup(f"{BASE}/genre/", source=self.name)
+        base = _base()
+        soup = await fetch_soup(f"{base}/genre/", source=self.name)
         out: List[dict] = []
         seen: set = set()
-        # genre listing links to /genre/<slug>/
         for a in soup.select("a[href*='/genre/']"):
             href = a.get("href", "")
-            # skip the /genre/ index itself
-            if href.rstrip("/") == f"{BASE}/genre":
+            if href.rstrip("/") == f"{base}/genre":
                 continue
             slug = _slug_from(href)
             if not slug or slug in seen:
@@ -496,23 +533,16 @@ class SakuranovelSource(NovelSource):
         return out
 
     async def genre(self, slug: str, page: int = 1) -> List[dict]:
+        base = _base()
         if page and page > 1:
-            url = f"{BASE}/genre/{slug}/page/{page}/"
+            url = f"{base}/genre/{slug}/page/{page}/"
         else:
-            url = f"{BASE}/genre/{slug}/"
+            url = f"{base}/genre/{slug}/"
         soup = await fetch_soup(url, source=self.name)
-        out = self._parse_listing(soup)
-        return out
+        return self._parse_listing(soup)
 
     async def popular(self) -> List[dict]:
-        """Popular novels.
-
-        sakuranovel does not expose a stable "popular" ranking page in server
-        HTML (it is JS-rendered), so — like the komiku adapter — we serve the
-        homepage listing, which is reliably server-rendered. Documented in
-        the README.
-        """
-        soup = await fetch_soup(f"{BASE}/", source=self.name)
+        soup = await fetch_soup(f"{_base()}/", source=self.name)
         out = self._parse_listing(soup)
         if not out:
             raise SourceError("sakuranovel: no items parsed from popular page")

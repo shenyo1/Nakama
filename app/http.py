@@ -179,9 +179,32 @@ async def fetch_text(
     client = await get_client()
     resp = await client.get(url, params=params)
     status = str(resp.status_code)
+
+    # Cloudflare / bot walls: optionally solve via FlareSolverr.
+    if resp.status_code in (403, 503) and get_settings().flaresolverr_url:
+        try:
+            text = await _flaresolverr_get(url if not params else str(resp.url))
+            if source:
+                source_requests_total.labels(
+                    source=source, method="GET", status="200"
+                ).inc()
+            await _cache.set(key, text)
+            return text
+        except Exception:
+            # Fall through to normal error mapping below.
+            pass
+
     try:
         resp.raise_for_status()
-    finally:
+    except httpx.HTTPStatusError as e:
+        if source:
+            source_requests_total.labels(source=source, method="GET", status=status).inc()
+        from .sources.base import SourceError
+
+        raise SourceError(
+            f"{source or 'upstream'} HTTP {resp.status_code} for {url}"
+        ) from e
+    else:
         if source:
             source_requests_total.labels(source=source, method="GET", status=status).inc()
     text = resp.text
@@ -197,6 +220,29 @@ async def fetch_soup(
 ) -> BeautifulSoup:
     text = await fetch_text(url, params=params, source=source)
     return BeautifulSoup(text, "lxml")
+
+
+async def _flaresolverr_get(url: str) -> str:
+    """Solve a Cloudflare challenge via FlareSolverr and return HTML."""
+    s = get_settings()
+    if not s.flaresolverr_url:
+        raise RuntimeError("FLARESOLVERR_URL not configured")
+    client = await get_client()
+    payload = {
+        "cmd": "request.get",
+        "url": url,
+        "maxTimeout": 85000,
+    }
+    resp = await client.post(s.flaresolverr_url, json=payload, timeout=90.0)
+    resp.raise_for_status()
+    data = resp.json()
+    if data.get("status") != "ok":
+        raise RuntimeError(f"FlareSolverr failed: {data.get('message')}")
+    sol = data.get("solution") or {}
+    html = sol.get("response") or ""
+    if not html:
+        raise RuntimeError("FlareSolverr returned empty response")
+    return html
 
 
 async def fetch_json(
@@ -250,9 +296,21 @@ async def fetch_json(
         status = str(resp.status_code)
         try:
             resp.raise_for_status()
-        finally:
+        except httpx.HTTPStatusError as e:
             if source:
-                source_requests_total.labels(source=source, method=method, status=status).inc()
+                source_requests_total.labels(
+                    source=source, method=method, status=status
+                ).inc()
+            from .sources.base import SourceError
+
+            raise SourceError(
+                f"{source or 'upstream'} HTTP {resp.status_code} for {url}"
+            ) from e
+        else:
+            if source:
+                source_requests_total.labels(
+                    source=source, method=method, status=status
+                ).inc()
         break
     assert resp is not None  # loop above always runs at least once
     text = resp.text

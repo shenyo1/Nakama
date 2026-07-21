@@ -43,6 +43,22 @@ class Settings:
         # Rate limit (requests per minute per client IP) applied via slowapi.
         # Format is "<count>/<period>" — e.g. "60/minute". Defaults to 60/min.
         self.rate_limit: str = os.getenv("RATE_LIMIT", "60/minute")
+        # Optional FlareSolverr endpoint for Cloudflare-managed sites.
+        # Example: http://host.docker.internal:8191/v1 or http://172.17.0.1:8191/v1
+        self.flaresolverr_url: str | None = os.getenv("FLARESOLVERR_URL") or None
+        # Source base URL overrides (mirrors change often).
+        self.kiryuu_base_url: str = (
+            os.getenv("KIRYUU_BASE_URL", "https://v7.kiryuu.to").rstrip("/")
+        )
+        self.komikcast_api_base: str = (
+            os.getenv("KOMIKCAST_API_BASE", "https://be.komikcast.cc").rstrip("/")
+        )
+        self.komikcast_site_base: str = (
+            os.getenv("KOMIKCAST_BASE_URL", "https://v3.komikcast.fit").rstrip("/")
+        )
+        self.sakuranovel_base_url: str = (
+            os.getenv("SAKURANOVEL_BASE_URL", "https://sakuranovel.id").rstrip("/")
+        )
 
 
 @lru_cache
