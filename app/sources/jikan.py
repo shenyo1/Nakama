@@ -1,12 +1,11 @@
 """Jikan (https://jikan.moe) — MyAnimeList unofficial REST API.
 
-Rate limit: ~60 req/min, ~3 req/sec recommended. We enforce a process-wide
-minimum spacing between calls and retry 429/5xx with exponential backoff.
+Rate limit: ~60 req/min, ~3 req/sec recommended. Process-wide spacing is
+enforced by app.source_throttle; this module retries 429/5xx with backoff.
 """
 from __future__ import annotations
 
 import asyncio
-import time
 from typing import Any, Dict, List, Optional
 
 from ..http import fetch_json
@@ -14,11 +13,6 @@ from .base import AnimeSource, SourceError
 
 
 JIKAN_API = "https://api.jikan.moe/v4"
-
-# Process-wide throttle so multi-endpoint bursts don't trip Jikan's limit.
-_LOCK = asyncio.Lock()
-_LAST_CALL = 0.0
-_MIN_INTERVAL = 0.4  # seconds between upstream calls
 
 
 def _mal_to_summary(anime: Dict[str, Any]) -> Dict[str, Any]:
@@ -85,21 +79,12 @@ class JikanSource(AnimeSource):
     name = "jikan"
     base_url = "https://myanimelist.net"
 
-    async def _throttle(self) -> None:
-        global _LAST_CALL
-        async with _LOCK:
-            now = time.monotonic()
-            wait = _MIN_INTERVAL - (now - _LAST_CALL)
-            if wait > 0:
-                await asyncio.sleep(wait)
-            _LAST_CALL = time.monotonic()
-
     async def _get(self, path: str, params: Optional[dict] = None) -> Dict[str, Any]:
         url = f"{JIKAN_API}{path}"
         last_err: Optional[Exception] = None
         # Up to 3 attempts with backoff on rate limits / transient errors.
+        # Per-source spacing is handled globally in app.http.throttle_source.
         for attempt in range(3):
-            await self._throttle()
             try:
                 resp = await fetch_json(
                     url,

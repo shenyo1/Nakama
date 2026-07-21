@@ -68,10 +68,16 @@ API runs **1 uvicorn worker** so in-process health counters stay consistent.
 ## Uptime / backup / digest / probe
 | Job | Schedule (UTC) | Script |
 |-----|----------------|--------|
-| Uptime alert | every 2 min | `deploy/uptime-check.sh` |
+| Synthetic uptime | every 2 min | `deploy/uptime-check.sh` (health + sources + app + CF status) |
 | SQLite backup | 03:15 daily | `deploy/backup.sh` → `/home/ubuntu/backups/nakama/` (14d) |
 | Daily digest | 02:00 daily | `deploy/daily-digest.sh` → Telegram |
-| Source probe | :15 & :45 hourly | `deploy/source-probe.sh` → Telegram |
+| Source probe | :15 & :45 hourly | `deploy/source-probe.sh` → Telegram + outages.jsonl |
+
+Outages log: `~/.config/nakama/outages.jsonl` (+ mirror `data/outages.jsonl` for API)
+Public: `GET /outages`
+
+Per-source upstream throttle (process-wide min interval):
+`jikan 0.4s`, `mangadex 0.25s`, scrapers 0.15–0.5s (see `app/source_throttle.py`).
 
 Logs: `~/.config/nakama/uptime.log`, `backup.log`, `digest.log`, `source-probe.log`
 

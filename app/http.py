@@ -24,6 +24,7 @@ from bs4 import BeautifulSoup
 
 from .config import get_settings
 from .metrics import cache_hits_total, cache_misses_total, source_requests_total
+from .source_throttle import throttle_source
 
 
 def _record(source: Optional[str], *, success: bool, started: float, error: Optional[str] = None) -> None:
@@ -195,6 +196,7 @@ async def fetch_text(
         _record(source, success=True, started=started)
         return text
 
+    await throttle_source(source)
     client = await get_client()
     resp = await client.get(url, params=params)
     status = str(resp.status_code)
@@ -311,10 +313,13 @@ async def fetch_json(
         _record(source, success=True, started=started)
         return json.loads(text)
 
+    await throttle_source(source)
     client = await get_client()
     # One retry on 429 with a short backoff; MangaDex rate-limits at ~5/sec.
     resp = None
     for attempt in range(2):
+        if attempt > 0:
+            await throttle_source(source)
         if method == "POST":
             resp = await client.post(url, json=json_body, headers=headers)
         else:

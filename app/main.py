@@ -29,6 +29,7 @@ from .routers import proxy as proxy_router
 from .routers import search as search_router
 from .routers import history as history_router
 from .routers import comic_fallback as comic_fallback_router
+from .routers import outages as outages_router
 from .routers import ws as ws_router
 from .routers import sources as sources_router
 from .schemas import ApiResponse
@@ -104,6 +105,7 @@ _PUBLIC_PREFIXES = (
     "/favicon.ico",
     "/stats",
     "/sources/health",
+    "/outages",
     "/metrics",
 )
 
@@ -115,6 +117,7 @@ _CACHE_RULES = (
     ("/health", 0, True, True),
     ("/stats", 0, True, True),
     ("/sources/health", 0, True, True),
+    ("/outages", 0, True, True),
     ("/openapi.json", 300, False, False),
     ("/anime/", 60, False, False),
     ("/comic/", 60, False, False),
@@ -132,6 +135,7 @@ async def api_key_auth(request: Request, call_next):
             path == "/"
             or path in _PUBLIC_PREFIXES
             or path.startswith("/sources/health")
+            or path.startswith("/outages")
         )
         if not is_public and (
             path.startswith("/anime")
@@ -208,6 +212,7 @@ app.include_router(search_router.router)
 app.include_router(history_router.router)
 app.include_router(ws_router.router)
 app.include_router(comic_fallback_router.router)
+app.include_router(outages_router.router)
 app.include_router(sources_router.router)
 
 

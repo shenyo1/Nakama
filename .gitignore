@@ -13,3 +13,6 @@ node_modules/
 .wrangler/
 dist/
 worker-configuration.d.ts
+
+# runtime outage log
+data/outages.jsonl

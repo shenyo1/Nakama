@@ -221,6 +221,12 @@ def _infra_status() -> dict:
             # readiness of local FlareSolverr (same network as API)
             base = s.flaresolverr_url.rsplit("/v1", 1)[0] + "/"
             out["flaresolverr_ready"] = _probe_host(base, timeout=2.0)
+        try:
+            from ..source_throttle import source_intervals
+
+            out["source_min_intervals_seconds"] = source_intervals()
+        except Exception:
+            pass
         return out
     except Exception:
         return {}
