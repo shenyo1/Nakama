@@ -102,15 +102,33 @@ export default async function StatusPage({
         <section className="card space-y-2 text-sm">
           <h2 className="font-semibold">Infra</h2>
           <dl className="grid gap-1 sm:grid-cols-2">
-            {Object.entries(infra).map(([k, v]) => (
-              <div key={k} className="flex gap-2">
-                <dt className="text-ink-400">{k}:</dt>
-                <dd className="truncate text-ink-100">
-                  {typeof v === "boolean" ? (v ? "yes" : "no") : String(v ?? "—")}
-                </dd>
-              </div>
-            ))}
+            {Object.entries(infra).map(([k, v]) => {
+              let display: string;
+              if (typeof v === "boolean") display = v ? "yes" : "no";
+              else if (v && typeof v === "object" && "ok" in (v as object)) {
+                const o = v as { ok?: boolean; status?: number | null; error?: string | null };
+                display = o.ok
+                  ? `up${o.status != null ? ` (HTTP ${o.status})` : ""}`
+                  : `down${o.error ? `: ${o.error}` : ""}`;
+              } else {
+                display = String(v ?? "—");
+              }
+              return (
+                <div key={k} className="flex gap-2">
+                  <dt className="text-ink-400">{k}:</dt>
+                  <dd className="truncate text-ink-100">{display}</dd>
+                </div>
+              );
+            })}
           </dl>
+          {infra.komikcast_appwrite_auth &&
+          typeof infra.komikcast_appwrite_auth === "object" &&
+          (infra.komikcast_appwrite_auth as { ok?: boolean }).ok === false ? (
+            <p className="mt-2 text-xs text-sakura-300">
+              Komikcast Appwrite auth host unreachable — chapter images cannot be
+              enabled until their login backend is back (localStorage.token stays null).
+            </p>
+          ) : null}
         </section>
       ) : null}
 

@@ -32,8 +32,12 @@ SOURCE_META: Dict[str, Dict[str, Any]] = {
     "komikcast": {
         "kind": "comic",
         "transport": "json-api",
-        "notes": "be.komikcast.cc API; chapter images need KOMIKCAST_TOKEN (SPA JWT, not FlareSolverr)",
-        "limitations": ["chapter_images_require_token"],
+        "notes": (
+            "be.komikcast.cc list/detail OK; chapter images need SPA JWT "
+            "(KOMIKCAST_TOKEN). Appwrite auth host may be down "
+            "(appwrite.komikcast.com) — then no token can be issued."
+        ),
+        "limitations": ["chapter_images_require_token", "auth_depends_on_appwrite"],
     },
     "mangadex": {"kind": "comic", "transport": "json", "notes": "Official MangaDex API"},
     "shinigami": {"kind": "comic", "transport": "html", "notes": "ID comic scraper"},
@@ -193,12 +197,12 @@ def snapshot() -> dict:
 
 
 def _infra_status() -> dict:
-    """Lightweight infra flags (no network by default except env presence)."""
+    """Infra flags + cheap upstream auth reachability (best-effort, no auth)."""
     try:
         from ..config import get_settings
 
         s = get_settings()
-        return {
+        out = {
             "offline_mode": s.offline_mode,
             "flaresolverr_configured": bool(s.flaresolverr_url),
             "flaresolverr_url": s.flaresolverr_url,
@@ -207,8 +211,39 @@ def _infra_status() -> dict:
             "komikcast_token_configured": bool(s.komikcast_token),
             "sakuranovel_base_url": s.sakuranovel_base_url,
         }
+        # Best-effort TCP/HTTP probe for Komikcast Appwrite auth host.
+        # Does not use secrets; only reports whether auth backend is reachable.
+        out["komikcast_appwrite_auth"] = _probe_host(
+            "https://appwrite.komikcast.com/v1/health",
+            timeout=3.0,
+        )
+        if s.flaresolverr_url:
+            # readiness of local FlareSolverr (same network as API)
+            base = s.flaresolverr_url.rsplit("/v1", 1)[0] + "/"
+            out["flaresolverr_ready"] = _probe_host(base, timeout=2.0)
+        return out
     except Exception:
         return {}
+
+
+def _probe_host(url: str, timeout: float = 3.0) -> dict:
+    """Return {ok, status, error} without raising."""
+    import urllib.error
+    import urllib.request
+
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "nakama-health/1.0", "Accept": "application/json,*/*"},
+            method="GET",
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310
+            return {"ok": True, "status": getattr(r, "status", 200), "error": None}
+    except urllib.error.HTTPError as e:
+        # HTTP response means host is up (even 401/404)
+        return {"ok": True, "status": e.code, "error": None}
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "status": None, "error": str(e)[:160]}
 
 
 async def probe_source(name: str) -> dict:
