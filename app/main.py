@@ -90,7 +90,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # deployment ever exposes user-scoped data.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_settings().allow_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -188,6 +188,11 @@ async def api_key_auth(request: Request, call_next):
             except Exception:
                 ok = False
         if not ok and s.api_key and api_key_hdr == s.api_key:
+            principal = "apikey"
+            plan = "unlimited"
+            auth_method = "api_key"
+            ok = True
+        if not ok and s.api_keys and api_key_hdr in s.api_keys:
             principal = "apikey"
             plan = "unlimited"
             auth_method = "api_key"

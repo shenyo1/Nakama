@@ -40,6 +40,16 @@ class Settings:
         # `X-API-Key` or a valid `Authorization: Bearer <jwt>` from /auth.
         # When unset, open access (local/dev/offline default).
         self.api_key: str | None = os.getenv("API_KEY") or None
+        # Optional comma-separated list of additional API keys (multi-tenant /
+        # per-client keys). Each is accepted by the auth middleware.
+        self.api_keys: list[str] = [
+            k.strip() for k in os.getenv("API_KEYS", "").split(",") if k.strip()
+        ]
+        # Allowed CORS origins. "*" = any (dev default). Production should set
+        # ALLOW_ORIGINS="https://app.mynakama.web.id".
+        self.allow_origins: list[str] = [
+            o.strip() for o in os.getenv("ALLOW_ORIGINS", "*").split(",") if o.strip()
+        ]
         # JWT signing secret. Falls back to API_KEY when unset.
         self.jwt_secret: str | None = os.getenv("JWT_SECRET") or None
         # Default daily quota for free-plan JWT users (0 = unlimited).
