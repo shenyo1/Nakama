@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nakama",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "containers": [
+    {
+      "class_name": "NakamaContainer",
+      "image": "./Dockerfile.cloudflare",
+      "max_instances": 3,
+      "instance_type": "basic",
+      "name": "nakama-api"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "NAKAMA",
+        "class_name": "NakamaContainer"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["NakamaContainer"]
+    }
+  ]
+}

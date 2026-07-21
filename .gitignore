@@ -7,3 +7,7 @@ venv/
 .env
 .probe/
 sankadb.sqlite
+node_modules/
+.wrangler/
+dist/
+worker-configuration.d.ts

@@ -1,14 +1,15 @@
 # Deploy Guide — Nakama / SankaApi
 
-Deploy the FastAPI backend to **Railway**, **Render**, or **Fly.io**.
-All three configs ship in-repo. Free tiers are enough for demos.
+Deploy the FastAPI backend to **Cloudflare Containers**, **Railway**,
+**Render**, or **Fly.io**. Frontend demo can go to **Cloudflare Pages**
+or Vercel.
 
 ---
 
 ## Prerequisites
 
 - GitHub repo: https://github.com/shenyo1/Nakama
-- Docker multi-stage build already in `Dockerfile`
+- Docker multi-stage build already in `Dockerfile` (+ `Dockerfile.cloudflare`)
 - Health endpoint: `GET /health` → `200`
 
 ### Required env vars
@@ -23,6 +24,92 @@ All three configs ship in-repo. Free tiers are enough for demos.
 | `API_KEY` | *(empty)* | Optional. When set, require `X-API-Key` header |
 | `REDIS_URL` | *(empty)* | Optional. Enables distributed cache |
 | `DATABASE_URL` | SQLite file | Optional. Postgres URL for production history |
+
+---
+
+## 0. Cloudflare Containers (recommended if already on CF)
+
+Nakama is a full FastAPI + scraper stack (not Workers-native). The in-repo
+path uses **Cloudflare Containers**: a thin Worker (`src/index.ts`) routes
+every request into a Docker container built from `Dockerfile.cloudflare`.
+
+### Requirements
+
+| Item | Notes |
+|------|-------|
+| **Workers Paid plan** | Containers are **not** available on Free. Upgrade: https://dash.cloudflare.com/?to=/:account/workers/plans |
+| Docker running locally | `docker info` must succeed (wrangler builds the image) |
+| Wrangler ≥ 4.x | `npm install` in repo root installs it |
+| API token scopes | Account: Workers Scripts Edit, Containers Edit, Account Settings Read |
+
+### Deploy
+
+```bash
+cd /path/to/Nakama
+npm install
+
+# Auth (pick one)
+export CLOUDFLARE_API_TOKEN=cfut_...   # recommended for CI
+# or: npx wrangler login
+
+export CLOUDFLARE_ACCOUNT_ID=<your-account-id>
+npx wrangler deploy
+```
+
+What `wrangler deploy` does:
+
+1. Uploads the Worker (`nakama`)
+2. Builds `Dockerfile.cloudflare` (`linux/amd64`)
+3. Pushes image to Cloudflare's registry
+4. Wires Durable Object class `NakamaContainer` → container pool
+
+### Config files
+
+| File | Role |
+|------|------|
+| `wrangler.jsonc` | Worker name, container binding, DO migration |
+| `src/index.ts` | Routes traffic via `getRandom()` load-balance |
+| `Dockerfile.cloudflare` | FastAPI listens on `10.0.0.1:8080` (CF requirement) |
+| `package.json` | `@cloudflare/containers` + wrangler |
+
+### Verify
+
+```bash
+BASE=https://nakama.<your-subdomain>.workers.dev
+curl -fsS -H "User-Agent: Mozilla/5.0" "$BASE/health" | jq .
+curl -fsS -H "User-Agent: Mozilla/5.0" "$BASE/stats" | jq '.data.total_sources'
+npx wrangler containers list
+npx wrangler tail
+```
+
+### Common failure: `Unauthorized` on image push
+
+```
+✘ [ERROR] Unauthorized
+# API: "Deploying containers requires the Workers Paid plan"
+```
+
+**Fix:** upgrade the account to Workers Paid, then re-run `npx wrangler deploy`.
+The Worker script itself may already be uploaded; only the container image
+push is blocked on Free.
+
+### Free-plan Cloudflare alternative
+
+If you stay on Free:
+
+1. Run the API on VPS / Railway / Render / Fly (Docker).
+2. Put **Cloudflare Tunnel** or a proxied DNS A/CNAME in front for TLS + CDN.
+3. Deploy the Next.js demo (`frontend/`) to **Cloudflare Pages** (free).
+
+```bash
+# Frontend → Cloudflare Pages (after API is live somewhere)
+cd frontend
+npm ci && npm run build
+npx wrangler pages deploy ./out --project-name=nakama-web
+# or connect the GitHub repo in the Pages dashboard (Root: frontend)
+```
+
+Set `NEXT_PUBLIC_API_BASE` to the live API URL before building.
 
 ---
 

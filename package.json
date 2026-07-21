@@ -1,0 +1,21 @@
+{
+  "name": "nakama",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Containers worker that fronts the Nakama FastAPI backend",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "cf-typegen": "wrangler types",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "^0.0.28"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.100.0"
+  }
+}

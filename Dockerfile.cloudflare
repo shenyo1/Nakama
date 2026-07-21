@@ -1,0 +1,51 @@
+# Cloudflare Containers image for Nakama (FastAPI).
+# Listens on 10.0.0.1:8080 — required by CF container networking.
+# Build/push happens automatically via `wrangler deploy`.
+
+# ---- builder stage ----
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
+
+
+# ---- runtime stage ----
+FROM python:3.11-slim AS runtime
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    OFFLINE_MODE=0 \
+    CACHE_TTL_SECONDS=900 \
+    REQUEST_TIMEOUT=20 \
+    RATE_LIMIT=60/minute \
+    PORT=8080
+
+RUN groupadd --system --gid 1001 sankaapi \
+    && useradd --system --uid 1001 --gid sankaapi --no-create-home --shell /sbin/nologin sankaapi
+
+COPY --from=builder /install /usr/local
+COPY --chown=sankaapi:sankaapi app ./app
+COPY --chown=sankaapi:sankaapi fixtures ./fixtures
+
+USER sankaapi
+
+EXPOSE 8080
+
+# CF containers reach the process via the fixed host 10.0.0.1.
+# Single worker keeps cold-start + memory within `basic` instance type.
+CMD ["uvicorn", "app.main:app", "--host", "10.0.0.1", "--port", "8080", "--workers", "1"]
