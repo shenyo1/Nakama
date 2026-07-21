@@ -24,7 +24,7 @@ import os
 from datetime import datetime
 from typing import AsyncIterator
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Boolean, func, UniqueConstraint
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -84,6 +84,12 @@ class User(Base):
     history: Mapped[list["ReadingHistory"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    bookmarks: Mapped[list["Bookmark"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    webhooks: Mapped[list["WebhookSubscription"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class ReadingHistory(Base):
@@ -109,6 +115,55 @@ class ReadingHistory(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="history")
+
+
+class Bookmark(Base):
+    """Per-user saved title (anime/comic/novel)."""
+
+    __tablename__ = "bookmarks"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "source", "content_id", "content_type",
+            name="uq_bookmark_user_item",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    source: Mapped[str] = mapped_column(String(64), nullable=False)
+    content_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(16), nullable=False)  # anime|comic|novel
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    thumbnail: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    user: Mapped["User"] = relationship(back_populates="bookmarks")
+
+
+class WebhookSubscription(Base):
+    """User webhook for chapter/update notifications."""
+
+    __tablename__ = "webhook_subscriptions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    url: Mapped[str] = mapped_column(String(512), nullable=False)
+    secret: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    source: Mapped[str | None] = mapped_column(String(64), nullable=True)  # null = all
+    content_type: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    user: Mapped["User"] = relationship(back_populates="webhooks")
 
 
 # ---------------------------------------------------------------------------

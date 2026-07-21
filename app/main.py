@@ -32,6 +32,7 @@ from .routers import comic_fallback as comic_fallback_router
 from .routers import outages as outages_router
 from .routers import analytics as analytics_router
 from .routers import auth as auth_router
+from .routers import tier5 as tier5_router
 from .routers import ws as ws_router
 from .routers import sources as sources_router
 from .audit import router as audit_router
@@ -116,7 +117,17 @@ _PUBLIC_PREFIXES = (
     "/metrics",
 )
 
-_METERED_PREFIXES = ("/anime", "/comic", "/novel", "/search", "/history")
+_METERED_PREFIXES = (
+    "/anime",
+    "/comic",
+    "/novel",
+    "/search",
+    "/history",
+    "/bookmarks",
+    "/webhooks",
+    "/recommend",
+    "/trending",
+)
 
 # Cache-Control policy table. Cloudflare Free honours Cache-Control on the
 # origin response; nginx already forwards the header untouched. Paths not
@@ -305,6 +316,7 @@ app.include_router(comic_fallback_router.router)
 app.include_router(outages_router.router)
 app.include_router(analytics_router.router)
 app.include_router(auth_router.router)
+app.include_router(tier5_router.router)
 app.include_router(audit_router)
 app.include_router(sources_router.router)
 

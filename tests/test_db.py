@@ -192,7 +192,12 @@ async def test_init_db_creates_file_and_tables(tmp_path, monkeypatch):
 
     assert target.exists(), "SQLite file should be created by init_db"
     # Both model tables are registered with the declarative Base.
-    assert set(db_module.Base.metadata.tables.keys()) == {"users", "reading_history"}
+    assert set(db_module.Base.metadata.tables.keys()) == {
+        "users",
+        "reading_history",
+        "bookmarks",
+        "webhook_subscriptions",
+    }
 
     await db_module.dispose_engine()
     db_module._engine = None  # noqa: SLF001
