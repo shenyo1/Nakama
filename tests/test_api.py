@@ -1,4 +1,4 @@
-"""Tests for SankaApi.
+"""Tests for NakamaApi.
 
 Run with OFFLINE_MODE=1 so sources read local fixtures (no network needed).
 """
@@ -28,7 +28,7 @@ async def test_health(client):
 async def test_root_html(client):
     r = await client.get("/")
     assert r.status_code == 200
-    assert "SankaApi" in r.text
+    assert "Nakama" in r.text
 
 
 @pytest.mark.asyncio

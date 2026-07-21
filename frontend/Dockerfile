@@ -1,4 +1,4 @@
-# Multi-stage Next.js 14 frontend for Nakama / SankaApi demo
+# Multi-stage Next.js 14 frontend for Nakama demo
 # API_KEY is NOT baked into the client bundle — only injected at runtime
 # for Server Components + /api/backend BFF routes.
 

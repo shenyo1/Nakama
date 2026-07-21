@@ -256,7 +256,7 @@ async def test_docs_json_returns_expected_shape(client):
     body = r.json()
 
     # Title + version from the FastAPI app.
-    assert body["title"] == "SankaApi"
+    assert body["title"] == "Nakama"
     assert isinstance(body["version"], str) and body["version"]
 
     # Endpoint map includes every documentation surface.

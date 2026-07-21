@@ -1,7 +1,7 @@
-# Nakama Frontend — Next.js demo for SankaApi
+# Nakama Frontend — Next.js demo for Nakama
 
 Dark-themed demo UI for the [shenyo1/Nakama](https://github.com/shenyo1/Nakama)
-FastAPI backend (SankaApi).
+FastAPI backend (Nakama).
 
 ## Pages
 

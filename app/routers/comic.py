@@ -27,7 +27,7 @@ def _get(source: str):
 async def comic_index(request: Request):  # noqa: ANN001
     return ApiResponse(
         data={
-            "message": "SankaApi Comic endpoints. Use /comic/{source}/{...}.",
+            "message": "Nakama Comic endpoints. Use /comic/{source}/{...}.",
             "sources": list_comic_sources(),
             "default_source": "komiku",
             "example": "/comic/komiku/home",

@@ -14,18 +14,18 @@ log() { echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*"; }
 log "backup start → $DEST"
 
 # 1) SQLite (safe copy even if api is running)
-DB_SRC="$APP_DIR/data/sankadb.sqlite"
+DB_SRC="$APP_DIR/data/nakamadb.sqlite"
 if [[ -f "$DB_SRC" ]]; then
   # Prefer sqlite3 online backup if available
   if command -v sqlite3 >/dev/null 2>&1; then
-    sqlite3 "$DB_SRC" ".backup '$DEST/sankadb.sqlite'" || cp -a "$DB_SRC" "$DEST/sankadb.sqlite"
+    sqlite3 "$DB_SRC" ".backup '$DEST/nakamadb.sqlite'" || cp -a "$DB_SRC" "$DEST/nakamadb.sqlite"
   else
-    cp -a "$DB_SRC" "$DEST/sankadb.sqlite"
+    cp -a "$DB_SRC" "$DEST/nakamadb.sqlite"
   fi
   # wal/shm if present
   [[ -f "${DB_SRC}-wal" ]] && cp -a "${DB_SRC}-wal" "$DEST/" || true
   [[ -f "${DB_SRC}-shm" ]] && cp -a "${DB_SRC}-shm" "$DEST/" || true
-  log "sqlite copied ($(du -h "$DEST/sankadb.sqlite" | awk '{print $1}'))"
+  log "sqlite copied ($(du -h "$DEST/nakamadb.sqlite" | awk '{print $1}'))"
 else
   log "WARN: no sqlite at $DB_SRC"
 fi

@@ -1,4 +1,4 @@
-"""Shared test fixtures for SankaApi.
+"""Shared test fixtures for NakamaApi.
 
 Tests run with OFFLINE_MODE=1 so sources read local fixtures (no network).
 The rate-limiter's in-memory storage is reset between tests so one test's hits

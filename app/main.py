@@ -1,4 +1,4 @@
-"""FastAPI application entrypoint for SankaApi."""
+"""FastAPI application entrypoint for Nakama."""
 from __future__ import annotations
 
 import time
@@ -48,7 +48,7 @@ from .ratelimit import limiter  # noqa: E402
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create tables on startup. Safe no-op when they already exist; supports
-    # the default SQLite (./sankadb.sqlite) or any DATABASE_URL override.
+    # the default SQLite (./nakamadb.sqlite) or any DATABASE_URL override.
     await init_db()
     # Start the WebSocket chapter-update broadcaster (idempotent).
     await start_broadcaster()
@@ -63,7 +63,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="SankaApi",
+    title="Nakama",
     description=(
         "REST API for anime & comic data, aggregating multiple public sources "
         "behind one consistent JSON interface. Set OFFLINE_MODE=1 to serve local "
@@ -224,10 +224,10 @@ async def index():
     novel = ", ".join(list_novel_sources())
     mode = "OFFLINE (fixtures)" if s.offline_mode else "LIVE"
     return f"""<!doctype html><html><head><meta charset="utf-8">
-<title>SankaApi</title><style>body{{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;color:#222}}
+<title>Nakama</title><style>body{{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;color:#222}}
 code{{background:#f4f4f4;padding:2px 6px;border-radius:4px}}h1{{color:#FF6B6B}}
 table{{border-collapse:collapse;width:100%}}td,th{{border:1px solid #ddd;padding:6px 10px;text-align:left}}</style></head>
-<body><h1>🚀 SankaApi</h1>
+<body><h1>🚀 Nakama</h1>
 <p>REST API for Anime, Comic &amp; Novel data. Mode: <b>{mode}</b></p>
 <h3>Anime sources</h3><p>{anime}</p>
 <h3>Comic sources</h3><p>{comic}</p>

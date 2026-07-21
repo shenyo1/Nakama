@@ -35,7 +35,7 @@ def _get(source: str):
 async def novel_index(request: Request):  # noqa: ANN001 — slowapi injects Request
     return ApiResponse(
         data={
-            "message": "SankaApi Novel endpoints. Use /novel/{source}/{...}.",
+            "message": "Nakama Novel endpoints. Use /novel/{source}/{...}.",
             "sources": list_novel_sources(),
             "default_source": "sakuranovel",
             "example": "/novel/sakuranovel/home",

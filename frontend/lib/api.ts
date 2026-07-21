@@ -1,5 +1,5 @@
 /**
- * Server-side fetch wrapper against Nakama / SankaApi.
+ * Server-side fetch wrapper against Nakama.
  *
  * - Browser never sees API_KEY (server-only env).
  * - Server components call the internal Docker URL when set

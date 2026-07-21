@@ -34,17 +34,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=8000
 
 # Create non-root user for runtime
-RUN groupadd --system --gid 1001 sankaapi \
-    && useradd --system --uid 1001 --gid sankaapi --no-create-home --shell /sbin/nologin sankaapi
+RUN groupadd --system --gid 1001 nakama \
+    && useradd --system --uid 1001 --gid nakama --no-create-home --shell /sbin/nologin nakama
 
 # Copy installed Python packages from builder
 COPY --from=builder /install /usr/local
 
 # Copy application code and fixtures
-COPY --chown=sankaapi:sankaapi app ./app
-COPY --chown=sankaapi:sankaapi fixtures ./fixtures
+COPY --chown=nakama:nakama app ./app
+COPY --chown=nakama:nakama fixtures ./fixtures
 
-USER sankaapi
+USER nakama
 
 EXPOSE 8000
 

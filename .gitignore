@@ -7,7 +7,7 @@ venv/
 .env
 .env.production
 .probe/
-sankadb.sqlite
+nakamadb.sqlite
 data/
 node_modules/
 .wrangler/

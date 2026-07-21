@@ -27,7 +27,7 @@ def _get(source: str):
 async def anime_index(request: Request):  # noqa: ANN001 — slowapi injects Request
     return ApiResponse(
         data={
-            "message": "SankaApi Anime endpoints. Use /anime/{source}/{...}.",
+            "message": "Nakama Anime endpoints. Use /anime/{source}/{...}.",
             "sources": list_anime_sources(),
             "default_source": "otakudesu",
             "example": "/anime/otakudesu/home",

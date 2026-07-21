@@ -1,9 +1,9 @@
-"""Async SQLAlchemy database layer for SankaApi.
+"""Async SQLAlchemy database layer for NakamaApi.
 
 Provides:
 
 * An async engine + session factory bound to a configurable URL (default
-  SQLite at ``./sankadb.sqlite``, overridable via the ``DATABASE_URL`` env
+  SQLite at ``./nakamadb.sqlite``, overridable via the ``DATABASE_URL`` env
   var so the same code path supports PostgreSQL in production).
 * Two ORM models — ``User`` (placeholder for future auth) and
   ``ReadingHistory`` (per-user "I read this chapter" log).
@@ -37,12 +37,12 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 def _default_sqlite_url() -> str:
     """Build the default SQLite URL anchored at the project root.
 
-    ``./sankadb.sqlite`` is resolved against the current working directory so
+    ``./nakamadb.sqlite`` is resolved against the current working directory so
     the file lands next to wherever the app is launched (dev mode, uvicorn,
     test runner, etc.).
     """
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    db_path = os.path.join(project_root, "sankadb.sqlite")
+    db_path = os.path.join(project_root, "nakamadb.sqlite")
     return f"sqlite+aiosqlite:///{db_path}"
 
 
@@ -51,7 +51,7 @@ def get_database_url() -> str:
 
     Order:
     1. ``DATABASE_URL`` environment variable (any async-driver URL).
-    2. Fallback: ``sqlite+aiosqlite:///./sankadb.sqlite``.
+    2. Fallback: ``sqlite+aiosqlite:///./nakamadb.sqlite``.
     """
     return os.getenv("DATABASE_URL") or _default_sqlite_url()
 

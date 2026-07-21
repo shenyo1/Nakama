@@ -49,7 +49,7 @@ def test_dockerfile_uses_slim_python(dockerfile_text):
 def test_dockerfile_runs_as_non_root(dockerfile_text):
     """Non-root user must be created and activated."""
     assert "useradd" in dockerfile_text or "adduser" in dockerfile_text
-    assert "USER sankaapi" in dockerfile_text, "non-root USER directive required"
+    assert "USER nakama" in dockerfile_text, "non-root USER directive required"
 
 
 def test_dockerfile_has_healthcheck(dockerfile_text):

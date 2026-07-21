@@ -51,7 +51,7 @@ async def test_stats_source_counts_consistent(client):
 
 @pytest.mark.asyncio
 async def test_stats_has_eight_sources(client):
-    """SankaApi exposes 8 source adapters in total (kura is an alias of otakudesu)."""
+    """NakamaApi exposes 8 source adapters in total (kura is an alias of otakudesu)."""
     r = await client.get("/stats")
     data = r.json()["data"]
     assert data["total_sources"] == 10, (

@@ -16,12 +16,12 @@ jobs:
         run: |
           export TZ='Asia/Jakarta'
           TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
-          echo "Last auto update: $TIMESTAMP" > .github/Api_sanka_auto_update.txt
+          echo "Last auto update: $TIMESTAMP" > .github/Api_nakama_auto_update.txt
        
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'Plana AI Auto Update'
-          file_pattern: '.github/Api_sanka_auto_update.txt'
+          file_pattern: '.github/Api_nakama_auto_update.txt'
           commit_user_name: 'Plana AI'
-          commit_user_email: 'plana@sankanime.web.id'
+          commit_user_email: 'plana@nakamanime.web.id'

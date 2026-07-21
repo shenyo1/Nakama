@@ -1,4 +1,4 @@
-"""Prometheus metrics for SankaApi.
+"""Prometheus metrics for NakamaApi.
 
 Single-process metric registry. We deliberately avoid ``PROMETHEUS_MULTIPROC_DIR``
 because the app runs as a single uvicorn worker in dev/test/CI. If the deployer

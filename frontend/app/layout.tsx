@@ -3,9 +3,9 @@ import "./globals.css";
 import { Nav } from "../components/Nav";
 
 export const metadata: Metadata = {
-  title: "Nakama — SankaApi Demo",
+  title: "Nakama",
   description:
-    "Demo frontend for SankaApi: multi-source anime, comic, and novel REST API with live WebSocket updates.",
+    "Demo frontend for Nakama: multi-source anime, comic, and novel REST API with live WebSocket updates.",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
           >
             shenyo1/Nakama
           </a>{" "}
-          · SankaApi FastAPI backend
+          · Nakama FastAPI backend
         </footer>
       </body>
     </html>

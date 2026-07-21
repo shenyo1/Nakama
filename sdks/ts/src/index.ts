@@ -1,14 +1,14 @@
 // ============================================================================
-//  SankaApi TypeScript SDK — AUTO-GENERATED FILE. DO NOT EDIT.
+//  NakamaApi TypeScript SDK — AUTO-GENERATED FILE. DO NOT EDIT.
 //
 //  Regenerate with: python scripts/gen_ts_sdk.py [--url URL] [--output PATH]
 //
-//  Source of truth: GET /openapi.json.export on a running SankaApi instance.
+//  Source of truth: GET /openapi.json.export on a running NakamaApi instance.
 //  Runtime deps    : none — uses the platform fetch API directly.
 // ============================================================================
 
-export interface SankaApiOptions {
-  /** Base URL of the SankaApi deployment. No trailing slash. */
+export interface NakamaApiOptions {
+  /** Base URL of the NakamaApi deployment. No trailing slash. */
   baseUrl: string;
   /** Default headers sent with every request (e.g. { "X-API-Key": "..." }). */
   headers?: Record<string, string>;
@@ -17,7 +17,7 @@ export interface SankaApiOptions {
 }
 
 /** Internal handle shared across groups — never instantiated by callers. */
-export interface SankaApiClient {
+export interface NakamaApiClient {
   baseUrl: string;
   headers: Record<string, string>;
   _fetch: typeof fetch;
@@ -29,14 +29,14 @@ export interface SankaApiClient {
  * The original body is kept on ``.body`` (string) so callers can do their
  * own structured parsing. ``status`` is the numeric HTTP status code.
  */
-export class SankaApiError extends Error {
+export class NakamaApiError extends Error {
   readonly status: number;
   readonly body: string;
   constructor(status: number, body: string) {
-    super(`SankaApi request failed: ${status} ${body}`);
+    super(`NakamaApi request failed: ${status} ${body}`);
     this.status = status;
     this.body = body;
-    this.name = "SankaApiError";
+    this.name = "NakamaApiError";
   }
 }
 
@@ -45,7 +45,7 @@ export class SankaApiError extends Error {
  * Groups accept their own typed subset of ``params`` for typed query/body
  * input but this base is exposed for advanced use cases.
  */
-export interface SankaApiRequestInit {
+export interface NakamaApiRequestInit {
   headers?: Record<string, string>;
   fetch?: typeof fetch;
 }
@@ -68,8 +68,8 @@ export interface ValidationError { "loc": Array<string | number>; "msg": string;
 // -- Endpoint groups --------------------------------------------------
 
 export class Anime {
-  private readonly _client: SankaApiClient;
-  constructor(client: SankaApiClient) {
+  private readonly _client: NakamaApiClient;
+  constructor(client: NakamaApiClient) {
     this._client = client;
   }
 
@@ -88,7 +88,7 @@ export class Anime {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as unknown;
   }
@@ -108,7 +108,7 @@ export class Anime {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "status"?: string; "score"?: string; "released"?: string; "japanese_title"?: string; "synopsis"?: string; "genres"?: Array<string>; "episodes_count"?: string; "studios"?: string; "episodes"?: Array<Record<string, unknown>> } };
   }
@@ -128,7 +128,7 @@ export class Anime {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as unknown;
   }
@@ -153,7 +153,7 @@ export class Anime {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -178,7 +178,7 @@ export class Anime {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -203,7 +203,7 @@ export class Anime {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -228,15 +228,15 @@ export class Anime {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
 
 }
 export class Comic {
-  private readonly _client: SankaApiClient;
-  constructor(client: SankaApiClient) {
+  private readonly _client: NakamaApiClient;
+  constructor(client: NakamaApiClient) {
     this._client = client;
   }
 
@@ -255,7 +255,7 @@ export class Comic {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as unknown;
   }
@@ -275,7 +275,7 @@ export class Comic {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as unknown;
   }
@@ -300,7 +300,7 @@ export class Comic {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -325,7 +325,7 @@ export class Comic {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -350,7 +350,7 @@ export class Comic {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -370,7 +370,7 @@ export class Comic {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> } };
   }
@@ -395,7 +395,7 @@ export class Comic {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -420,15 +420,15 @@ export class Comic {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
 
 }
 export class Novel {
-  private readonly _client: SankaApiClient;
-  constructor(client: SankaApiClient) {
+  private readonly _client: NakamaApiClient;
+  constructor(client: NakamaApiClient) {
     this._client = client;
   }
 
@@ -447,7 +447,7 @@ export class Novel {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as unknown;
   }
@@ -467,7 +467,7 @@ export class Novel {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -487,7 +487,7 @@ export class Novel {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "status"?: string; "rating"?: string; "latest_chapter"?: string; "author"?: string; "synopsis"?: string; "genres"?: Array<string>; "chapters"?: Array<Record<string, unknown>> } };
   }
@@ -516,7 +516,7 @@ export class Novel {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -541,7 +541,7 @@ export class Novel {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -570,7 +570,7 @@ export class Novel {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -595,7 +595,7 @@ export class Novel {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -620,15 +620,15 @@ export class Novel {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
 
 }
 export class Search {
-  private readonly _client: SankaApiClient;
-  constructor(client: SankaApiClient) {
+  private readonly _client: NakamaApiClient;
+  constructor(client: NakamaApiClient) {
     this._client = client;
   }
 
@@ -653,15 +653,15 @@ export class Search {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as unknown;
   }
 
 }
 export class Image {
-  private readonly _client: SankaApiClient;
-  constructor(client: SankaApiClient) {
+  private readonly _client: NakamaApiClient;
+  constructor(client: NakamaApiClient) {
     this._client = client;
   }
 
@@ -691,15 +691,15 @@ export class Image {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as unknown;
   }
 
 }
 export class History {
-  private readonly _client: SankaApiClient;
-  constructor(client: SankaApiClient) {
+  private readonly _client: NakamaApiClient;
+  constructor(client: NakamaApiClient) {
     this._client = client;
   }
 
@@ -727,7 +727,7 @@ export class History {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as Array<{ "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }>;
   }
@@ -750,15 +750,15 @@ export class History {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string };
   }
 
 }
 export class Ws {
-  private readonly _client: SankaApiClient;
-  constructor(client: SankaApiClient) {
+  private readonly _client: NakamaApiClient;
+  constructor(client: NakamaApiClient) {
     this._client = client;
   }
 
@@ -786,16 +786,92 @@ export class Ws {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as Record<string, unknown>;
   }
 
 }
 export class Stats {
-  private readonly _client: SankaApiClient;
-  constructor(client: SankaApiClient) {
+  private readonly _client: NakamaApiClient;
+  constructor(client: NakamaApiClient) {
     this._client = client;
+  }
+
+  /**
+   * Chapter images across comic sources with fallback
+   * @see GET /comic/chapter/{slug}
+   * First source returning a non-empty ``images`` list wins.
+   * 
+   * Komikcast (which needs a JWT) is intentionally last so other free sources
+   * can serve images first.
+   */
+  async fallback_get_x(slug: string, params?: { "primary"?: string }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.primary !== undefined) search.set("primary", String(p.primary));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/comic/chapter/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Find manga detail across comic sources with fallback
+   * @see GET /comic/manga/{slug}
+   */
+  async fallback_get(slug: string, params?: { "primary"?: string }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.primary !== undefined) search.set("primary", String(p.primary));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/comic/manga/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Search across comic sources with fallback
+   * @see GET /comic/search/{query}
+   */
+  async fallback(query: string, params?: { "primary"?: string }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.primary !== undefined) search.set("primary", String(p.primary));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/comic/search/${query}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
   }
 
   /**
@@ -817,7 +893,84 @@ export class Stats {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Recent outage / recovery events
+   * @see GET /outages
+   * Return the tail of the outages JSONL log (newest last, then reversed).
+   */
+  async outages(params?: { "limit"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/outages${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Source health scoreboard
+   * @see GET /sources/health
+   * Return per-source health from in-process counters.
+   * 
+   * Without ``probe=true`` this is pure memory (fast). With ``probe=true`` the
+   * API hits each source's home listing once and updates the scoreboard.
+   */
+  async sources(params?: { "probe"?: boolean }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.probe !== undefined) search.set("probe", String(p.probe));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/sources/health${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Probe a single source
+   * @see GET /sources/health/{name}
+   */
+  async source(name: string, params?: { "probe"?: boolean }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.probe !== undefined) search.set("probe", String(p.probe));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/sources/health/${name}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -841,7 +994,7 @@ export class Stats {
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new SankaApiError(res.status, text || res.statusText);
+      throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
@@ -850,7 +1003,7 @@ export class Stats {
 
 // -- Top-level client -------------------------------------------------
 
-export class SankaApi {
+export class NakamaApi {
   readonly anime: Anime;
   readonly comic: Comic;
   readonly novel: Novel;
@@ -860,8 +1013,8 @@ export class SankaApi {
   readonly ws: Ws;
   readonly stats: Stats;
 
-  constructor(opts: SankaApiOptions) {
-    const client: SankaApiClient = {
+  constructor(opts: NakamaApiOptions) {
+    const client: NakamaApiClient = {
       baseUrl: opts.baseUrl.replace(/\/$/, ""),
       headers: opts.headers ?? {},
       _fetch: opts.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args)),
@@ -877,4 +1030,4 @@ export class SankaApi {
   }
 }
 // -- Default export --------------------------------------------------
-export default SankaApi;
+export default NakamaApi;

@@ -1,4 +1,4 @@
-# Nakama (SankaApi) — REST API for Anime, Comic & Novel Data
+# Nakama — REST API for Anime, Comic & Novel Data
 
 [![CI](https://github.com/shenyo1/Nakama/actions/workflows/ci.yml/badge.svg)](https://github.com/shenyo1/Nakama/actions)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -68,7 +68,7 @@ docker compose up --build
 
 `docker-compose.yml` ships a two-service stack:
 
-- `api` — the SankaApi container (built from `Dockerfile`), port 8000.
+- `api` — the Nakama API container (built from `Dockerfile`), port 8000.
 - `redis` — Redis 7 cache backend, exposed to the API via `REDIS_URL`.
 
 To add the API key, edit `docker-compose.yml` (or use `--env-file`):
@@ -83,8 +83,8 @@ environment:
 ### Plain Docker (no compose)
 
 ```bash
-docker build -t sanka-api .
-docker run -p 8000:8000 sanka-api
+docker build -t nakama-api .
+docker run -p 8000:8000 nakama-api
 ```
 
 ---
@@ -276,15 +276,15 @@ RATE_LIMIT="120/minute" uvicorn app.main:app --port 8000
 ### Docker (with Redis + auth)
 
 ```bash
-docker build -t sanka-api .
+docker build -t nakama-api .
 # open access, in-memory cache
-docker run -p 8000:8000 sanka-api
+docker run -p 8000:8000 nakama-api
 # with API key + Redis + higher rate limit
 docker run -p 8000:8000 \
   -e API_KEY="s3cret" \
   -e REDIS_URL="redis://redis:6379/0" \
   -e RATE_LIMIT="120/minute" \
-  sanka-api
+  nakama-api
 ```
 
 ---

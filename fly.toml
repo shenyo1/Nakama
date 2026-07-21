@@ -2,7 +2,7 @@
 # Deploy: fly launch --no-deploy && fly deploy
 # Closest region to Indonesia: sin (Singapore)
 
-app = "sankaapi"
+app = "nakama"
 primary_region = "sin"
 
 [build]

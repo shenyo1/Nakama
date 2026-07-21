@@ -23,7 +23,7 @@ export default async function HomePage() {
           <span className="text-sakura-400">10 sources</span> through one API.
         </h1>
         <p className="max-w-2xl text-ink-300">
-          This demo frontend talks to the Nakama (SankaApi) FastAPI backend —
+          This demo frontend talks to the Nakama FastAPI backend —
           offline fixtures, image proxy, WebSocket chapter updates, Prometheus
           metrics, and a generated TypeScript SDK.
         </p>

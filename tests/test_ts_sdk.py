@@ -102,6 +102,7 @@ def test_generator_writes_valid_typescript_strict(regenerated_sdk: Path) -> None
         "--strict",
         "--lib", "es2020,dom",
         "--ignoreDeprecations", "6.0",
+        "--ignoreConfig",
         str(regenerated_sdk),
     ]
     result = subprocess.run(
@@ -127,10 +128,10 @@ def test_required_group_classes_present(sdk_source: str) -> None:
         )
 
     # The top-level client must be a single class that wires every group up.
-    assert "export class SankaApi {" in sdk_source
+    assert "export class NakamaApi {" in sdk_source
     for group in REQUIRED_GROUPS:
         assert f"readonly {group}:" in sdk_source, (
-            f"SankaApi class must expose a '{group}' group"
+            f"NakamaApi class must expose a '{group}' group"
         )
 
 
@@ -165,7 +166,7 @@ def test_known_endpoints_present(sdk_source: str) -> None:
             )
 
 
-def test_sankaapi_uses_platform_fetch_only(sdk_source: str) -> None:
+def test_nakama_uses_platform_fetch_only(sdk_source: str) -> None:
     """The SDK must use platform ``fetch`` and not pull any runtime imports."""
     # No `import` statements — the SDK is fully self-contained.
     assert "import " not in sdk_source, (

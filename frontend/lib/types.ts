@@ -1,5 +1,5 @@
 /**
- * Shared TypeScript types matching SankaApi's response shapes.
+ * Shared TypeScript types matching Nakama response shapes.
  *
  * The backend wraps every response in a `{ ok, source, data }` envelope —
  * see `app/schemas.py`. We mirror it here so pages can stay strongly typed

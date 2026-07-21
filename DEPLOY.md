@@ -1,4 +1,4 @@
-# Deploy Guide — Nakama / SankaApi
+# Deploy Guide — Nakama / NakamaApi
 
 Deploy the FastAPI backend to **Cloudflare Containers**, **Railway**,
 **Render**, or **Fly.io**. Frontend demo can go to **Cloudflare Pages**

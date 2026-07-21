@@ -20,7 +20,7 @@ services:
       REQUEST_TIMEOUT: ${REQUEST_TIMEOUT:-20}
       RATE_LIMIT: ${RATE_LIMIT:-60/minute}
       REDIS_URL: redis://redis:6379/0
-      DATABASE_URL: sqlite+aiosqlite:////data/sankadb.sqlite
+      DATABASE_URL: sqlite+aiosqlite:////data/nakamadb.sqlite
       API_KEY: ${API_KEY}
       FLARESOLVERR_URL: ${FLARESOLVERR_URL:-}
       KIRYUU_BASE_URL: ${KIRYUU_BASE_URL:-https://v7.kiryuu.to}

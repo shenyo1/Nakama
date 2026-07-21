@@ -93,7 +93,7 @@ class _RedisCache:
     async def get(self, key: str) -> Optional[str]:
         try:
             client = await self._client()
-            return await client.get(f"sanka:{key}")
+            return await client.get(f"nakama:{key}")
         except Exception:
             # Redis down → behave as a cache miss rather than 500-ing the API.
             return None
@@ -102,7 +102,7 @@ class _RedisCache:
         try:
             client = await self._client()
             ttl = get_settings().cache_ttl_seconds
-            await client.set(f"sanka:{key}", value, ex=ttl)
+            await client.set(f"nakama:{key}", value, ex=ttl)
         except Exception:
             # Swallow: a cache write failure must not break the request.
             pass

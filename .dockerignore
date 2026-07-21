@@ -20,7 +20,7 @@ htmlcov/
 .env.local
 *.sqlite
 *.sqlite-journal
-sankadb.sqlite
+nakamadb.sqlite
 
 # Git / IDE
 .git/

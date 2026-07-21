@@ -1,12 +1,12 @@
-"""Generate the TypeScript SDK for SankaApi from /openapi.json.export.
+"""Generate the TypeScript SDK for NakamaApi from /openapi.json.export.
 
-The generator fetches the OpenAPI 3 schema from a running SankaApi instance
+The generator fetches the OpenAPI 3 schema from a running NakamaApi instance
 and emits a single hand-rolled, dependency-free TypeScript client. Each
 endpoint group is exposed as a named class (``Anime``, ``Comic``, …) so
 callers can write::
 
-    import { SankaApi } from "./sdks/ts/src";
-    const api = new SankaApi({ baseUrl: "https://example.com" });
+    import { NakamaApi } from "./sdks/ts/src";
+    const api = new NakamaApi({ baseUrl: "https://example.com" });
     const res = await api.anime.home("otakudesu");
 
 Design goals
@@ -312,16 +312,16 @@ def _short_op_name(op_id: str, path: str, method: str) -> str:
 # Renderer.
 # ---------------------------------------------------------------------------
 HEADER = """// ============================================================================
-//  SankaApi TypeScript SDK — AUTO-GENERATED FILE. DO NOT EDIT.
+//  NakamaApi TypeScript SDK — AUTO-GENERATED FILE. DO NOT EDIT.
 //
 //  Regenerate with: python scripts/gen_ts_sdk.py [--url URL] [--output PATH]
 //
-//  Source of truth: GET /openapi.json.export on a running SankaApi instance.
+//  Source of truth: GET /openapi.json.export on a running NakamaApi instance.
 //  Runtime deps    : none — uses the platform fetch API directly.
 // ============================================================================
 
-export interface SankaApiOptions {
-  /** Base URL of the SankaApi deployment. No trailing slash. */
+export interface NakamaApiOptions {
+  /** Base URL of the NakamaApi deployment. No trailing slash. */
   baseUrl: string;
   /** Default headers sent with every request (e.g. { "X-API-Key": "..." }). */
   headers?: Record<string, string>;
@@ -330,7 +330,7 @@ export interface SankaApiOptions {
 }
 
 /** Internal handle shared across groups — never instantiated by callers. */
-export interface SankaApiClient {
+export interface NakamaApiClient {
   baseUrl: string;
   headers: Record<string, string>;
   _fetch: typeof fetch;
@@ -342,14 +342,14 @@ export interface SankaApiClient {
  * The original body is kept on ``.body`` (string) so callers can do their
  * own structured parsing. ``status`` is the numeric HTTP status code.
  */
-export class SankaApiError extends Error {
+export class NakamaApiError extends Error {
   readonly status: number;
   readonly body: string;
   constructor(status: number, body: string) {
-    super(`SankaApi request failed: ${status} ${body}`);
+    super(`NakamaApi request failed: ${status} ${body}`);
     this.status = status;
     this.body = body;
-    this.name = "SankaApiError";
+    this.name = "NakamaApiError";
   }
 }
 
@@ -358,7 +358,7 @@ export class SankaApiError extends Error {
  * Groups accept their own typed subset of ``params`` for typed query/body
  * input but this base is exposed for advanced use cases.
  */
-export interface SankaApiRequestInit {
+export interface NakamaApiRequestInit {
   headers?: Record<string, string>;
   fetch?: typeof fetch;
 }
@@ -461,7 +461,7 @@ def _emit_method(
         "      const text = await res.text().catch(() => \"\");"
     )
     inner_lines.append(
-        "      throw new SankaApiError("
+        "      throw new NakamaApiError("
         "res.status, text || res.statusText);"
     )
     inner_lines.append("    }")
@@ -487,8 +487,8 @@ def _render_group_class(group: str, ops: List[Tuple[str, str, str, Dict[str, Any
     class_name = group.capitalize()
     lines: List[str] = []
     lines.append(f"export class {class_name} {{")
-    lines.append("  private readonly _client: SankaApiClient;")
-    lines.append(f"  constructor(client: SankaApiClient) {{")
+    lines.append("  private readonly _client: NakamaApiClient;")
+    lines.append(f"  constructor(client: NakamaApiClient) {{")
     lines.append("    this._client = client;")
     lines.append("  }")
     lines.append("")
@@ -567,7 +567,7 @@ def render(spec: Dict[str, Any]) -> str:
 
             grouped_ops[group].append((func_name, method.upper(), path, op))
 
-    # ---- Top-level SankaApi class ---------------------------------------
+    # ---- Top-level NakamaApi class ---------------------------------------
     group_classes: List[str] = []
     for group in GROUP_ORDER:
         if group in grouped_ops:
@@ -579,8 +579,8 @@ def render(spec: Dict[str, Any]) -> str:
             # group existing on the client.
             stub = (
                 f"export class {group.capitalize()} {{\n"
-                f"  private readonly _client: SankaApiClient;\n"
-                f"  constructor(client: SankaApiClient) {{\n"
+                f"  private readonly _client: NakamaApiClient;\n"
+                f"  constructor(client: NakamaApiClient) {{\n"
                 f"    this._client = client;\n"
                 f"  }}\n"
                 f"}}\n"
@@ -588,15 +588,15 @@ def render(spec: Dict[str, Any]) -> str:
             group_classes.append(stub)
 
     class_decl_lines: List[str] = []
-    class_decl_lines.append("export class SankaApi {")
+    class_decl_lines.append("export class NakamaApi {")
     for group in GROUP_ORDER:
         class_decl_lines.append(
             f"  readonly {group}: {group.capitalize()};"
         )
     class_decl_lines.append("")
-    class_decl_lines.append("  constructor(opts: SankaApiOptions) {")
+    class_decl_lines.append("  constructor(opts: NakamaApiOptions) {")
     class_decl_lines.append(
-        "    const client: SankaApiClient = {"
+        "    const client: NakamaApiClient = {"
     )
     class_decl_lines.append(
         "      baseUrl: opts.baseUrl.replace(/\\/$/, \"\"),"
@@ -623,7 +623,7 @@ def render(spec: Dict[str, Any]) -> str:
     parts.append(class_decl)
     parts.append(
         "\n// -- Default export --------------------------------------------------\n"
-        "export default SankaApi;\n"
+        "export default NakamaApi;\n"
     )
     return "".join(parts)
 
@@ -664,14 +664,14 @@ def fetch_spec(base_url: str, timeout: float = 10.0) -> Dict[str, Any]:
 def main(argv: Optional[Iterable[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate the SankaApi TypeScript SDK from /openapi.json.export. "
+            "Generate the NakamaApi TypeScript SDK from /openapi.json.export. "
             "Run while the FastAPI app is reachable."
         )
     )
     parser.add_argument(
         "--url",
         default="http://localhost:8000",
-        help="Base URL of the running SankaApi instance (default: %(default)s)",
+        help="Base URL of the running NakamaApi instance (default: %(default)s)",
     )
     parser.add_argument(
         "--output",
