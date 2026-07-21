@@ -96,10 +96,10 @@ class JikanSource(AnimeSource):
                 last_err = e
                 msg = str(e).lower()
                 retriable = any(
-                    x in msg for x in ("429", "rate", "503", "502", "timeout", "timed out")
+                    x in msg for x in ("429", "rate", "503", "502", "504", "timeout", "timed out", "gateway")
                 )
                 if retriable and attempt < 2:
-                    await asyncio.sleep(1.0 * (2**attempt))  # 1s, 2s
+                    await asyncio.sleep(2.0 * (2**attempt))  # 2s, 4s
                     # shrink page size on rate limit
                     if isinstance(params, dict) and params.get("limit", 0) > 10:
                         params = {**params, "limit": 10}

@@ -324,9 +324,14 @@ async def fetch_json(
             resp = await client.post(url, json=json_body, headers=headers)
         else:
             resp = await client.get(url, params=params, headers=headers)
-        if resp.status_code == 429 and retry_429 and attempt == 0:
-            retry_after = float(resp.headers.get("Retry-After", "1") or "1")
-            await asyncio.sleep(min(retry_after, 2.0))
+        if (resp.status_code == 429 and retry_429 and attempt == 0) or (
+            resp.status_code in (502, 503, 504) and attempt == 0
+        ):
+            if resp.status_code == 429:
+                retry_after = float(resp.headers.get("Retry-After", "1") or "1")
+                await asyncio.sleep(min(retry_after, 2.0))
+            else:
+                await asyncio.sleep(2.0)
             continue
         status = str(resp.status_code)
         try:
