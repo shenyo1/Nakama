@@ -1,0 +1,23 @@
+{
+  "retcode": 0,
+  "data": [
+    {
+      "chapter_title": "Chapter 180",
+      "chapter_id": "test-chapter-1",
+      "chapter_number": 180,
+      "release_date": "2024-12-29"
+    },
+    {
+      "chapter_title": "Chapter 179",
+      "chapter_id": "test-chapter-2",
+      "chapter_number": 179,
+      "release_date": "2024-12-22"
+    },
+    {
+      "chapter_title": "Chapter 178",
+      "chapter_id": "test-chapter-3",
+      "chapter_number": 178,
+      "release_date": "2024-12-15"
+    }
+  ]
+}

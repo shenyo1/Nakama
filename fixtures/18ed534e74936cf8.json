@@ -1,0 +1,16 @@
+{
+  "retcode": 0,
+  "data": {
+    "chapter_title": "Chapter 180",
+    "chapter_number": 180,
+    "chapter": {
+      "data": [
+        "page-001.jpg",
+        "page-002.jpg",
+        "page-003.jpg"
+      ],
+      "path": "/comics/solo-leveling/180/"
+    },
+    "base_url": "https://cdn.shinigami.com"
+  }
+}

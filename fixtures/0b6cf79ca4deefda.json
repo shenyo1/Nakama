@@ -1,0 +1,18 @@
+{
+  "result": "ok",
+  "response": "entity",
+  "data": {
+    "id": "test-chapter-1",
+    "type": "chapter",
+    "attributes": {
+      "title": "The Final Battle",
+      "chapter": "180",
+      "translatedLanguage": "en",
+      "publishAt": "2024-12-29T10:00:00+00:00",
+      "readableAt": "2024-12-29T10:00:00+00:00"
+    },
+    "relationships": [
+      {"type": "scanlation_group", "id": "group-1", "attributes": {"name": "Test Scanlation"}}
+    ]
+  }
+}

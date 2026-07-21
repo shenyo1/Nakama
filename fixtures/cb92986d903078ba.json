@@ -1,0 +1,42 @@
+{
+  "result": "ok",
+  "response": "collection",
+  "data": [
+    {
+      "id": "test-chapter-1",
+      "type": "chapter",
+      "attributes": {
+        "title": "The Final Battle",
+        "chapter": "180",
+        "publishAt": "2024-12-29T10:00:00+00:00",
+        "readableAt": "2024-12-29T10:00:00+00:00"
+      },
+      "relationships": []
+    },
+    {
+      "id": "test-chapter-2",
+      "type": "chapter",
+      "attributes": {
+        "title": "Preparation",
+        "chapter": "179",
+        "publishAt": "2024-12-22T10:00:00+00:00",
+        "readableAt": "2024-12-22T10:00:00+00:00"
+      },
+      "relationships": []
+    },
+    {
+      "id": "test-chapter-3",
+      "type": "chapter",
+      "attributes": {
+        "title": null,
+        "chapter": "178",
+        "publishAt": "2024-12-15T10:00:00+00:00",
+        "readableAt": "2024-12-15T10:00:00+00:00"
+      },
+      "relationships": []
+    }
+  ],
+  "limit": 500,
+  "offset": 0,
+  "total": 3
+}

@@ -1,0 +1,880 @@
+// ============================================================================
+//  SankaApi TypeScript SDK — AUTO-GENERATED FILE. DO NOT EDIT.
+//
+//  Regenerate with: python scripts/gen_ts_sdk.py [--url URL] [--output PATH]
+//
+//  Source of truth: GET /openapi.json.export on a running SankaApi instance.
+//  Runtime deps    : none — uses the platform fetch API directly.
+// ============================================================================
+
+export interface SankaApiOptions {
+  /** Base URL of the SankaApi deployment. No trailing slash. */
+  baseUrl: string;
+  /** Default headers sent with every request (e.g. { "X-API-Key": "..." }). */
+  headers?: Record<string, string>;
+  /** Optional fetch override — useful for Node 18 < environments. */
+  fetch?: typeof fetch;
+}
+
+/** Internal handle shared across groups — never instantiated by callers. */
+export interface SankaApiClient {
+  baseUrl: string;
+  headers: Record<string, string>;
+  _fetch: typeof fetch;
+}
+
+/**
+ * Thrown by every endpoint when the response status is not 2xx.
+ *
+ * The original body is kept on ``.body`` (string) so callers can do their
+ * own structured parsing. ``status`` is the numeric HTTP status code.
+ */
+export class SankaApiError extends Error {
+  readonly status: number;
+  readonly body: string;
+  constructor(status: number, body: string) {
+    super(`SankaApi request failed: ${status} ${body}`);
+    this.status = status;
+    this.body = body;
+    this.name = "SankaApiError";
+  }
+}
+
+/**
+ * Generic request options accepted by every generated endpoint method.
+ * Groups accept their own typed subset of ``params`` for typed query/body
+ * input but this base is exposed for advanced use cases.
+ */
+export interface SankaApiRequestInit {
+  headers?: Record<string, string>;
+  fetch?: typeof fetch;
+}
+
+// -- Component schemas (TypeScript interfaces) --------------------
+
+export interface AnimeDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "status"?: string; "score"?: string; "released"?: string; "japanese_title"?: string; "synopsis"?: string; "genres"?: Array<string>; "episodes_count"?: string; "studios"?: string; "episodes"?: Array<Record<string, unknown>> }
+export interface ApiResponse { "ok"?: boolean; "source"?: string; "data": unknown }
+export interface ApiResponse_AnimeDetail { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "status"?: string; "score"?: string; "released"?: string; "japanese_title"?: string; "synopsis"?: string; "genres"?: Array<string>; "episodes_count"?: string; "studios"?: string; "episodes"?: Array<Record<string, unknown>> } }
+export interface ApiResponse_ComicDetail { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> } }
+export interface ApiResponse_NovelDetail { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "status"?: string; "rating"?: string; "latest_chapter"?: string; "author"?: string; "synopsis"?: string; "genres"?: Array<string>; "chapters"?: Array<Record<string, unknown>> } }
+export interface BroadcastBody { "event": Record<string, unknown> }
+export interface ComicDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> }
+export interface HTTPValidationError { "detail"?: Array<{ "loc": Array<string | number>; "msg": string; "type": string; "input"?: unknown; "ctx"?: Record<string, unknown> }> }
+export interface HistoryCreate { "user_id": number; "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "chapter_id": string }
+export interface HistoryEntry { "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }
+export interface NovelDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "status"?: string; "rating"?: string; "latest_chapter"?: string; "author"?: string; "synopsis"?: string; "genres"?: Array<string>; "chapters"?: Array<Record<string, unknown>> }
+export interface ValidationError { "loc": Array<string | number>; "msg": string; "type": string; "input"?: unknown; "ctx"?: Record<string, unknown> }
+
+// -- Endpoint groups --------------------------------------------------
+
+export class Anime {
+  private readonly _client: SankaApiClient;
+  constructor(client: SankaApiClient) {
+    this._client = client;
+  }
+
+  /**
+   * Anime documentation / source list
+   * @see GET /anime/
+   */
+  async anime(): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/anime/${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Anime detail
+   * @see GET /anime/{source}/detail/{slug}
+   */
+  async detail(source: string, slug: string): Promise<{ "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "status"?: string; "score"?: string; "released"?: string; "japanese_title"?: string; "synopsis"?: string; "genres"?: Array<string>; "episodes_count"?: string; "studios"?: string; "episodes"?: Array<Record<string, unknown>> } }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/anime/${source}/detail/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "status"?: string; "score"?: string; "released"?: string; "japanese_title"?: string; "synopsis"?: string; "genres"?: Array<string>; "episodes_count"?: string; "studios"?: string; "episodes"?: Array<Record<string, unknown>> } };
+  }
+
+  /**
+   * Stream/download links for an episode
+   * @see GET /anime/{source}/episode/{slug}
+   */
+  async episode(source: string, slug: string): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/anime/${source}/episode/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Anime in a genre
+   * @see GET /anime/{source}/genre/{slug}
+   */
+  async genre(source: string, slug: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/anime/${source}/genre/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * All genres
+   * @see GET /anime/{source}/genres
+   */
+  async genres(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/anime/${source}/genres${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Latest ongoing anime
+   * @see GET /anime/{source}/home
+   */
+  async home(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/anime/${source}/home${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Search anime
+   * @see GET /anime/{source}/search/{query}
+   */
+  async search(source: string, query: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/anime/${source}/search/${query}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+}
+export class Comic {
+  private readonly _client: SankaApiClient;
+  constructor(client: SankaApiClient) {
+    this._client = client;
+  }
+
+  /**
+   * Comic documentation / source list
+   * @see GET /comic/
+   */
+  async comic(): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/comic/${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Chapter image list
+   * @see GET /comic/{source}/chapter/{slug}
+   */
+  async chapter(source: string, slug: string): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/comic/${source}/chapter/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Comics in a genre
+   * @see GET /comic/{source}/genre/{slug}
+   */
+  async genre(source: string, slug: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/comic/${source}/genre/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Latest comics
+   * @see GET /comic/{source}/home
+   */
+  async home(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/comic/${source}/home${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Recently updated comics
+   * @see GET /comic/{source}/latest
+   */
+  async latest(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/comic/${source}/latest${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Comic detail + chapter list
+   * @see GET /comic/{source}/manga/{slug}
+   */
+  async manga(source: string, slug: string): Promise<{ "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> } }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/comic/${source}/manga/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> } };
+  }
+
+  /**
+   * Popular comics
+   * @see GET /comic/{source}/popular
+   */
+  async popular(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/comic/${source}/popular${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Search comics
+   * @see GET /comic/{source}/search/{query}
+   */
+  async search(source: string, query: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/comic/${source}/search/${query}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+}
+export class Novel {
+  private readonly _client: SankaApiClient;
+  constructor(client: SankaApiClient) {
+    this._client = client;
+  }
+
+  /**
+   * Novel documentation / source list
+   * @see GET /novel/
+   */
+  async novel(): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/novel/${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Chapter text (novel prose)
+   * @see GET /novel/{source}/chapter/{slug}
+   */
+  async chapter(source: string, slug: string): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/novel/${source}/chapter/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Novel detail + chapter list
+   * @see GET /novel/{source}/detail/{slug}
+   */
+  async detail(source: string, slug: string): Promise<{ "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "status"?: string; "rating"?: string; "latest_chapter"?: string; "author"?: string; "synopsis"?: string; "genres"?: Array<string>; "chapters"?: Array<Record<string, unknown>> } }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/novel/${source}/detail/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "status"?: string; "rating"?: string; "latest_chapter"?: string; "author"?: string; "synopsis"?: string; "genres"?: Array<string>; "chapters"?: Array<Record<string, unknown>> } };
+  }
+
+  /**
+   * Novels in a genre (paginated upstream)
+   * @see GET /novel/{source}/genre/{slug}
+   * Novels in a genre.
+   * 
+   * ``page`` is the *upstream* genre page (passed to ``genre``); ``page_size``
+   * paginates the returned slice locally.
+   */
+  async genre(source: string, slug: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/novel/${source}/genre/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * All genres
+   * @see GET /novel/{source}/genres
+   */
+  async genres(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/novel/${source}/genres${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Latest novels (paginated upstream)
+   * @see GET /novel/{source}/home
+   * Latest novels.
+   * 
+   * ``page`` here is the *upstream* page (passed to the source's ``home``);
+   * ``page_size`` paginates the returned slice locally.
+   */
+  async home(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/novel/${source}/home${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Popular novels
+   * @see GET /novel/{source}/popular
+   */
+  async popular(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/novel/${source}/popular${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Search novels
+   * @see GET /novel/{source}/search/{query}
+   */
+  async search(source: string, query: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/novel/${source}/search/${query}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+}
+export class Search {
+  private readonly _client: SankaApiClient;
+  constructor(client: SankaApiClient) {
+    this._client = client;
+  }
+
+  /**
+   * Cross-source search (anime/comic/novel)
+   * @see GET /search
+   * Search every source of *type* for *q* and return per-source results.
+   */
+  async cross(params?: { "q": string; "type"?: string }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.q !== undefined) search.set("q", String(p.q));
+    if (p.type !== undefined) search.set("type", String(p.type));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/search${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+}
+export class Image {
+  private readonly _client: SankaApiClient;
+  constructor(client: SankaApiClient) {
+    this._client = client;
+  }
+
+  /**
+   * Proxy a remote image with SSRF protection
+   * @see GET /image
+   * Fetch *url* server-side and stream the raw bytes back.
+   * 
+   * This endpoint exists so a browser frontend can render chapter page images
+   * that would otherwise be blocked by hotlink protection or CORS. The server
+   * validates that *url* is a public http(s) resource before fetching — any
+   * scheme other than http/https, and any host that resolves into a private
+   * IP range, is rejected with HTTP 400.
+   */
+  async image(params?: { "url": string }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.url !== undefined) search.set("url", String(p.url));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/image${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+}
+export class History {
+  private readonly _client: SankaApiClient;
+  constructor(client: SankaApiClient) {
+    this._client = client;
+  }
+
+  /**
+   * List reading history for a user
+   * @see GET /history
+   * Return up to ``limit`` history rows for ``user_id``, newest first.
+   * 
+   * Optional ``content_type`` filter narrows to a single medium.
+   */
+  async get(params?: { "user_id": number; "content_type"?: "anime" | "comic" | "novel"; "limit"?: number }): Promise<Array<{ "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }>> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.user_id !== undefined) search.set("user_id", String(p.user_id));
+    if (p.content_type !== undefined) search.set("content_type", String(p.content_type));
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/history${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as Array<{ "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }>;
+  }
+
+  /**
+   * Record a reading event
+   * @see POST /history
+   * Insert a new reading-history row and return it.
+   */
+  async post(params?: { body: { "user_id": number; "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "chapter_id": string } }): Promise<{ "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/history${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string };
+  }
+
+}
+export class Ws {
+  private readonly _client: SankaApiClient;
+  constructor(client: SankaApiClient) {
+    this._client = client;
+  }
+
+  /**
+   * Manually broadcast a JSON event to every connected /ws client
+   * @see POST /admin/broadcast
+   * Forward ``payload.event`` to every connected WebSocket.
+   * 
+   * When ``API_KEY`` is configured, the caller must send the matching
+   * ``X-API-Key`` header. The HTTP-level auth middleware in ``main.py``
+   * already exempts non-/anime/comic/novel paths, so the admin endpoint
+   * is unrestricted by that middleware; we enforce the API key here
+   * explicitly so the gate still works.
+   */
+  async admin(params?: { body: { "event": Record<string, unknown> } }): Promise<Record<string, unknown>> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/admin/broadcast${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as Record<string, unknown>;
+  }
+
+}
+export class Stats {
+  private readonly _client: SankaApiClient;
+  constructor(client: SankaApiClient) {
+    this._client = client;
+  }
+
+  /**
+   * Health
+   * @see GET /health
+   * Liveness probe.
+   * 
+   * Returns the active source list and the current OFFLINE_MODE setting.
+   * Performs no network I/O — safe to call in air-gapped / CI environments.
+   */
+  async health(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/health${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Stats
+   * @see GET /stats
+   * Operational stats: source counts, total, uptime, and mode flag.
+   * 
+   * Pure-process introspection — no network calls — so this endpoint is safe
+   * to hit in offline mode and from liveness/readiness probes.
+   */
+  async stats(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/stats${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new SankaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+}
+
+// -- Top-level client -------------------------------------------------
+
+export class SankaApi {
+  readonly anime: Anime;
+  readonly comic: Comic;
+  readonly novel: Novel;
+  readonly search: Search;
+  readonly image: Image;
+  readonly history: History;
+  readonly ws: Ws;
+  readonly stats: Stats;
+
+  constructor(opts: SankaApiOptions) {
+    const client: SankaApiClient = {
+      baseUrl: opts.baseUrl.replace(/\/$/, ""),
+      headers: opts.headers ?? {},
+      _fetch: opts.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args)),
+    };
+    this.anime = new Anime(client);
+    this.comic = new Comic(client);
+    this.novel = new Novel(client);
+    this.search = new Search(client);
+    this.image = new Image(client);
+    this.history = new History(client);
+    this.ws = new Ws(client);
+    this.stats = new Stats(client);
+  }
+}
+// -- Default export --------------------------------------------------
+export default SankaApi;

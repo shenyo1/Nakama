@@ -1,0 +1,17 @@
+{
+  "result": "ok",
+  "baseUrl": "https://uploads.mangadex.org",
+  "chapter": {
+    "hash": "abc123def456",
+    "data": [
+      "x1.jpg",
+      "x2.jpg",
+      "x3.jpg"
+    ],
+    "dataSaver": [
+      "x1.jpg",
+      "x2.jpg",
+      "x3.jpg"
+    ]
+  }
+}

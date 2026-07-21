@@ -1,0 +1,38 @@
+# Local Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+.probe/
+*.log
+
+# Local secrets / state
+.env
+.env.local
+*.sqlite
+*.sqlite-journal
+sankadb.sqlite
+
+# Git / IDE
+.git/
+.gitignore
+.github/
+
+# Docker build outputs
+Dockerfile
+docker-compose.yml
+.dockerignore
+Dockerfile.test
+
+# OS junk
+.DS_Store
+Thumbs.db

@@ -1,0 +1,31 @@
+# Render Blueprint — https://render.com
+# Deploy via Dashboard → New → Blueprint → connect this repo.
+
+services:
+  - type: web
+    name: sankaapi
+    runtime: docker
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: OFFLINE_MODE
+        value: "0"
+      - key: CACHE_TTL_SECONDS
+        value: "900"
+      - key: RATE_LIMIT
+        value: "60/minute"
+      - key: REQUEST_TIMEOUT
+        value: "20"
+      - key: PORT
+        value: "10000"
+      # Optional: set via Render dashboard secrets
+      # - key: API_KEY
+      #   generateValue: true
+      # - key: REDIS_URL
+      #   fromService:
+      #     type: redis
+      #     name: sankaapi-redis
+      #     property: connectionString

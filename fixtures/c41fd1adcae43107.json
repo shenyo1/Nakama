@@ -1,0 +1,44 @@
+{
+  "result": "ok",
+  "response": "collection",
+  "data": [
+    {
+      "id": "test-manga-1",
+      "type": "manga",
+      "attributes": {
+        "title": {"en": "Solo Leveling"},
+        "description": {"en": "10 years ago, after 'the Gate' that connected the real world with the monster world opened, some ordinary people received the power to hunt monsters within the Gate."},
+        "status": "ongoing",
+        "year": 2018,
+        "tags": [
+          {"id": "tag-1", "type": "tag", "attributes": {"name": {"en": "Action"}, "group": "genre"}},
+          {"id": "tag-2", "type": "tag", "attributes": {"name": {"en": "Adventure"}, "group": "genre"}},
+          {"id": "tag-3", "type": "tag", "attributes": {"name": {"en": "Fantasy"}, "group": "genre"}}
+        ]
+      },
+      "relationships": [
+        {"type": "cover_art", "id": "cover-1", "attributes": {"fileName": "cover-solo-leveling.jpg"}}
+      ]
+    },
+    {
+      "id": "test-manga-2",
+      "type": "manga",
+      "attributes": {
+        "title": {"en": "Omniscient Reader"},
+        "description": {"en": "Only I know the end of this world."},
+        "status": "ongoing",
+        "year": 2020,
+        "tags": [
+          {"id": "tag-1", "type": "tag", "attributes": {"name": {"en": "Action"}, "group": "genre"}},
+          {"id": "tag-4", "type": "tag", "attributes": {"name": {"en": "Drama"}, "group": "genre"}}
+        ]
+      },
+      "relationships": [
+        {"type": "cover_art", "id": "cover-2", "attributes": {"fileName": "cover-omniscient-reader.jpg"}}
+      ]
+    }
+  ],
+  "limit": 24,
+  "offset": 0,
+  "total": 2
+}

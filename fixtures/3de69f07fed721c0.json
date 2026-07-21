@@ -1,0 +1,39 @@
+{
+  "retcode": 0,
+  "data": [
+    {
+      "title": "Solo Leveling",
+      "manga_id": "test-manga-1",
+      "cover_image_url": "https://cdn.shinigami.com/covers/solo-leveling.jpg",
+      "latest_chapter_number": 180,
+      "user_rate": 9.5,
+      "taxonomy": {
+        "Format": ["Manhwa"],
+        "Genre": ["Action", "Adventure", "Fantasy"],
+        "Author": ["Chugong"]
+      },
+      "release_year": 2018,
+      "status": "Ongoing",
+      "description": "10 years ago, after 'the Gate' that connected the real world with the monster world opened, some ordinary people received the power to hunt monsters within the Gate."
+    },
+    {
+      "title": "Omniscient Reader",
+      "manga_id": "test-manga-2",
+      "cover_image_url": "https://cdn.shinigami.com/covers/omniscient-reader.jpg",
+      "latest_chapter_number": 142,
+      "user_rate": 9.3,
+      "taxonomy": {
+        "Format": ["Manhwa"],
+        "Genre": ["Action", "Drama", "Fantasy"],
+        "Author": ["Sing-Shong"]
+      },
+      "release_year": 2020,
+      "status": "Ongoing",
+      "description": "Only I know the end of this world. One day our protagonist, Kim Dokja, finds that the web novel he has been reading for ten years has become reality."
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "total_page": 10
+  }
+}

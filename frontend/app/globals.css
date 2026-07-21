@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html,
+  body {
+    @apply bg-ink-950 text-ink-100 antialiased;
+  }
+  body {
+    @apply min-h-screen bg-hero-gradient bg-fixed;
+  }
+  a {
+    @apply transition-colors;
+  }
+  /* Slightly more vivid focus ring everywhere for keyboard nav. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-sakura-400 ring-offset-2 ring-offset-ink-950;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+  .card {
+    @apply rounded-xl border border-ink-700/60 bg-ink-900/60 p-4 shadow-lg shadow-black/20 backdrop-blur;
+  }
+  .card-hover {
+    @apply transition hover:border-sakura-400/60 hover:shadow-glow;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition;
+  }
+  .btn-primary {
+    @apply btn bg-sakura-500 text-white hover:bg-sakura-400 disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply btn border border-ink-700 bg-ink-900/50 text-ink-100 hover:bg-ink-800;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full border border-ink-700 bg-ink-800/60 px-2 py-0.5 text-xs text-ink-200;
+  }
+  .input {
+    @apply w-full rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2 text-ink-100 placeholder:text-ink-400 focus:border-sakura-400 focus:outline-none focus:ring-2 focus:ring-sakura-400/40;
+  }
+  .grid-cards {
+    @apply grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5;
+  }
+}

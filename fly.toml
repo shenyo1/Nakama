@@ -1,0 +1,36 @@
+# fly.toml — Fly.io app config
+# Deploy: fly launch --no-deploy && fly deploy
+# Closest region to Indonesia: sin (Singapore)
+
+app = "sankaapi"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  OFFLINE_MODE = "0"
+  CACHE_TTL_SECONDS = "900"
+  RATE_LIMIT = "60/minute"
+  REQUEST_TIMEOUT = "20"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
