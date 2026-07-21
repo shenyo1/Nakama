@@ -6,6 +6,7 @@ const links = [
   { href: "/comic", label: "Comic" },
   { href: "/novel", label: "Novel" },
   { href: "/search", label: "Search" },
+  { href: "/status", label: "Status" },
   { href: "/ws-test", label: "Live WS" },
 ];
 

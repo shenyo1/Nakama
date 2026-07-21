@@ -32,8 +32,8 @@ SOURCE_META: Dict[str, Dict[str, Any]] = {
     "komikcast": {
         "kind": "comic",
         "transport": "json-api",
-        "notes": "be.komikcast.cc API; chapter images auth-gated",
-        "limitations": ["chapter_images_require_auth"],
+        "notes": "be.komikcast.cc API; chapter images need KOMIKCAST_TOKEN (SPA JWT, not FlareSolverr)",
+        "limitations": ["chapter_images_require_token"],
     },
     "mangadex": {"kind": "comic", "transport": "json", "notes": "Official MangaDex API"},
     "shinigami": {"kind": "comic", "transport": "html", "notes": "ID comic scraper"},
@@ -204,6 +204,7 @@ def _infra_status() -> dict:
             "flaresolverr_url": s.flaresolverr_url,
             "kiryuu_base_url": s.kiryuu_base_url,
             "komikcast_api_base": s.komikcast_api_base,
+            "komikcast_token_configured": bool(s.komikcast_token),
             "sakuranovel_base_url": s.sakuranovel_base_url,
         }
     except Exception:

@@ -9,8 +9,9 @@ The old HTML theme (komikcast.bz / listupd) is gone. The current SPA
   GET https://be.komikcast.cc/genres
   GET https://be.komikcast.cc/series?title=<q>
 
-Chapter page images require auth on this backend, so ``chapter()`` returns
-metadata + empty images (or a reader URL) rather than crashing.
+Chapter page images require a Bearer JWT (``KOMIKCAST_TOKEN``) on
+``GET /series/{slug}/chapters/{id}`` which returns ``data.images``.
+Without the token we still return metadata + reader URL (no crash).
 """
 from __future__ import annotations
 
@@ -245,30 +246,110 @@ class KomikcastSource(ComicSource):
             else f"{self.base_url}/"
         )
         title = f"Chapter {chapter_id}"
+        comic_title = (
+            series_slug.replace("-", " ").title() if series_slug else None
+        )
         if series_slug:
             try:
                 body = await self._get(f"/series/{quote(series_slug, safe='')}")
                 item = body.get("data") if isinstance(body, dict) else body
                 sid = item.get("id") if isinstance(item, dict) else None
+                if isinstance(item, dict):
+                    d = _data(item)
+                    comic_title = d.get("title") or comic_title
                 if sid is not None:
                     ch_body = await self._get(f"/series/{sid}/chapters")
                     for ch in ch_body.get("data") or []:
                         if str(ch.get("id")) == str(chapter_id):
                             cd = _data(ch)
-                            title = cd.get("title") or f"Chapter {cd.get('index') or chapter_id}"
+                            title = (
+                                cd.get("title")
+                                or f"Chapter {cd.get('index') or chapter_id}"
+                            )
                             break
             except Exception:
                 pass
+
+        images = []
+        notes = None
+        token = get_settings().komikcast_token
+        if token and series_slug:
+            images = await self._fetch_chapter_images(
+                series_slug, chapter_id, token
+            )
+            if not images:
+                notes = (
+                    "KOMIKCAST_TOKEN set but chapter images empty "
+                    "(token expired/invalid or chapter gated)."
+                )
+        else:
+            notes = (
+                "Chapter images need KOMIKCAST_TOKEN (Bearer JWT from "
+                "komikcast login). Without it only metadata/reader URL is returned."
+            )
+
         return ChapterDetail(
-            comic_title=series_slug.replace("-", " ").title() if series_slug else None,
+            comic_title=comic_title,
             chapter=title,
             url=reader,
-            images=[],
-            notes=(
-                "Chapter page images require authenticated access on "
-                "be.komikcast.cc; use the reader URL or MangaDex/Komiku for images."
-            ),
+            images=images,
+            notes=notes,
         ).model_dump()
+
+    async def _fetch_chapter_images(
+        self, series_slug: str, chapter_key: str, token: str
+    ) -> list:
+        """Fetch chapter payload with Bearer token; extract data.images."""
+        from ..schemas import ChapterImage
+
+        headers = {
+            "Origin": self.base_url,
+            "Referer": self.base_url + "/",
+            "Accept": "application/json",
+            "Authorization": f"Bearer {token}",
+        }
+        # Reader uses /series/{seriesSlug}/chapters/{chapterSlug|id}
+        paths = [
+            f"/series/{quote(series_slug, safe='')}/chapters/{quote(chapter_key, safe='')}",
+            f"/chapters/{quote(chapter_key, safe='')}",
+        ]
+        body = None
+        last_err = None
+        for path in paths:
+            try:
+                body = await fetch_json(
+                    f"{self._api}{path}",
+                    source=self.name,
+                    headers=headers,
+                )
+                break
+            except Exception as e:  # noqa: BLE001
+                last_err = e
+                body = None
+        if not body:
+            return []
+        data = body.get("data") if isinstance(body, dict) else body
+        if isinstance(data, dict):
+            # shape: { data: { images: [...] } } or { images: [...] }
+            inner = data.get("data") if isinstance(data.get("data"), dict) else data
+            if not isinstance(inner, dict):
+                inner = data
+            raw_images = inner.get("images") or data.get("images") or []
+        else:
+            raw_images = []
+        out = []
+        seen: set[str] = set()
+        for i, img in enumerate(raw_images):
+            url = None
+            if isinstance(img, str):
+                url = img
+            elif isinstance(img, dict):
+                url = img.get("url") or img.get("src") or img.get("image")
+            if not url or not str(url).startswith("http") or url in seen:
+                continue
+            seen.add(url)
+            out.append(ChapterImage(index=len(out) + 1, url=url))
+        return out
 
     async def _chapter_offline_html(self, slug: str) -> dict:
         from bs4 import BeautifulSoup

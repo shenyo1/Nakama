@@ -1,17 +1,24 @@
 """Jikan (https://jikan.moe) — MyAnimeList unofficial REST API.
 
-Rate limit: 60 req/min, 2 req/sec burst. No auth required.
+Rate limit: ~60 req/min, ~3 req/sec recommended. We enforce a process-wide
+minimum spacing between calls and retry 429/5xx with exponential backoff.
 """
 from __future__ import annotations
 
+import asyncio
+import time
 from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin
 
 from ..http import fetch_json
 from .base import AnimeSource, SourceError
 
 
 JIKAN_API = "https://api.jikan.moe/v4"
+
+# Process-wide throttle so multi-endpoint bursts don't trip Jikan's limit.
+_LOCK = asyncio.Lock()
+_LAST_CALL = 0.0
+_MIN_INTERVAL = 0.4  # seconds between upstream calls
 
 
 def _mal_to_summary(anime: Dict[str, Any]) -> Dict[str, Any]:
@@ -45,12 +52,17 @@ def _mal_to_detail(anime: Dict[str, Any]) -> Dict[str, Any]:
             "popularity": anime.get("popularity"),
             "members": anime.get("members"),
             "favorites": anime.get("favorites"),
-            "studios": ", ".join(s.get("name") for s in (anime.get("studios") or []) if s.get("name")) or None,
+            "studios": ", ".join(
+                s.get("name") for s in (anime.get("studios") or []) if s.get("name")
+            )
+            or None,
             "aired_from": aired.get("from"),
             "aired_to": aired.get("to"),
             "season": anime.get("season"),
             "year": anime.get("year"),
-            "demographics": [d.get("name") for d in (anime.get("demographics") or []) if d.get("name")],
+            "demographics": [
+                d.get("name") for d in (anime.get("demographics") or []) if d.get("name")
+            ],
             "themes": [t.get("name") for t in (anime.get("themes") or []) if t.get("name")],
             "relations": [
                 {
@@ -73,23 +85,45 @@ class JikanSource(AnimeSource):
     name = "jikan"
     base_url = "https://myanimelist.net"
 
+    async def _throttle(self) -> None:
+        global _LAST_CALL
+        async with _LOCK:
+            now = time.monotonic()
+            wait = _MIN_INTERVAL - (now - _LAST_CALL)
+            if wait > 0:
+                await asyncio.sleep(wait)
+            _LAST_CALL = time.monotonic()
+
     async def _get(self, path: str, params: Optional[dict] = None) -> Dict[str, Any]:
         url = f"{JIKAN_API}{path}"
-        try:
-            resp = await fetch_json(url, params=params, source="jikan")
-        except Exception as e:
-            # Fall back to a smaller page_size if the server rate-limited us
-            if isinstance(params, dict) and "limit" in params and params["limit"] != 10:
-                params = {**params, "limit": 10}
-                try:
-                    resp = await fetch_json(url, params=params, source="jikan")
-                except Exception as e2:
-                    raise SourceError(f"jikan: fetch failed for {path}: {e2}")
-            else:
-                raise SourceError(f"jikan: fetch failed for {path}: {e}")
-        if not isinstance(resp, dict) or "data" not in resp:
-            raise SourceError(f"jikan: bad response shape for {path}")
-        return resp
+        last_err: Optional[Exception] = None
+        # Up to 3 attempts with backoff on rate limits / transient errors.
+        for attempt in range(3):
+            await self._throttle()
+            try:
+                resp = await fetch_json(
+                    url,
+                    params=params,
+                    source="jikan",
+                    retry_429=True,
+                )
+            except Exception as e:
+                last_err = e
+                msg = str(e).lower()
+                retriable = any(
+                    x in msg for x in ("429", "rate", "503", "502", "timeout", "timed out")
+                )
+                if retriable and attempt < 2:
+                    await asyncio.sleep(1.0 * (2**attempt))  # 1s, 2s
+                    # shrink page size on rate limit
+                    if isinstance(params, dict) and params.get("limit", 0) > 10:
+                        params = {**params, "limit": 10}
+                    continue
+                raise SourceError(f"jikan: fetch failed for {path}: {e}") from e
+            if not isinstance(resp, dict) or "data" not in resp:
+                raise SourceError(f"jikan: bad response shape for {path}")
+            return resp
+        raise SourceError(f"jikan: fetch failed for {path}: {last_err}")
 
     async def home(self) -> List[dict]:
         data = await self._get("/top/anime", {"limit": 24})
@@ -121,12 +155,18 @@ class JikanSource(AnimeSource):
     async def genres(self) -> List[dict]:
         data = await self._get("/genres/anime")
         return [
-            {"name": g.get("name"), "slug": g.get("name", "").lower().replace(" ", "-"), "mal_id": g.get("mal_id")}
+            {
+                "name": g.get("name"),
+                "slug": g.get("name", "").lower().replace(" ", "-"),
+                "mal_id": g.get("mal_id"),
+            }
             for g in (data.get("data") or [])
         ]
 
     async def genre(self, slug: str) -> List[dict]:
-        data = await self._get(f"/anime", {"genre": slug.replace("-", " ").title(), "limit": 30})
+        data = await self._get(
+            "/anime", {"genre": slug.replace("-", " ").title(), "limit": 30}
+        )
         return [_mal_to_summary(a) for a in (data.get("data") or [])]
 
     async def popular(self) -> List[dict]:

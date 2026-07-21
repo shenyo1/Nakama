@@ -109,6 +109,51 @@ export async function crossSearch(
   return body as SearchResults;
 }
 
+export interface SourceHealthRow {
+  name: string;
+  kind: string;
+  status: "healthy" | "degraded" | "down" | "unknown" | string;
+  ok: number;
+  fail: number;
+  total: number;
+  success_rate: number | null;
+  last_status: string;
+  last_latency_ms: number | null;
+  p50_ms: number | null;
+  p95_ms: number | null;
+  last_error: string | null;
+  transport?: string;
+  notes?: string;
+  limitations?: string[];
+}
+
+export interface SourceHealthBoard {
+  summary: {
+    healthy: number;
+    degraded: number;
+    down: number;
+    unknown: number;
+    total: number;
+  };
+  sources: SourceHealthRow[];
+  infra?: Record<string, unknown>;
+}
+
+export async function fetchSourceHealth(
+  probe = false
+): Promise<SourceHealthBoard> {
+  const path = probe ? "/sources/health?probe=true" : "/sources/health";
+  const body = await getJson<ApiEnvelope<SourceHealthBoard> | SourceHealthBoard>(
+    path,
+    // probes can be slow
+    { next: { revalidate: 0 } as never }
+  );
+  if (body && typeof body === "object" && "data" in body && body.data) {
+    return body.data as SourceHealthBoard;
+  }
+  return body as SourceHealthBoard;
+}
+
 export const ANIME_SOURCES = ["otakudesu", "kura", "anilist", "jikan"] as const;
 export const COMIC_SOURCES = [
   "komiku",

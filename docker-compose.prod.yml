@@ -26,6 +26,7 @@ services:
       KIRYUU_BASE_URL: ${KIRYUU_BASE_URL:-https://v7.kiryuu.to}
       KOMIKCAST_API_BASE: ${KOMIKCAST_API_BASE:-https://be.komikcast.cc}
       KOMIKCAST_BASE_URL: ${KOMIKCAST_BASE_URL:-https://v3.komikcast.fit}
+      KOMIKCAST_TOKEN: ${KOMIKCAST_TOKEN:-}
       SAKURANOVEL_BASE_URL: ${SAKURANOVEL_BASE_URL:-https://sakuranovel.id}
     volumes:
       - ./data:/data

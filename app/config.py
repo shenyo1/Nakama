@@ -56,6 +56,9 @@ class Settings:
         self.komikcast_site_base: str = (
             os.getenv("KOMIKCAST_BASE_URL", "https://v3.komikcast.fit").rstrip("/")
         )
+        # Optional JWT for komikcast chapter images (Bearer). Without it,
+        # chapter listings work but page images stay empty.
+        self.komikcast_token: str | None = os.getenv("KOMIKCAST_TOKEN") or None
         self.sakuranovel_base_url: str = (
             os.getenv("SAKURANOVEL_BASE_URL", "https://sakuranovel.id").rstrip("/")
         )

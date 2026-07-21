@@ -67,7 +67,7 @@ async def manga(source: str, slug: str, request: Request):
         raise HTTPException(status_code=502, detail=str(e))
 
 
-@router.get("/{source}/chapter/{slug}", summary="Chapter image list")
+@router.get("/{source}/chapter/{slug:path}", summary="Chapter image list")
 @limiter.limit(get_settings().rate_limit)
 async def chapter(source: str, slug: str, request: Request):
     src = _get(source)
