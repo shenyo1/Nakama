@@ -26,6 +26,22 @@ from .config import get_settings
 from .metrics import cache_hits_total, cache_misses_total, source_requests_total
 
 
+def _record(source: Optional[str], *, success: bool, started: float, error: Optional[str] = None) -> None:
+    if not source:
+        return
+    try:
+        from .sources.health import record_source_event
+
+        record_source_event(
+            source,
+            success=success,
+            latency_ms=(time.perf_counter() - started) * 1000,
+            error=error,
+        )
+    except Exception:
+        pass
+
+
 class _MemoryCache:
     """Default in-process TTL cache (no external deps)."""
 
@@ -157,10 +173,12 @@ async def fetch_text(
     ``source`` is an optional label used for ``source_requests_total``; pass the
     source name (e.g. ``"otakudesu"``) to keep the metric useful for dashboards.
     """
+    started = time.perf_counter()
     key = _cache_key("GET", url, params)
     cached = await _cache.get(key)
     if cached is not None:
         cache_hits_total.inc()
+        _record(source, success=True, started=started)
         return cached
     cache_misses_total.inc()
 
@@ -174,6 +192,7 @@ async def fetch_text(
         # useful in tests and dev. The status is 200 because the fixture exists.
         if source:
             source_requests_total.labels(source=source, method="GET", status="200").inc()
+        _record(source, success=True, started=started)
         return text
 
     client = await get_client()
@@ -189,10 +208,15 @@ async def fetch_text(
                     source=source, method="GET", status="200"
                 ).inc()
             await _cache.set(key, text)
+            _record(source, success=True, started=started)
             return text
-        except Exception:
+        except Exception as e:
             # Fall through to normal error mapping below.
-            pass
+            fs_err = str(e)
+        else:
+            fs_err = None
+    else:
+        fs_err = None
 
     try:
         resp.raise_for_status()
@@ -201,14 +225,17 @@ async def fetch_text(
             source_requests_total.labels(source=source, method="GET", status=status).inc()
         from .sources.base import SourceError
 
-        raise SourceError(
-            f"{source or 'upstream'} HTTP {resp.status_code} for {url}"
-        ) from e
+        msg = f"{source or 'upstream'} HTTP {resp.status_code} for {url}"
+        if fs_err:
+            msg = f"{msg} (flaresolverr: {fs_err[:120]})"
+        _record(source, success=False, started=started, error=msg)
+        raise SourceError(msg) from e
     else:
         if source:
             source_requests_total.labels(source=source, method="GET", status=status).inc()
     text = resp.text
     await _cache.set(key, text)
+    _record(source, success=True, started=started)
     return text
 
 
@@ -264,10 +291,12 @@ async def fetch_json(
 
     ``source`` is an optional metric label forwarded to ``source_requests_total``.
     """
+    started = time.perf_counter()
     key = _cache_key(method, url, params, body=json_body)
     cached = await _cache.get(key)
     if cached is not None:
         cache_hits_total.inc()
+        _record(source, success=True, started=started)
         return json.loads(cached)
     cache_misses_total.inc()
 
@@ -279,6 +308,7 @@ async def fetch_json(
         # Fixture reads count as source activity (200 OK). See fetch_text.
         if source:
             source_requests_total.labels(source=source, method=method, status="200").inc()
+        _record(source, success=True, started=started)
         return json.loads(text)
 
     client = await get_client()
@@ -303,9 +333,9 @@ async def fetch_json(
                 ).inc()
             from .sources.base import SourceError
 
-            raise SourceError(
-                f"{source or 'upstream'} HTTP {resp.status_code} for {url}"
-            ) from e
+            msg = f"{source or 'upstream'} HTTP {resp.status_code} for {url}"
+            _record(source, success=False, started=started, error=msg)
+            raise SourceError(msg) from e
         else:
             if source:
                 source_requests_total.labels(
@@ -315,6 +345,7 @@ async def fetch_json(
     assert resp is not None  # loop above always runs at least once
     text = resp.text
     await _cache.set(key, text)
+    _record(source, success=True, started=started)
     return json.loads(text)
 
 

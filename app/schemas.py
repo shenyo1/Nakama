@@ -110,6 +110,8 @@ class ChapterDetail(BaseModel):
     images: List[ChapterImage] = []
     next: Optional[str] = None
     prev: Optional[str] = None
+    # Optional machine-readable notes (e.g. images gated by upstream auth).
+    notes: Optional[str] = None
 
 
 class Genre(BaseModel):

@@ -34,7 +34,23 @@ try:
   up=data.get('uptime_seconds')
   off=data.get('offline_mode')
   print(f"sources={total} offline={off} uptime_s={round(float(up or 0),1)}")
-except Exception as e:
+except Exception:
+  print('parse_error')
+PY
+)
+fi
+
+# source health summary (passive + optional probe of degraded)
+health_line="n/a"
+health_code=$(check https://mynakama.web.id/sources/health)
+if [[ "$health_code" == "200" ]]; then
+  health_line=$(python3 - <<'PY'
+import json
+try:
+  d=json.load(open('/tmp/nakama_digest_body.json'))
+  s=(d.get('data') or {}).get('summary') or {}
+  print(f"healthy={s.get('healthy')} degraded={s.get('degraded')} down={s.get('down')} unknown={s.get('unknown')}")
+except Exception:
   print('parse_error')
 PY
 )
@@ -70,6 +86,7 @@ MSG="📊 Nakama daily digest
 • time: ${TS}
 • health: ${api_health}
 • stats: ${api_stats} (${stats_line})
+• sources: ${health_line}
 • app: ${app_home}
 • protected_no_key: ${prot} (want 401)
 • monitor_fails_24h_log: ${fail_count}
@@ -79,6 +96,7 @@ MSG="📊 Nakama daily digest
 • containers: ${docker_line}
 • urls:
   - https://mynakama.web.id/health
+  - https://mynakama.web.id/sources/health
   - https://app.mynakama.web.id"
 
 curl -sS --max-time 15 -X POST \

@@ -29,6 +29,7 @@ from .routers import proxy as proxy_router
 from .routers import search as search_router
 from .routers import history as history_router
 from .routers import ws as ws_router
+from .routers import sources as sources_router
 from .schemas import ApiResponse
 from .sources import list_anime_sources, list_comic_sources, list_novel_sources
 
@@ -94,7 +95,16 @@ app.add_middleware(
 # with /anime, /comic, or /novel must carry header `X-API-Key: *** Public paths
 # (/health, /, /docs, /redoc, /openapi.json) are always exempt. When API_KEY is
 # unset, auth is disabled — preserving open access for local/dev/offline use.
-_PUBLIC_PREFIXES = ("/health", "/docs", "/redoc", "/openapi.json", "/favicon.ico")
+_PUBLIC_PREFIXES = (
+    "/health",
+    "/docs",
+    "/redoc",
+    "/openapi.json",
+    "/favicon.ico",
+    "/stats",
+    "/sources/health",
+    "/metrics",
+)
 
 
 @app.middleware("http")
@@ -102,7 +112,11 @@ async def api_key_auth(request: Request, call_next):
     s = get_settings()
     if s.api_key:
         path = request.url.path
-        is_public = path == "/" or path in _PUBLIC_PREFIXES
+        is_public = (
+            path == "/"
+            or path in _PUBLIC_PREFIXES
+            or path.startswith("/sources/health")
+        )
         if not is_public and (
             path.startswith("/anime")
             or path.startswith("/comic")
@@ -151,6 +165,7 @@ app.include_router(proxy_router.router)
 app.include_router(search_router.router)
 app.include_router(history_router.router)
 app.include_router(ws_router.router)
+app.include_router(sources_router.router)
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)

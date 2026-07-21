@@ -264,6 +264,10 @@ class KomikcastSource(ComicSource):
             chapter=title,
             url=reader,
             images=[],
+            notes=(
+                "Chapter page images require authenticated access on "
+                "be.komikcast.cc; use the reader URL or MangaDex/Komiku for images."
+            ),
         ).model_dump()
 
     async def _chapter_offline_html(self, slug: str) -> dict:
