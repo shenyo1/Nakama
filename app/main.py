@@ -28,6 +28,7 @@ from .routers import novel as novel_router
 from .routers import proxy as proxy_router
 from .routers import search as search_router
 from .routers import history as history_router
+from .routers import comic_fallback as comic_fallback_router
 from .routers import ws as ws_router
 from .routers import sources as sources_router
 from .schemas import ApiResponse
@@ -106,6 +107,21 @@ _PUBLIC_PREFIXES = (
     "/metrics",
 )
 
+# Cache-Control policy table. Cloudflare Free honours Cache-Control on the
+# origin response; nginx already forwards the header untouched. Paths not
+# listed get no explicit Cache-Control header (origin default applies).
+_CACHE_RULES = (
+    # (prefix, public_seconds, must_revalidate, private)
+    ("/health", 0, True, True),
+    ("/stats", 0, True, True),
+    ("/sources/health", 0, True, True),
+    ("/openapi.json", 300, False, False),
+    ("/anime/", 60, False, False),
+    ("/comic/", 60, False, False),
+    ("/novel/", 120, False, False),
+    ("/search", 30, False, False),
+)
+
 
 @app.middleware("http")
 async def api_key_auth(request: Request, call_next):
@@ -138,6 +154,32 @@ async def api_key_auth(request: Request, call_next):
 #   - path: matched route template (e.g. /anime/{source}/home) when available,
 #           falling back to the raw path
 #   - status: response status code as a string
+# Also attaches Cache-Control headers so Cloudflare can cache listings.
+@app.middleware("http")
+async def cache_control_middleware(request: Request, call_next):
+    response: Response = await call_next(request)
+    if response.status_code == 200:
+        path = request.url.path
+        for prefix, ttl, must_revalidate, private in _CACHE_RULES:
+            if path == prefix or path.startswith(prefix):
+                parts = []
+                if private:
+                    parts.append("private")
+                else:
+                    parts.append("public")
+                if ttl <= 0:
+                    parts.append("no-store")
+                else:
+                    parts.append(f"max-age={ttl}")
+                    if must_revalidate:
+                        parts.append("must-revalidate")
+                # Hint Cloudflare to vary by API key (auth header) and Accept-Encoding.
+                response.headers["Cache-Control"] = ", ".join(parts)
+                response.headers["Vary"] = "Accept-Encoding, Authorization"
+                break
+    return response
+
+
 @app.middleware("http")
 async def prometheus_middleware(request: Request, call_next):
     if request.url.path == "/metrics":
@@ -165,6 +207,7 @@ app.include_router(proxy_router.router)
 app.include_router(search_router.router)
 app.include_router(history_router.router)
 app.include_router(ws_router.router)
+app.include_router(comic_fallback_router.router)
 app.include_router(sources_router.router)
 
 
