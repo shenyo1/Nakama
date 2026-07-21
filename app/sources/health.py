@@ -1,14 +1,13 @@
-"""In-process source health scoreboard.
+"""Redis-backed (with in-process fallback) source health scoreboard.
 
-Tracks per-source success/failure, latency, last error, and capability flags.
-Used by ``GET /sources/health`` and optional active probes. Pure process state —
-resets on restart (which is fine for ops dashboards; Prometheus retains history).
+When REDIS_URL is set, counters are shared across uvicorn workers via Redis
+hashes/lists. Without Redis, falls back to process-local state (dev/tests).
 """
 from __future__ import annotations
 
 import asyncio
+import json
 import time
-from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from .registry import (
@@ -20,8 +19,6 @@ from .registry import (
     novel_source,
 )
 
-
-# Static capability notes so clients know what each source can do.
 SOURCE_META: Dict[str, Dict[str, Any]] = {
     "otakudesu": {"kind": "anime", "transport": "html", "notes": "Primary ID anime scraper"},
     "kura": {"kind": "anime", "transport": "html", "notes": "Alias of otakudesu"},
@@ -49,109 +46,161 @@ SOURCE_META: Dict[str, Dict[str, Any]] = {
     },
 }
 
+_PREFIX = "nakama:health:"
+_LOCAL: Dict[str, Dict[str, Any]] = {}
+_REDIS = None
+_REDIS_LOCK = asyncio.Lock()
+_REDIS_FAILED = False
 
-@dataclass
-class SourceHealth:
-    name: str
-    kind: str = "unknown"
-    ok: int = 0
-    fail: int = 0
-    last_status: str = "unknown"  # ok | error | unknown
-    last_latency_ms: Optional[float] = None
-    last_error: Optional[str] = None
-    last_success_at: Optional[float] = None
-    last_failure_at: Optional[float] = None
-    latencies_ms: List[float] = field(default_factory=list)
 
-    def record(self, *, success: bool, latency_ms: float, error: Optional[str] = None) -> None:
-        now = time.time()
-        self.last_latency_ms = round(latency_ms, 2)
-        self.latencies_ms.append(latency_ms)
-        if len(self.latencies_ms) > 50:
-            self.latencies_ms = self.latencies_ms[-50:]
-        if success:
-            self.ok += 1
-            self.last_status = "ok"
-            self.last_success_at = now
-            self.last_error = None
-        else:
-            self.fail += 1
-            self.last_status = "error"
-            self.last_failure_at = now
-            self.last_error = (error or "error")[:300]
+def _empty_state(name: str, kind: str = "unknown") -> Dict[str, Any]:
+    meta = SOURCE_META.get(name, {})
+    return {
+        "name": name,
+        "kind": meta.get("kind") or kind,
+        "ok": 0,
+        "fail": 0,
+        "last_status": "unknown",
+        "last_latency_ms": None,
+        "last_error": None,
+        "last_success_at": None,
+        "last_failure_at": None,
+        "latencies_ms": [],
+    }
 
-    @property
-    def total(self) -> int:
-        return self.ok + self.fail
 
-    @property
-    def success_rate(self) -> Optional[float]:
-        if self.total == 0:
+async def _redis():
+    global _REDIS, _REDIS_FAILED
+    if _REDIS_FAILED:
+        return None
+    if _REDIS is not None:
+        return _REDIS
+    async with _REDIS_LOCK:
+        if _REDIS is not None:
+            return _REDIS
+        try:
+            from ..config import get_settings
+
+            url = get_settings().redis_url
+            if not url:
+                _REDIS_FAILED = True
+                return None
+            import redis.asyncio as aioredis
+
+            client = aioredis.from_url(url, decode_responses=True)
+            await client.ping()
+            _REDIS = client
+            return _REDIS
+        except Exception:
+            _REDIS_FAILED = True
             return None
-        return round(self.ok / self.total, 4)
 
-    @property
-    def p50_ms(self) -> Optional[float]:
-        if not self.latencies_ms:
-            return None
-        s = sorted(self.latencies_ms)
-        return round(s[len(s) // 2], 2)
 
-    @property
-    def p95_ms(self) -> Optional[float]:
-        if not self.latencies_ms:
-            return None
-        s = sorted(self.latencies_ms)
-        idx = max(0, int(len(s) * 0.95) - 1)
-        return round(s[idx], 2)
-
-    def status_label(self) -> str:
-        """healthy | degraded | down | unknown"""
-        if self.total == 0:
-            return "unknown"
-        if self.last_status == "error" and self.fail >= 2 and self.ok == 0:
-            return "down"
-        if self.last_status == "error":
-            return "degraded"
-        rate = self.success_rate or 0
-        if rate >= 0.9:
-            return "healthy"
-        if rate >= 0.5:
-            return "degraded"
+def _status_label(state: Dict[str, Any]) -> str:
+    total = int(state.get("ok", 0)) + int(state.get("fail", 0))
+    if total == 0:
+        return "unknown"
+    last = state.get("last_status") or "unknown"
+    ok = int(state.get("ok", 0))
+    fail = int(state.get("fail", 0))
+    if last == "error" and fail >= 2 and ok == 0:
         return "down"
-
-    def to_dict(self) -> dict:
-        meta = SOURCE_META.get(self.name, {})
-        return {
-            "name": self.name,
-            "kind": meta.get("kind") or self.kind,
-            "status": self.status_label(),
-            "ok": self.ok,
-            "fail": self.fail,
-            "total": self.total,
-            "success_rate": self.success_rate,
-            "last_status": self.last_status,
-            "last_latency_ms": self.last_latency_ms,
-            "p50_ms": self.p50_ms,
-            "p95_ms": self.p95_ms,
-            "last_error": self.last_error,
-            "last_success_at": self.last_success_at,
-            "last_failure_at": self.last_failure_at,
-            "transport": meta.get("transport"),
-            "notes": meta.get("notes"),
-            "limitations": meta.get("limitations") or [],
-        }
+    if last == "error":
+        return "degraded"
+    rate = ok / total if total else 0
+    if rate >= 0.9:
+        return "healthy"
+    if rate >= 0.5:
+        return "degraded"
+    return "down"
 
 
-_LOCK = asyncio.Lock()
-_STATE: Dict[str, SourceHealth] = {}
+def _p_latency(latencies: List[float], q: float) -> Optional[float]:
+    if not latencies:
+        return None
+    s = sorted(float(x) for x in latencies)
+    if q <= 0.5:
+        return round(s[len(s) // 2], 2)
+    idx = max(0, int(len(s) * q) - 1)
+    return round(s[idx], 2)
 
 
-def _ensure(name: str, kind: str = "unknown") -> SourceHealth:
-    if name not in _STATE:
-        meta = SOURCE_META.get(name, {})
-        _STATE[name] = SourceHealth(name=name, kind=meta.get("kind") or kind)
-    return _STATE[name]
+def _to_dict(state: Dict[str, Any]) -> dict:
+    meta = SOURCE_META.get(state["name"], {})
+    ok = int(state.get("ok", 0))
+    fail = int(state.get("fail", 0))
+    total = ok + fail
+    lats = state.get("latencies_ms") or []
+    return {
+        "name": state["name"],
+        "kind": meta.get("kind") or state.get("kind") or "unknown",
+        "status": _status_label(state),
+        "ok": ok,
+        "fail": fail,
+        "total": total,
+        "success_rate": round(ok / total, 4) if total else None,
+        "last_status": state.get("last_status") or "unknown",
+        "last_latency_ms": state.get("last_latency_ms"),
+        "p50_ms": _p_latency(lats, 0.5),
+        "p95_ms": _p_latency(lats, 0.95),
+        "last_error": state.get("last_error"),
+        "last_success_at": state.get("last_success_at"),
+        "last_failure_at": state.get("last_failure_at"),
+        "transport": meta.get("transport"),
+        "notes": meta.get("notes"),
+        "limitations": meta.get("limitations") or [],
+    }
+
+
+async def _load_state(name: str, kind: str = "unknown") -> Dict[str, Any]:
+    r = await _redis()
+    if r is None:
+        if name not in _LOCAL:
+            _LOCAL[name] = _empty_state(name, kind)
+        return _LOCAL[name]
+    key = f"{_PREFIX}{name}"
+    raw = await r.hgetall(key)
+    if not raw:
+        st = _empty_state(name, kind)
+        return st
+    lats_raw = raw.get("latencies_ms") or "[]"
+    try:
+        lats = json.loads(lats_raw)
+    except Exception:
+        lats = []
+    return {
+        "name": name,
+        "kind": raw.get("kind") or kind,
+        "ok": int(raw.get("ok") or 0),
+        "fail": int(raw.get("fail") or 0),
+        "last_status": raw.get("last_status") or "unknown",
+        "last_latency_ms": float(raw["last_latency_ms"]) if raw.get("last_latency_ms") else None,
+        "last_error": raw.get("last_error") or None,
+        "last_success_at": float(raw["last_success_at"]) if raw.get("last_success_at") else None,
+        "last_failure_at": float(raw["last_failure_at"]) if raw.get("last_failure_at") else None,
+        "latencies_ms": lats,
+    }
+
+
+async def _save_state(state: Dict[str, Any]) -> None:
+    r = await _redis()
+    if r is None:
+        _LOCAL[state["name"]] = state
+        return
+    key = f"{_PREFIX}{state['name']}"
+    mapping = {
+        "kind": state.get("kind") or "unknown",
+        "ok": str(int(state.get("ok", 0))),
+        "fail": str(int(state.get("fail", 0))),
+        "last_status": state.get("last_status") or "unknown",
+        "last_latency_ms": "" if state.get("last_latency_ms") is None else str(state["last_latency_ms"]),
+        "last_error": state.get("last_error") or "",
+        "last_success_at": "" if state.get("last_success_at") is None else str(state["last_success_at"]),
+        "last_failure_at": "" if state.get("last_failure_at") is None else str(state["last_failure_at"]),
+        "latencies_ms": json.dumps(list(state.get("latencies_ms") or [])[-50:]),
+    }
+    await r.hset(key, mapping=mapping)
+    await r.expire(key, 60 * 60 * 24 * 7)  # 7d retention
 
 
 def record_source_event(
@@ -162,14 +211,77 @@ def record_source_event(
     error: Optional[str] = None,
     kind: str = "unknown",
 ) -> None:
+    """Sync entrypoint used by HTTP layer; schedules async Redis write."""
     if not source:
         return
-    h = _ensure(source, kind=kind)
-    h.record(success=success, latency_ms=latency_ms, error=error)
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # No loop (rare): local only
+        st = _LOCAL.get(source) or _empty_state(source, kind)
+        _apply_event(st, success=success, latency_ms=latency_ms, error=error)
+        _LOCAL[source] = st
+        return
+    loop.create_task(
+        _record_async(source, success=success, latency_ms=latency_ms, error=error, kind=kind)
+    )
+
+
+def _apply_event(
+    st: Dict[str, Any],
+    *,
+    success: bool,
+    latency_ms: float,
+    error: Optional[str],
+) -> None:
+    now = time.time()
+    st["last_latency_ms"] = round(latency_ms, 2)
+    lats = list(st.get("latencies_ms") or [])
+    lats.append(latency_ms)
+    st["latencies_ms"] = lats[-50:]
+    if success:
+        st["ok"] = int(st.get("ok", 0)) + 1
+        st["last_status"] = "ok"
+        st["last_success_at"] = now
+        st["last_error"] = None
+    else:
+        st["fail"] = int(st.get("fail", 0)) + 1
+        st["last_status"] = "error"
+        st["last_failure_at"] = now
+        st["last_error"] = (error or "error")[:300]
+
+
+async def _record_async(
+    source: str,
+    *,
+    success: bool,
+    latency_ms: float,
+    error: Optional[str],
+    kind: str,
+) -> None:
+    try:
+        st = await _load_state(source, kind=kind)
+        _apply_event(st, success=success, latency_ms=latency_ms, error=error)
+        await _save_state(st)
+    except Exception:
+        # Never break request path for health accounting.
+        pass
 
 
 def snapshot() -> dict:
-    """Return full scoreboard for all registered sources."""
+    """Sync snapshot for FastAPI handlers (loads Redis via short event loop hop)."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+    if loop and loop.is_running():
+        # Called from async context — schedule is wrong; use local/cache best-effort.
+        # Prefer awaitable snapshot_async from async handlers.
+        return _snapshot_from_local()
+    return asyncio.run(snapshot_async())
+
+
+def _snapshot_from_local() -> dict:
     names = (
         [(n, "anime") for n in list_anime_sources()]
         + [(n, "comic") for n in list_comic_sources()]
@@ -177,9 +289,25 @@ def snapshot() -> dict:
     )
     sources = []
     for name, kind in names:
-        h = _ensure(name, kind=kind)
-        sources.append(h.to_dict())
-    # sort: down first, then degraded, healthy, unknown
+        st = _LOCAL.get(name) or _empty_state(name, kind)
+        sources.append(_to_dict(st))
+    return _pack(sources)
+
+
+async def snapshot_async() -> dict:
+    names = (
+        [(n, "anime") for n in list_anime_sources()]
+        + [(n, "comic") for n in list_comic_sources()]
+        + [(n, "novel") for n in list_novel_sources()]
+    )
+    sources = []
+    for name, kind in names:
+        st = await _load_state(name, kind=kind)
+        sources.append(_to_dict(st))
+    return _pack(sources)
+
+
+def _pack(sources: List[dict]) -> dict:
     order = {"down": 0, "degraded": 1, "unknown": 2, "healthy": 3}
     sources.sort(key=lambda s: (order.get(s["status"], 9), s["name"]))
     summary = {
@@ -193,11 +321,11 @@ def snapshot() -> dict:
         "summary": summary,
         "sources": sources,
         "infra": _infra_status(),
+        "backend": "redis" if (_REDIS is not None and not _REDIS_FAILED) else "memory",
     }
 
 
 def _infra_status() -> dict:
-    """Infra flags + cheap upstream auth reachability (best-effort, no auth)."""
     try:
         from ..config import get_settings
 
@@ -210,15 +338,23 @@ def _infra_status() -> dict:
             "komikcast_api_base": s.komikcast_api_base,
             "komikcast_token_configured": bool(s.komikcast_token),
             "sakuranovel_base_url": s.sakuranovel_base_url,
+            "redis_url_configured": bool(s.redis_url),
+            "database_url_scheme": (s.__dict__.get("database_url") or "")[:32]
+            if hasattr(s, "database_url")
+            else None,
         }
-        # Best-effort TCP/HTTP probe for Komikcast Appwrite auth host.
-        # Does not use secrets; only reports whether auth backend is reachable.
+        # database scheme from env
+        import os
+
+        db = os.getenv("DATABASE_URL") or ""
+        out["database_backend"] = (
+            "postgres" if db.startswith("postgres") else ("sqlite" if "sqlite" in db or not db else "other")
+        )
+        out["workers"] = int(os.getenv("WEB_CONCURRENCY") or os.getenv("UVICORN_WORKERS") or "1")
         out["komikcast_appwrite_auth"] = _probe_host(
-            "https://appwrite.komikcast.com/v1/health",
-            timeout=3.0,
+            "https://appwrite.komikcast.com/v1/health", timeout=3.0
         )
         if s.flaresolverr_url:
-            # readiness of local FlareSolverr (same network as API)
             base = s.flaresolverr_url.rsplit("/v1", 1)[0] + "/"
             out["flaresolverr_ready"] = _probe_host(base, timeout=2.0)
         try:
@@ -233,7 +369,6 @@ def _infra_status() -> dict:
 
 
 def _probe_host(url: str, timeout: float = 3.0) -> dict:
-    """Return {ok, status, error} without raising."""
     import urllib.error
     import urllib.request
 
@@ -246,14 +381,12 @@ def _probe_host(url: str, timeout: float = 3.0) -> dict:
         with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310
             return {"ok": True, "status": getattr(r, "status", 200), "error": None}
     except urllib.error.HTTPError as e:
-        # HTTP response means host is up (even 401/404)
         return {"ok": True, "status": e.code, "error": None}
     except Exception as e:  # noqa: BLE001
         return {"ok": False, "status": None, "error": str(e)[:160]}
 
 
 async def probe_source(name: str) -> dict:
-    """Active health probe: call home/search lightly and record outcome."""
     started = time.perf_counter()
     kind = "unknown"
     err: Optional[str] = None
@@ -293,22 +426,24 @@ async def probe_source(name: str) -> dict:
         err = str(e)[:300]
         ok = False
     latency = (time.perf_counter() - started) * 1000
-    record_source_event(name, success=ok, latency_ms=latency, error=err, kind=kind)
-    result = _ensure(name, kind=kind).to_dict()
+    await _record_async(name, success=ok, latency_ms=latency, error=err, kind=kind)
+    st = await _load_state(name, kind=kind)
+    result = _to_dict(st)
     result["probe_items"] = items
     return result
 
 
 async def probe_all(timeout: float = 25.0) -> dict:
-    """Probe every registered source concurrently (bounded)."""
     names = list_anime_sources() + list_comic_sources() + list_novel_sources()
 
     async def _one(n: str):
         try:
             return await asyncio.wait_for(probe_source(n), timeout=timeout)
         except Exception as e:  # noqa: BLE001
-            record_source_event(n, success=False, latency_ms=timeout * 1000, error=str(e)[:200])
-            return _ensure(n).to_dict()
+            await _record_async(
+                n, success=False, latency_ms=timeout * 1000, error=str(e)[:200], kind="unknown"
+            )
+            return _to_dict(await _load_state(n))
 
     await asyncio.gather(*[_one(n) for n in names])
-    return snapshot()
+    return await snapshot_async()

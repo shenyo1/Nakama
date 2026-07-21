@@ -60,3 +60,16 @@ find "$BACKUP_ROOT" -maxdepth 1 -type f -name 'nakama-*.tgz' -mtime +"$KEEP_DAYS
 find "$BACKUP_ROOT" -maxdepth 1 -mindepth 1 -type d -mtime +"$KEEP_DAYS" -exec rm -rf {} +
 log "retention keep_days=$KEEP_DAYS done"
 log "backup complete"
+
+# Postgres dump (if DATABASE_URL points at postgres and docker db is up)
+if docker ps --format '{{.Names}}' | grep -qx nakama-db; then
+  if [[ -f /home/ubuntu/.config/nakama/postgres-password ]]; then
+    export PGPASSWORD=$(tr -d '\n' </home/ubuntu/.config/nakama/postgres-password)
+    if docker exec -e PGPASSWORD="$PGPASSWORD" nakama-db pg_dump -U nakama -d nakama -Fc -f /tmp/nakama.dump 2>/dev/null; then
+      docker cp nakama-db:/tmp/nakama.dump "$DEST/nakama.dump" 2>/dev/null || true
+      log "postgres dump copied"
+    else
+      log "postgres dump skipped/failed"
+    fi
+  fi
+fi

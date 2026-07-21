@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from ..config import get_settings
 from ..ratelimit import limiter
 from ..schemas import ApiResponse
-from ..sources.health import probe_all, probe_source, snapshot
+from ..sources.health import probe_all, probe_source, snapshot_async
 from ..sources.registry import (
     list_anime_sources,
     list_comic_sources,
@@ -25,15 +25,15 @@ async def sources_health(
         description="If true, actively probe every source home() (slow).",
     ),
 ):
-    """Return per-source health from in-process counters.
+    """Return per-source health from Redis/memory counters.
 
-    Without ``probe=true`` this is pure memory (fast). With ``probe=true`` the
-    API hits each source's home listing once and updates the scoreboard.
+    Without ``probe=true`` this is pure counter reads (fast). With
+    ``probe=true`` the API hits each source home once and updates the board.
     """
     if probe:
         data = await probe_all(timeout=20.0)
     else:
-        data = snapshot()
+        data = await snapshot_async()
     return ApiResponse(data=data)
 
 
@@ -57,8 +57,7 @@ async def source_health_one(
     if probe:
         data = await probe_source(name)
     else:
-        # passive snapshot entry
-        board = snapshot()
+        board = await snapshot_async()
         data = next((s for s in board["sources"] if s["name"] == name), None)
         if data is None:
             raise HTTPException(status_code=404, detail=f"No health data for {name}")

@@ -3,13 +3,42 @@
 # API on localhost:8000, frontend on localhost:3000. Nginx terminates TLS.
 
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: nakama-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nakama}
+      POSTGRES_USER: ${POSTGRES_USER:-nakama}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nakama_change_me}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # keep private to compose network only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nakama} -d ${POSTGRES_DB:-nakama}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    mem_limit: 384m
+
   api:
     build:
       context: .
       dockerfile: Dockerfile
     image: nakama-api:latest
     container_name: nakama-api
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    # 2 workers share Redis-backed health counters (Tier 3).
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--workers",
+        "${UVICORN_WORKERS:-2}",
+      ]
     env_file:
       - .env.production
     ports:
@@ -20,7 +49,7 @@ services:
       REQUEST_TIMEOUT: ${REQUEST_TIMEOUT:-20}
       RATE_LIMIT: ${RATE_LIMIT:-60/minute}
       REDIS_URL: redis://redis:6379/0
-      DATABASE_URL: sqlite+aiosqlite:////data/nakamadb.sqlite
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://nakama:nakama_change_me@db:5432/nakama}
       API_KEY: ${API_KEY}
       FLARESOLVERR_URL: ${FLARESOLVERR_URL:-}
       KIRYUU_BASE_URL: ${KIRYUU_BASE_URL:-https://v7.kiryuu.to}
@@ -28,12 +57,17 @@ services:
       KOMIKCAST_BASE_URL: ${KOMIKCAST_BASE_URL:-https://v3.komikcast.fit}
       KOMIKCAST_TOKEN: ${KOMIKCAST_TOKEN:-}
       SAKURANOVEL_BASE_URL: ${SAKURANOVEL_BASE_URL:-https://sakuranovel.id}
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+      WEB_CONCURRENCY: ${UVICORN_WORKERS:-2}
     volumes:
       - ./data:/data
     depends_on:
       redis:
         condition: service_healthy
+      db:
+        condition: service_healthy
     restart: unless-stopped
+    mem_limit: 768m
     healthcheck:
       test:
         [
@@ -45,7 +79,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 20s
+      start_period: 30s
 
   frontend:
     build:
@@ -70,6 +104,7 @@ services:
       api:
         condition: service_healthy
     restart: unless-stopped
+    mem_limit: 256m
     healthcheck:
       test:
         [
@@ -86,7 +121,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: nakama-redis
-    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
     volumes:
       - redis-data:/data
     healthcheck:
@@ -95,6 +130,8 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
+    mem_limit: 160m
 
 volumes:
   redis-data:
+  postgres-data:

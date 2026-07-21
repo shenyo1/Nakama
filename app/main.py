@@ -30,6 +30,7 @@ from .routers import search as search_router
 from .routers import history as history_router
 from .routers import comic_fallback as comic_fallback_router
 from .routers import outages as outages_router
+from .routers import analytics as analytics_router
 from .routers import ws as ws_router
 from .routers import sources as sources_router
 from .schemas import ApiResponse
@@ -106,6 +107,7 @@ _PUBLIC_PREFIXES = (
     "/stats",
     "/sources/health",
     "/outages",
+    "/analytics",
     "/metrics",
 )
 
@@ -118,6 +120,7 @@ _CACHE_RULES = (
     ("/stats", 0, True, True),
     ("/sources/health", 0, True, True),
     ("/outages", 0, True, True),
+    ("/analytics", 0, True, True),
     ("/openapi.json", 300, False, False),
     ("/anime/", 60, False, False),
     ("/comic/", 60, False, False),
@@ -136,6 +139,7 @@ async def api_key_auth(request: Request, call_next):
             or path in _PUBLIC_PREFIXES
             or path.startswith("/sources/health")
             or path.startswith("/outages")
+            or path.startswith("/analytics")
         )
         if not is_public and (
             path.startswith("/anime")
@@ -189,6 +193,12 @@ async def prometheus_middleware(request: Request, call_next):
     if request.url.path == "/metrics":
         # Don't observe scrapes of our own metrics endpoint.
         return await call_next(request)
+    try:
+        from .routers.analytics import note_request
+
+        note_request()
+    except Exception:
+        pass
     started = time.perf_counter()
     response: Response = await call_next(request)
     duration = time.perf_counter() - started
@@ -213,6 +223,7 @@ app.include_router(history_router.router)
 app.include_router(ws_router.router)
 app.include_router(comic_fallback_router.router)
 app.include_router(outages_router.router)
+app.include_router(analytics_router.router)
 app.include_router(sources_router.router)
 
 

@@ -106,3 +106,11 @@ shred -u /tmp/nakama_gha /tmp/nakama_gha.pub
 
 ## Note
 `NEXT_PUBLIC_*` must never hold secrets. Only `API_KEY` (server env) + `API_INTERNAL_URL` (+ optional `KOMIKCAST_TOKEN`).
+
+
+## Tier 3 data plane
+- Postgres: container `nakama-db` (private network), `DATABASE_URL=postgresql+asyncpg://...@db:5432/nakama`
+- Password file: `/home/ubuntu/.config/nakama/postgres-password`
+- Migrate: `deploy/migrate_sqlite_to_postgres.sh`
+- API workers: 2 (Redis-backed `/sources/health` counters)
+- Analytics: `GET /analytics` (request rate + cost guard + cache policy)

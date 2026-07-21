@@ -1,6 +1,8 @@
 """Tests for /sources/health scoreboard."""
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -17,9 +19,13 @@ async def client():
 
 @pytest.fixture(autouse=True)
 def _reset_health_state():
-    health_mod._STATE.clear()
+    health_mod._LOCAL.clear()
+    health_mod._REDIS = None
+    health_mod._REDIS_FAILED = False
     yield
-    health_mod._STATE.clear()
+    health_mod._LOCAL.clear()
+    health_mod._REDIS = None
+    health_mod._REDIS_FAILED = False
 
 
 @pytest.mark.asyncio
@@ -45,6 +51,8 @@ async def test_sources_health_records_after_traffic(client):
     # exercise offline fixtures for a comic source
     r = await client.get("/comic/kiryuu/home")
     assert r.status_code == 200
+    # allow background health write task to flush
+    await asyncio.sleep(0.05)
     r2 = await client.get("/sources/health")
     data = r2.json()["data"]
     kiryuu = next(s for s in data["sources"] if s["name"] == "kiryuu")
