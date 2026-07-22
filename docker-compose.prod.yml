@@ -61,6 +61,8 @@ services:
       WEB_CONCURRENCY: ${UVICORN_WORKERS:-2}
     volumes:
       - ./data:/data
+      # Camoufox browser binary (663MB, too heavy for Docker image)
+      - /home/ubuntu/.cache/camoufox:/home/nakama/.cache/camoufox:rw
     depends_on:
       redis:
         condition: service_healthy

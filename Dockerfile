@@ -31,11 +31,26 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     CACHE_TTL_SECONDS=900 \
     REQUEST_TIMEOUT=20 \
     RATE_LIMIT=60/minute \
-    PORT=8000
+    PORT=8000 \
+    CAMOUFOX_BROWSER_DIR=/home/nakama/.cache/camoufox/browsers
+
+# Install Firefox system deps for Camoufox browser automation
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libgtk-3-0 libdbus-glib-1-2 libx11-6 libx11-xcb1 \
+        libxcb1 libxcomposite1 libxcursor1 libxdamage1 \
+        libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 \
+        libxtst6 libglib2.0-0 libnss3 libnspr4 libatk1.0-0 \
+        libatk-bridge2.0-0 libcups2 libdrm2 libpango-1.0-0 \
+        libcairo2 libasound2 libxss1 libgbm1 \
+        fonts-liberation libappindicator3-1 xdg-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for runtime
 RUN groupadd --system --gid 1001 nakama \
-    && useradd --system --uid 1001 --gid nakama --no-create-home --shell /sbin/nologin nakama
+    && useradd --system --uid 1001 --gid nakama --no-create-home --shell /sbin/nologin nakama \
+    && mkdir -p /home/nakama/.cache/camoufox \
+    && chown -R nakama:nakama /home/nakama
 
 # Copy installed Python packages from builder
 COPY --from=builder /install /usr/local

@@ -142,18 +142,19 @@ def _parse_listing(html: str, base_url: str) -> List[dict]:
         href = a.get("href", "")
         if "/comic/" not in href:
             continue
-        if href in seen:
-            continue
-        seen.add(href)
         text = a.get_text(strip=True)
-        # Filter out non-title links
+        # Skip empty or navigation links
         if len(text) < 5 or text.lower() in ("manga list", "history", "bookmark"):
             continue
+        full_href = href if href.startswith("http") else base_url + href
+        if full_href in seen:
+            continue
+        seen.add(full_href)
         slug = href.rstrip("/").split("/")[-1]
         results.append({
             "title": text,
             "slug": slug,
-            "url": href if href.startswith("http") else base_url + href,
+            "url": full_href,
             "source": "westmanga",
         })
     return results
