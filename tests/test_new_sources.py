@@ -51,6 +51,7 @@ def _ns(n):
 
 
 @pytest.mark.asyncio
+@pytest.mark.network
 @pytest.mark.skipif(
     os.environ.get("CI", "") == "true" and not _fixture_exists("https://bacakomik.my/"),
     reason="fixture not available in CI environment",
@@ -73,6 +74,7 @@ async def test_bacakomik_home_returns_items():
 
 
 @pytest.mark.asyncio
+@pytest.mark.network
 @pytest.mark.skipif(
     os.environ.get("CI", "") == "true" and not _fixture_exists("https://bacakomik.my/"),
     reason="fixture not available in CI environment",
@@ -136,6 +138,7 @@ async def test_anichin_home_uses_ongoing():
 
 
 @pytest.mark.asyncio
+@pytest.mark.network
 @pytest.mark.skipif(
     os.environ.get("CI", "") == "true" and not _fixture_exists("https://anichin.cafe/"),
     reason="fixture not available in CI environment",

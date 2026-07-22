@@ -9,6 +9,7 @@ from typing import Deque, Dict, Optional
 from fastapi import APIRouter, Request
 
 from ..config import get_settings
+from ..quota import PLAN_QUOTAS
 from ..ratelimit import limiter
 from ..schemas import ApiResponse
 
@@ -108,6 +109,9 @@ async def analytics(request: Request):
                 "novel_max_age": 120,
                 "search_max_age": 30,
                 "health_no_store": True,
+            },
+            "quota_tiers": {
+                plan: limit for plan, limit in PLAN_QUOTAS.items()
             },
         }
     )
