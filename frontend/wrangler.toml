@@ -1,0 +1,10 @@
+name = "nakama-frontend"
+pages_build_output_dir = ".vercel/output/static"
+compatibility_date = "2025-07-22"
+
+[build]
+command = "npm run build"
+
+[build.environment]
+NEXT_PUBLIC_API_BASE = "https://mynakama.web.id"
+NODE_VERSION = "20"
