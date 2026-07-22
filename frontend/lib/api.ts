@@ -163,7 +163,7 @@ export const COMIC_SOURCES = [
   "mangadex",
   "shinigami",
 ] as const;
-export const NOVEL_SOURCES = ["sakuranovel", "novelbin"] as const;
+export const NOVEL_SOURCES = ["sakuranovel", "novelbin", "novelfull"] as const;
 
 // Back-compat alias used by older imports / docs.
 export const API_BASE = PUBLIC_API_BASE;

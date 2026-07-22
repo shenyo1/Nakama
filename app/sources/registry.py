@@ -20,6 +20,7 @@ def _build() -> None:
     from .mangadex import MangadexSource
     from .sakuranovel import SakuranovelSource
     from .novelbin import NovelbinSource
+    from .novelfull import NovelFullSource
     from .shinigami import ShinigamiSource
     from .otakudesu import OtakudesuSource
     from .anilist import AnilistSource
@@ -34,6 +35,7 @@ def _build() -> None:
     _REGISTRY["shinigami"] = ShinigamiSource()
     _REGISTRY["sakuranovel"] = SakuranovelSource()
     _REGISTRY["novelbin"] = NovelbinSource()
+    _REGISTRY["novelfull"] = NovelFullSource()
     # Adult-only sources (nekopoi, mangasusuku) intentionally excluded.
     _REGISTRY["kura"] = OtakudesuSource()  # otakudesu exposed under the "kura" alias
     _REGISTRY["otakudesu"] = OtakudesuSource()
