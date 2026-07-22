@@ -224,9 +224,10 @@ export class Anime {
    * Latest ongoing anime
    * @see GET /anime/{source}/home
    */
-  async home(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async home(source: string, params?: { "cursor"?: string; "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
+    if (p.cursor !== undefined) search.set("cursor", String(p.cursor));
     if (p.page !== undefined) search.set("page", String(p.page));
     if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
     const qs = search.toString();
@@ -346,9 +347,10 @@ export class Comic {
    * Latest comics
    * @see GET /comic/{source}/home
    */
-  async home(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async home(source: string, params?: { "cursor"?: string; "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
+    if (p.cursor !== undefined) search.set("cursor", String(p.cursor));
     if (p.page !== undefined) search.set("page", String(p.page));
     if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
     const qs = search.toString();
@@ -703,6 +705,9 @@ export class Search {
    * Cross-source search (anime/comic/novel)
    * @see GET /search
    * Search every source of *type* for *q* and return per-source results.
+   * 
+   * Results are cached for 30s (configurable via RESPONSE_CACHE_TTL_SECONDS)
+   * to avoid re-fanning-out on repeated queries within a session.
    */
   async cross(params?: { "q": string; "type"?: string }): Promise<unknown> {
     const p: any = (params as any) ?? {};
@@ -869,10 +874,38 @@ export class Stats {
    * * request rate (last 60s / 5m) from this process
    * * CF cache status histogram from recent samples (if any)
    * * process uptime / worker count / memory if available
+   * * search latency stats (p50, p95, p99)
+   * * per-source latency stats
+   * * cache backend stats
+   * * quota tier overview
    */
   async analytics(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const suffix = "";
     const url = `${this._client.baseUrl}/analytics${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Search performance breakdown
+   * @see GET /analytics/search
+   * Detailed search performance analytics.
+   * 
+   * Shows latency distribution by kind (anime/comic/novel),
+   * slowest queries, and cache hit ratio for search endpoints.
+   */
+  async search(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/analytics/search${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
     const init: RequestInit = {
       method: "GET",

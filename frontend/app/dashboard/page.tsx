@@ -1,6 +1,7 @@
 import { getJson } from "../../lib/api";
 
 export const runtime = "edge";
+
 export const dynamic = "force-dynamic";
 
 interface SourceHealth {
@@ -33,6 +34,14 @@ interface Analytics {
   requests: { last_60s: number; last_5m: number };
   memory: { VmSize: string; VmRSS: string };
   cost_guard: { load1: number; cores: number; load_ratio: number; alert: boolean };
+  search_latency?: {
+    samples: number;
+    p50_ms: number;
+    p95_ms: number;
+    avg_ms: number;
+  };
+  source_latency?: Record<string, { p50_ms: number; p95_ms: number; avg_ms: number; samples: number }>;
+  cache_backend?: { backend: string; size: number; max_size: number };
 }
 
 function statusColor(status: string): string {
@@ -80,13 +89,14 @@ export default async function DashboardPage() {
 
   const sources = health?.sources || [];
   const summary = health?.summary;
+  const totalSources = summary?.total ?? sources.length;
 
   return (
-    <div className="space-y-8">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+    <div className="space-y-6 sm:space-y-8">
+      <header className="space-y-1 sm:space-y-2">
+        <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
         <p className="text-sm text-ink-400">
-          Real-time monitoring for 20 sources across 6 anime, 9 comic, and 5 novel providers.
+          Real-time monitoring for {totalSources} sources across anime, comic, and novel providers.
         </p>
       </header>
 
@@ -98,7 +108,7 @@ export default async function DashboardPage() {
 
       {/* Summary row */}
       {summary ? (
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="grid gap-2 grid-cols-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {([
             ["Total", summary.total, "text-ink-50"],
             ["Healthy", summary.healthy, "text-neon-400"],
@@ -108,7 +118,7 @@ export default async function DashboardPage() {
           ] as const).map(([label, value, color]) => (
             <div key={label} className="card">
               <p className="text-xs uppercase tracking-wide text-ink-400">{label}</p>
-              <p className={`mt-1 text-3xl font-bold tabular-nums ${color}`}>{value}</p>
+              <p className={`mt-1 text-2xl font-bold tabular-nums ${color} sm:text-3xl`}>{value}</p>
             </div>
           ))}
         </section>
@@ -116,7 +126,7 @@ export default async function DashboardPage() {
 
       {/* Runtime metrics */}
       {analytics ? (
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="grid gap-2 grid-cols-2 sm:gap-3 lg:grid-cols-4">
           <MiniMetric
             label="Uptime"
             value={formatUptime(analytics.uptime_seconds)}
@@ -141,12 +151,39 @@ export default async function DashboardPage() {
         </section>
       ) : null}
 
+      {/* Search latency + cache stats */}
+      {analytics?.search_latency || analytics?.cache_backend ? (
+        <section className="grid gap-2 grid-cols-2 sm:gap-3 lg:grid-cols-4">
+          {analytics.search_latency ? (
+            <>
+              <MiniMetric
+                label="Search p50"
+                value={`${analytics.search_latency.p50_ms}ms`}
+                sub={`${analytics.search_latency.samples} samples`}
+              />
+              <MiniMetric
+                label="Search p95"
+                value={`${analytics.search_latency.p95_ms}ms`}
+                sub={`avg ${analytics.search_latency.avg_ms}ms`}
+              />
+            </>
+          ) : null}
+          {analytics.cache_backend ? (
+            <MiniMetric
+              label="Cache"
+              value={String(analytics.cache_backend.size)}
+              sub={`${analytics.cache_backend.backend}`}
+            />
+          ) : null}
+        </section>
+      ) : null}
+
       {/* Auto-repair status */}
       {health?.auto_repair ? (
         <section className="card">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-semibold">Auto-Repair</h2>
+              <h2 className="font-semibold text-sm sm:text-base">Auto-Repair</h2>
               <p className="text-xs text-ink-400 mt-0.5">
                 {health.auto_repair.enabled ? "Enabled" : "Disabled"}
                 {health.auto_repair.open_breakers?.length ? ` · ${health.auto_repair.open_breakers.length} breaker(s) open` : ""}
@@ -173,9 +210,9 @@ export default async function DashboardPage() {
       ) : null}
 
       {/* Source grid */}
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Sources</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <section className="space-y-2 sm:space-y-3">
+        <h2 className="text-lg font-semibold sm:text-xl">Sources</h2>
+        <div className="grid gap-2 grid-cols-1 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sources.map((s) => (
             <div
               key={s.name}
@@ -255,14 +292,18 @@ export default async function DashboardPage() {
       </section>
 
       {/* Quick links */}
-      <section className="border-t border-ink-800 pt-6 text-sm text-ink-400 space-y-1">
-        <p>
+      <section className="border-t border-ink-800 pt-4 text-sm text-ink-400 space-y-1 sm:pt-6">
+        <p className="text-xs sm:text-sm">
           <a href="https://mynakama.web.id/sources/health" className="text-sakura-400 hover:underline" target="_blank" rel="noreferrer">
             Health JSON
           </a>
           {" · "}
           <a href="https://mynakama.web.id/analytics" className="text-sakura-400 hover:underline" target="_blank" rel="noreferrer">
             Analytics JSON
+          </a>
+          {" · "}
+          <a href="https://mynakama.web.id/analytics/search" className="text-sakura-400 hover:underline" target="_blank" rel="noreferrer">
+            Search Analytics
           </a>
           {" · "}
           <a href="https://mynakama.web.id/stats" className="text-sakura-400 hover:underline" target="_blank" rel="noreferrer">
@@ -292,7 +333,7 @@ function MiniMetric({
   return (
     <div className={`card ${alert ? "border-amber-500/40 bg-amber-500/5" : ""}`}>
       <p className="text-xs uppercase tracking-wide text-ink-400">{label}</p>
-      <p className={`mt-1 text-2xl font-bold tabular-nums ${alert ? "text-amber-300" : "text-ink-50"}`}>
+      <p className={`mt-1 text-xl font-bold tabular-nums ${alert ? "text-amber-300" : "text-ink-50"} sm:text-2xl`}>
         {value}
       </p>
       {sub ? <p className="mt-0.5 text-xs text-ink-400">{sub}</p> : null}

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/shenyo1/Nakama/actions/workflows/ci.yml/badge.svg)](https://github.com/shenyo1/Nakama/actions)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Sources](https://img.shields.io/badge/sources-20-7C3AED?style=flat)](#-sources)
+[![Sources](https://img.shields.io/badge/sources-21-7C3AED?style=flat)](#-sources)
 [![Cloudflare](https://img.shields.io/badge/Cloudflare-Pages-F38020?style=flat&logo=cloudflare&logoColor=white)](https://app.mynakama.web.id)
 [![Tests](https://img.shields.io/badge/tests-271-brightgreen?style=flat)](#-tests)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
@@ -12,7 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-4ECDC4?style=flat)](LICENSE)
 
 A clean, extensible REST API that aggregates anime, comic, and novel data from
-**17 public sources** behind one consistent JSON interface. Built with
+**21 public sources** behind one consistent JSON interface. Built with
 **FastAPI**, deployed on **Cloudflare Pages**.
 
 > Repo: [shenyo1/Nakama](https://github.com/shenyo1/Nakama) · Deploy guide: [DEPLOY.md](DEPLOY.md)
@@ -42,7 +42,7 @@ A clean, extensible REST API that aggregates anime, comic, and novel data from
 - 🌐 **CORS** — open by default for browser clients; configure as needed.
 - 🔍 **Search** — every source exposes `/search/{query}`.
 - 📖 **Auto docs** — interactive Swagger UI at `/docs` and ReDoc at `/redoc`.
-- ✅ **80 tests** — pytest suite covering all sources, auth, rate limiting,
+- ✅ **271 tests** — pytest suite covering all sources, auth, rate limiting,
   pagination, and the `/stats` endpoint. Fully offline-runnable.
 
 ---
@@ -53,13 +53,13 @@ A clean, extensible REST API that aggregates anime, comic, and novel data from
 Search across ALL sources at once with automatic deduplication:
 
 ```bash
-# Anime — search across 6 sources
+# Anime — search across 7 sources
 curl "https://mynakama.web.id/anime/search/horimiya"
 
-# Comic — search across 7 sources (with merged results)
+# Comic — search across 9 sources (with merged results)
 curl "https://mynakama.web.id/comic/search/magic"
 
-# Novel — search across 4 sources
+# Novel — search across 5 sources
 curl "https://mynakama.web.id/novel/search/pangeran"
 ```
 

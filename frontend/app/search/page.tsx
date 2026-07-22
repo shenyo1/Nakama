@@ -24,8 +24,6 @@ export default async function SearchPage({
     }
   }
 
-  // New format: items[] with _sources, _source_count
-  // Old format (comic_fallback): results{} keyed by source
   const mergedItems = results?.items || [];
   const flatItems =
     mergedItems.length > 0
@@ -43,12 +41,12 @@ export default async function SearchPage({
         : [];
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold">Cross-source search</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <header className="space-y-1 sm:space-y-2">
+        <h1 className="text-2xl font-bold sm:text-3xl">Cross-source search</h1>
         <p className="text-sm text-ink-400">
           Hits every registered source of the selected type. Results are merged
-          and deduplicated — each item shows which sources carry it.
+          and deduplicated. Each item shows which sources carry it.
         </p>
       </header>
 
@@ -59,7 +57,7 @@ export default async function SearchPage({
             name="q"
             defaultValue={q}
             placeholder="e.g. one piece, boruto, isekai"
-            className="w-full rounded-lg border border-ink-700 bg-ink-950 px-3 py-2 text-ink-50"
+            className="input"
           />
         </label>
         <label className="text-sm">
@@ -67,7 +65,7 @@ export default async function SearchPage({
           <select
             name="type"
             defaultValue={type}
-            className="rounded-lg border border-ink-700 bg-ink-950 px-3 py-2 text-ink-50"
+            className="input"
           >
             <option value="comic">comic</option>
             <option value="anime">anime</option>
@@ -83,13 +81,16 @@ export default async function SearchPage({
 
       {results ? (
         <div className="space-y-3 text-sm text-ink-400">
-          <p>
+          <p className="text-xs sm:text-sm">
             Sources queried: {(results.sources_queried || results.sources_tried || []).join(", ") || "—"}
             {results.merged_unique_titles != null ? (
               <> · {results.merged_unique_titles} unique titles</>
             ) : null}
             {results.sources_failed?.length ? (
               <> · {results.sources_failed.length} failed</>
+            ) : null}
+            {results.duration_ms ? (
+              <> · {results.duration_ms}ms</>
             ) : null}
           </p>
           <SourceGrid items={flatItems as never[]} empty="No matches." />

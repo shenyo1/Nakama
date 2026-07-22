@@ -28,11 +28,16 @@ async def multi_source_search(
     timeout: float = 15.0,
     page: Optional[int] = None,
     page_size: Optional[int] = None,
+    early_results: int = 0,
 ) -> Dict[str, Any]:
     """Search every registered source concurrently.
 
     Returns a dict with: items, sources_queried, sources_failed,
     merged_unique_titles, page, page_size, total.
+
+    If ``early_results`` > 0, returns as soon as that many sources
+    complete successfully (fast-path for interactive search). Remaining
+    sources are still queried but with a shorter timeout.
     """
     sources = list_fn()
     if not sources:
@@ -56,8 +61,36 @@ async def multi_source_search(
         except Exception as e:
             return name, {"ok": False, "error": str(e)[:200]}
 
-    tasks = [asyncio.wait_for(_one(s), timeout=timeout) for s in sources]
-    finished = await asyncio.gather(*tasks, return_exceptions=True)
+    # Stagger slow sources (FlareSolverr/Camoufox) by 0.5s to avoid
+    # thundering-herd on shared resources and let fast sources return first.
+    SLOW_SOURCES = {"sakuranovel", "westmanga", "samehadaku", "anoboy"}
+    fast = [s for s in sources if s not in SLOW_SOURCES]
+    slow = [s for s in sources if s in SLOW_SOURCES]
+
+    async def _staggered(name: str, delay: float = 0.0):
+        if delay > 0:
+            await asyncio.sleep(delay)
+        return await asyncio.wait_for(_one(name), timeout=timeout)
+
+    # Fast sources start immediately, slow sources get 0.5s stagger
+    tasks = [_staggered(s) for s in fast] + [_staggered(s, 0.5) for s in slow]
+
+    if early_results > 0 and len(fast) >= early_results:
+        # Early-return path: collect first N fast source results
+        done: List[Any] = []
+        pending = list(tasks)
+        while pending and len([r for r in done if isinstance(r, tuple) and isinstance(r[1], dict) and r[1].get("ok")]) < early_results:
+            finished, pending = await asyncio.wait(
+                pending, timeout=timeout, return_when=asyncio.FIRST_COMPLETED
+            )
+            done.extend(finished)
+        # Gather remaining in background with short timeout
+        if pending:
+            remaining, _ = await asyncio.wait(pending, timeout=min(timeout, 8.0))
+            done.extend(remaining)
+        finished = [t.result() for t in done if t.done() and not t.cancelled()]
+    else:
+        finished = await asyncio.gather(*tasks, return_exceptions=True)
 
     by_source: Dict[str, dict] = {}
     sources_failed: List[dict] = []

@@ -57,9 +57,9 @@ export default function WsTestPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold">WebSocket live test</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <header className="space-y-1 sm:space-y-2">
+        <h1 className="text-2xl font-bold sm:text-3xl">WebSocket live test</h1>
         <p className="text-sm text-ink-400">
           Connects to <code className="text-neon-400">/ws</code> and streams
           hello + <code>chapter_update</code> events from the scheduler.
@@ -72,10 +72,10 @@ export default function WsTestPage() {
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="w-full rounded-lg border border-ink-700 bg-ink-950 px-3 py-2 font-mono text-sm"
+            className="input font-mono text-xs sm:text-sm"
           />
         </label>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button type="button" className="btn-primary" onClick={connect}>
             Connect
           </button>
@@ -100,7 +100,7 @@ export default function WsTestPage() {
       </div>
 
       <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Events ({events.length})</h2>
+        <h2 className="text-lg font-semibold sm:text-xl">Events ({events.length})</h2>
         <div className="space-y-2">
           {events.length === 0 ? (
             <div className="card text-sm text-ink-400">No events yet.</div>

@@ -1,4 +1,4 @@
-"""Per-user daily quota (Redis with in-memory fallback)."""
+"""Per-user daily quota (Redis with in-memory fallback) + tiered burst limits."""
 from __future__ import annotations
 
 import asyncio
@@ -14,7 +14,16 @@ PLAN_QUOTAS: Dict[str, int] = {
     "unlimited": 0,  # 0 means unlimited
 }
 
+# Tiered burst limits: (requests, window_seconds) per plan
+# Allows short bursts while keeping the daily cap
+BURST_LIMITS: Dict[str, Tuple[int, int]] = {
+    "free": (30, 60),        # 30 req per 60s
+    "pro": (200, 60),        # 200 req per 60s
+    "unlimited": (1000, 60), # 1000 req per 60s
+}
+
 _LOCAL_COUNTS: Dict[str, Tuple[str, int]] = {}  # key -> (day, count)
+_BURST_WINDOW: Dict[str, list] = {}  # key -> [timestamps]
 _REDIS = None
 _REDIS_FAILED = False
 _LOCK = asyncio.Lock()
@@ -22,6 +31,69 @@ _LOCK = asyncio.Lock()
 
 def quota_for_plan(plan: str) -> int:
     return int(PLAN_QUOTAS.get(plan or "free", PLAN_QUOTAS["free"]))
+
+
+def burst_limit_for_plan(plan: str) -> Tuple[int, int]:
+    return BURST_LIMITS.get(plan or "free", BURST_LIMITS["free"])
+
+
+async def check_burst(subject: str, plan: str = "free") -> dict:
+    """Check if subject is within burst limits.
+
+    Returns {allowed, burst_limit, burst_window_s, burst_used}.
+    """
+    limit, window = burst_limit_for_plan(plan)
+    now = time.monotonic()
+    key = f"burst:{subject}"
+
+    # Redis path
+    r = await _redis()
+    if r is not None:
+        try:
+            redis_key = f"nakama:{key}"
+            count = await r.zcard(redis_key)
+            if count >= limit:
+                # Check if oldest entry is still within window
+                oldest = await r.zrange(redis_key, 0, 0, withscores=True)
+                if oldest and (now - oldest[0][1]) < window:
+                    return {
+                        "allowed": False,
+                        "burst_limit": limit,
+                        "burst_window_s": window,
+                        "burst_used": int(count),
+                    }
+                # Clean expired entries
+                await r.zremrangebyscore(redis_key, 0, now - window)
+            await r.zadd(redis_key, {str(now): now})
+            await r.expire(redis_key, window + 10)
+            return {
+                "allowed": True,
+                "burst_limit": limit,
+                "burst_window_s": window,
+                "burst_used": int(count) + 1 if count < limit else 1,
+            }
+        except Exception:
+            pass
+
+    # Memory fallback
+    timestamps = _BURST_WINDOW.get(key, [])
+    timestamps = [t for t in timestamps if now - t < window]
+    if len(timestamps) >= limit:
+        _BURST_WINDOW[key] = timestamps
+        return {
+            "allowed": False,
+            "burst_limit": limit,
+            "burst_window_s": window,
+            "burst_used": len(timestamps),
+        }
+    timestamps.append(now)
+    _BURST_WINDOW[key] = timestamps
+    return {
+        "allowed": True,
+        "burst_limit": limit,
+        "burst_window_s": window,
+        "burst_used": len(timestamps),
+    }
 
 
 async def _redis():

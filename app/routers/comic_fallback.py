@@ -51,67 +51,78 @@ async def fallback_search(
             detail=f"Unknown primary '{primary}'. Available: {list_comic_sources()}",
         )
 
-    names = [primary] + [n for n in list_comic_sources() if n != primary]
+    # Cache search results for 60s to avoid re-fanning-out on repeated queries
+    from ..response_cache import cached_response
 
-    async def _one(name: str) -> tuple[str, Any]:
-        src = comic_source(name)
-        if src is None:
-            return name, {"error": f"unknown comic source '{name}'"}
-        try:
-            return name, await src.search(query)
-        except SourceError as e:
-            return name, {"error": str(e)}
-        except Exception as e:  # noqa: BLE001
-            return name, {"error": f"{type(e).__name__}: {e}"}
+    async def _fetch():
+        names = [primary] + [n for n in list_comic_sources() if n != primary]
 
-    results = await asyncio.gather(*[_one(n) for n in names], return_exceptions=False)
-    by_source: Dict[str, Any] = {}
-    failed: List[Dict[str, str]] = []
-    counts: Dict[str, int] = {}
-    for name, payload in results:
-        if isinstance(payload, dict) and "error" in payload and len(payload) == 1:
-            failed.append({"source": name, "error": str(payload["error"])})
-            continue
-        by_source[name] = payload
-        counts[name] = len(payload) if isinstance(payload, list) else 0
-    total = sum(counts.values())
+        # Stagger slow sources to let fast sources return first
+        SLOW = {"sakuranovel", "westmanga", "samehadaku", "anoboy"}
+        async def _one(name: str, delay: float = 0.0) -> tuple[str, Any]:
+            if delay > 0:
+                await asyncio.sleep(delay)
+            src = comic_source(name)
+            if src is None:
+                return name, {"error": f"unknown comic source '{name}'"}
+            try:
+                return name, await src.search(query)
+            except SourceError as e:
+                return name, {"error": str(e)}
+            except Exception as e:  # noqa: BLE001
+                return name, {"error": f"{type(e).__name__}: {e}"}
 
-    # Build deduplicated union of results, scored by source coverage.
-    # Imported lazily to avoid routers↔sources circular import at module load.
-    from ..sources.merge_search import normalize_title
-    merged: Dict[str, dict] = {}
-    for name, items in by_source.items():
-        if not isinstance(items, list):
-            continue
-        for item in items:
-            if not isinstance(item, dict):
+        tasks = [_one(n) for n in names if n not in SLOW] + [_one(n, 0.5) for n in names if n in SLOW]
+        results = await asyncio.gather(*tasks, return_exceptions=False)
+
+        by_source: Dict[str, Any] = {}
+        failed: List[Dict[str, str]] = []
+        counts: Dict[str, int] = {}
+        for name, payload in results:
+            if isinstance(payload, dict) and "error" in payload and len(payload) == 1:
+                failed.append({"source": name, "error": str(payload["error"])})
                 continue
-            title = item.get("title") or item.get("name") or ""
-            key = normalize_title(title)
-            if not key:
-                continue
-            if key not in merged:
-                merged[key] = {**item, "_sources": [], "_source_count": 0}
-            merged[key]["_sources"].append(name)
-            merged[key]["_source_count"] = len(merged[key]["_sources"])
-    merged_list = sorted(
-        merged.values(),
-        key=lambda x: (-x.get("_source_count", 0), x.get("title", "")),
-    )
+            by_source[name] = payload
+            counts[name] = len(payload) if isinstance(payload, list) else 0
+        total = sum(counts.values())
 
-    return ApiResponse(
-        data={
-            "query": query,
-            "primary": primary,
-            "sources_tried": names,
-            "sources_failed": failed,
-            "counts": counts,
-            "total": total,
-            "results": by_source,
-            "merged": merged_list,
-            "merged_unique_titles": len(merged),
-        }
-    )
+        # Build deduplicated union of results, scored by source coverage.
+        from ..sources.merge_search import normalize_title
+        merged: Dict[str, dict] = {}
+        for name, items in by_source.items():
+            if not isinstance(items, list):
+                continue
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                title = item.get("title") or item.get("name") or ""
+                key = normalize_title(title)
+                if not key:
+                    continue
+                if key not in merged:
+                    merged[key] = {**item, "_sources": [], "_source_count": 0}
+                merged[key]["_sources"].append(name)
+                merged[key]["_source_count"] = len(merged[key]["_sources"])
+        merged_list = sorted(
+            merged.values(),
+            key=lambda x: (-x.get("_source_count", 0), x.get("title", "")),
+        )
+
+        return ApiResponse(
+            data={
+                "query": query,
+                "primary": primary,
+                "sources_tried": names,
+                "sources_failed": failed,
+                "counts": counts,
+                "total": total,
+                "results": by_source,
+                "merged": merged_list,
+                "merged_unique_titles": len(merged),
+            },
+        )
+
+    return await cached_response(request, _fetch, ttl_seconds=60)
 
 
 @router.get(

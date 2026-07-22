@@ -21,20 +21,20 @@ export default async function AnimePage({
   }
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold">Anime</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <header className="space-y-1 sm:space-y-2">
+        <h1 className="text-2xl font-bold sm:text-3xl">Anime</h1>
         <p className="text-sm text-ink-400">
-          Home listings from 6 anime sources.
+          Home listings from {ANIME_SOURCES.length} anime sources.
         </p>
       </header>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2">
         {ANIME_SOURCES.map((s) => (
           <Link
             key={s}
             href={`/anime?source=${s}`}
-            className={`rounded-full px-3 py-1 text-sm ${
+            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs sm:px-3 sm:text-sm ${
               s === source
                 ? "bg-sakura-500 text-white"
                 : "bg-ink-800 text-ink-200 hover:bg-ink-700"

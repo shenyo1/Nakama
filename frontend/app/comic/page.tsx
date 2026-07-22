@@ -21,21 +21,20 @@ export default async function ComicPage({
   }
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold">Comics</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <header className="space-y-1 sm:space-y-2">
+        <h1 className="text-2xl font-bold sm:text-3xl">Comics</h1>
         <p className="text-sm text-ink-400">
-          Home listings from 9 comic sources.
-          live due to Cloudflare; MangaDex & Shinigami work.
+          Home listings from {COMIC_SOURCES.length} comic sources.
         </p>
       </header>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2">
         {COMIC_SOURCES.map((s) => (
           <Link
             key={s}
             href={`/comic?source=${s}`}
-            className={`rounded-full px-3 py-1 text-sm ${
+            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs sm:px-3 sm:text-sm ${
               s === source
                 ? "bg-sakura-500 text-white"
                 : "bg-ink-800 text-ink-200 hover:bg-ink-700"

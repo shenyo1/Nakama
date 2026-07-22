@@ -38,16 +38,16 @@ export default async function StatusPage({
   const infra = board?.infra || {};
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <AutoRefresh probe={probe} />
-      <header className="space-y-3">
+      <header className="space-y-2 sm:space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sakura-400">
           Operations
         </p>
-        <h1 className="text-3xl font-bold sm:text-4xl">Source status</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl sm:text-4xl">Source status</h1>
         <p className="max-w-2xl text-sm text-ink-400">
           Live scoreboard from{" "}
-          <code className="text-neon-400">GET /sources/health</code>. Passiveive mode
+          <code className="text-neon-400">GET /sources/health</code>. Passive mode
           shows counters from recent traffic; probe mode actively hits each
           source&apos;s home listing.
         </p>
@@ -82,7 +82,7 @@ export default async function StatusPage({
       ) : null}
 
       {summary ? (
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="grid gap-2 grid-cols-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {(
             [
               ["Total", summary.total, "text-ink-50"],
@@ -96,7 +96,7 @@ export default async function StatusPage({
               <p className="text-xs uppercase tracking-wide text-ink-400">
                 {label}
               </p>
-              <p className={`mt-1 text-3xl font-bold ${color}`}>{value}</p>
+              <p className={`mt-1 text-2xl font-bold tabular-nums ${color} sm:text-3xl`}>{value}</p>
             </div>
           ))}
         </section>

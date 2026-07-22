@@ -13,6 +13,7 @@ adapter's ``search()`` coroutine concurrently with ``asyncio.gather``.
 from __future__ import annotations
 
 import asyncio
+import time
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Query, Request
@@ -76,34 +77,55 @@ async def cross_search(
     q: str = Query(..., min_length=1, description="Free-text query."),
     type: str = Query("comic", description="One of: anime, comic, novel."),
 ):
-    """Search every source of *type* for *q* and return per-source results."""
-    kind = (type or "comic").lower()
-    if kind not in ("anime", "comic", "novel"):
+    """Search every source of *type* for *q* and return per-source results.
+
+    Results are cached for 30s (configurable via RESPONSE_CACHE_TTL_SECONDS)
+    to avoid re-fanning-out on repeated queries within a session.
+    """
+    from ..response_cache import cached_response
+
+    async def _fetch():
+        kind = (type or "comic").lower()
+        if kind not in ("anime", "comic", "novel"):
+            return ApiResponse(
+                ok=False,
+                data={
+                    "error": f"Unknown type '{type}'. Must be one of: anime, comic, novel.",
+                    "query": q,
+                    "type": kind,
+                    "sources_tried": [],
+                    "results": {},
+                },
+            )
+
+        if kind == "anime":
+            source_names = list_anime_sources()
+        elif kind == "comic":
+            source_names = list_comic_sources()
+        else:
+            source_names = list_novel_sources()
+
+        _start = time.perf_counter()
+        gathered = await _gather_search(source_names, kind, q)
+        _duration_ms = (time.perf_counter() - _start) * 1000
+
+        # Track search latency for analytics
+        try:
+            from ..routers.analytics import note_search_latency
+            ok_count = len(source_names) - len(gathered["sources_failed"])
+            note_search_latency(kind, q, _duration_ms, ok_count, len(source_names))
+        except Exception:
+            pass
+
         return ApiResponse(
-            ok=False,
             data={
-                "error": f"Unknown type '{type}'. Must be one of: anime, comic, novel.",
                 "query": q,
                 "type": kind,
-                "sources_tried": [],
-                "results": {},
+                "sources_tried": source_names,
+                "sources_failed": gathered["sources_failed"],
+                "results": gathered["data"],
+                "duration_ms": round(_duration_ms, 1),
             },
         )
 
-    if kind == "anime":
-        source_names = list_anime_sources()
-    elif kind == "comic":
-        source_names = list_comic_sources()
-    else:
-        source_names = list_novel_sources()
-
-    gathered = await _gather_search(source_names, kind, q)
-    return ApiResponse(
-        data={
-            "query": q,
-            "type": kind,
-            "sources_tried": source_names,
-            "sources_failed": gathered["sources_failed"],
-            "results": gathered["data"],
-        }
-    )
+    return await cached_response(request, _fetch, ttl_seconds=30)

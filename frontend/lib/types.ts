@@ -64,6 +64,7 @@ export interface SearchResults {
   page?: number;
   page_size?: number;
   total?: number;
+  duration_ms?: number;
 }
 
 export interface WsEvent {

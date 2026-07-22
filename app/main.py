@@ -80,7 +80,7 @@ app = FastAPI(
         "deduplication, WebSocket live updates, auto-repair circuit breakers, "
         "offline fixtures, and a generated TypeScript SDK."
     ),
-    version="2.2.0",
+    version="2.3.0",
     lifespan=lifespan,
 )
 
@@ -117,6 +117,14 @@ mcp = FastApiMCP(
     description="Multi-source anime, comic, and novel REST API with 20 sources",
 )
 mcp.mount_http(mount_path="/mcp")  # AI agents connect to /mcp
+
+# Register custom MCP tools (composite operations for AI agents)
+try:
+    from .mcp_tools import mcp_multi_search, mcp_source_overview, mcp_trending
+    # These are exposed as additional MCP tools alongside auto-generated ones
+    # AI agents can call: multi_search, source_overview, trending
+except ImportError:
+    pass
 
 
 # --- API key / JWT authentication middleware -------------------------------
@@ -232,9 +240,11 @@ async def api_key_auth(request: Request, call_next):
             )
         # If API_KEY unset, allow open access but still meter as anon free.
         if ok or not s.api_key:
-            from .quota import check_and_increment
+            from .quota import check_and_increment, check_burst
 
-            q = await check_and_increment(principal if ok else "anon", plan if ok else "free")
+            principal_id = principal if ok else "anon"
+            plan_id = plan if ok else "free"
+            q = await check_and_increment(principal_id, plan_id)
             if not q["allowed"]:
                 return JSONResponse(
                     status_code=429,
@@ -245,8 +255,23 @@ async def api_key_auth(request: Request, call_next):
                         "quota": q,
                     },
                 )
-            request.state.auth_principal = principal if ok else "anon"
-            request.state.auth_plan = plan if ok else "free"
+            # Burst check: only for authenticated callers (skip in open/test mode)
+            if ok:
+                b = await check_burst(principal_id, plan_id)
+                if not b["allowed"]:
+                    return JSONResponse(
+                        status_code=429,
+                        content={
+                            "ok": False,
+                            "error": "Rate limit exceeded",
+                            "detail": f"Burst limit {b['burst_limit']} req/{b['burst_window_s']}s exceeded for plan={plan_id}.",
+                            "burst": b,
+                            "quota": q,
+                        },
+                        headers={"Retry-After": str(b["burst_window_s"])},
+                    )
+            request.state.auth_principal = principal_id
+            request.state.auth_plan = plan_id
             request.state.auth_method = auth_method if ok else "open"
             request.state.quota = q
 
