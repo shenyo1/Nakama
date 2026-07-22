@@ -154,11 +154,28 @@ def _parse_detail(html: str, slug: str, base_url: str) -> Optional[dict]:
             "number": ep_num,
         })
 
+    # Synopsis from .entry-content or first long paragraph
+    synopsis = ""
+    for sel in [".entry-content p", ".sinopsis p", ".desc p", "article p"]:
+        el = soup.select_one(sel)
+        if el:
+            text = el.get_text(strip=True)
+            if len(text) > 30:
+                synopsis = text
+                break
+    if not synopsis:
+        for p in soup.select("p"):
+            text = p.get_text(strip=True)
+            if len(text) > 50:
+                synopsis = text
+                break
+
     return {
         "title": title,
         "slug": slug,
         "url": f"{base_url}/series/{slug}/",
         "thumbnail": thumbnail,
+        "synopsis": synopsis,
         "episodes": episodes,
         "source": "anoboy",
     }

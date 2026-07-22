@@ -129,7 +129,6 @@ def _parse_detail(soup: BeautifulSoup, slug: str, base_url: str) -> Optional[dic
         if not ch_href:
             continue
         ch_text = a_tag.get_text(strip=True)
-        # Parse "Chapter N" from text
         ch_match = re.search(r"Chapter\s+([\d.]+)", ch_text)
         chapter_num = ch_match.group(1) if ch_match else ""
         ch_slug = ch_href.rstrip("/").split("/")[-1]
@@ -140,12 +139,30 @@ def _parse_detail(soup: BeautifulSoup, slug: str, base_url: str) -> Optional[dic
             "number": chapter_num,
         })
 
+    # Synopsis from .entry-content, .wd-full, or first long paragraph
+    synopsis = ""
+    for sel in [".entry-content p", ".wd-full p", ".desc p", ".sinopsis p"]:
+        el = soup.select_one(sel)
+        if el:
+            text = el.get_text(strip=True)
+            if len(text) > 30:
+                synopsis = text
+                break
+    if not synopsis:
+        # Fallback: first long paragraph in main content
+        for p in soup.select("p"):
+            text = p.get_text(strip=True)
+            if len(text) > 50:
+                synopsis = text
+                break
+
     return {
         "title": title,
         "slug": slug,
         "url": f"{base_url}/manga/{slug}/",
         "thumbnail": thumbnail,
         "genres": genres,
+        "synopsis": synopsis,
         "chapters": chapters,
         "source": "komikstation",
     }
