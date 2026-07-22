@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ANIME_SOURCES, COMIC_SOURCES, NOVEL_SOURCES, fetchStats } from "../lib/api";
 
+export const runtime = "edge";
+
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {

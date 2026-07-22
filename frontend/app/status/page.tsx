@@ -2,6 +2,8 @@ import Link from "next/link";
 import { fetchSourceHealth } from "../../lib/api";
 import AutoRefresh from "./auto-refresh";
 
+export const runtime = "edge";
+
 export const dynamic = "force-dynamic";
 
 function statusColor(status: string): string {

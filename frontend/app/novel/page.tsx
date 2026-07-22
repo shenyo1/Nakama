@@ -2,6 +2,8 @@ import Link from "next/link";
 import { NOVEL_SOURCES, fetchSourceHome } from "../../lib/api";
 import { SourceGrid } from "../../components/SourceGrid";
 
+export const runtime = "edge";
+
 export const dynamic = "force-dynamic";
 
 export default async function NovelPage({

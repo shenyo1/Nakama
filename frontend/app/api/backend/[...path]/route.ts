@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "edge";
+
 /**
  * Same-origin BFF proxy.
  *
@@ -10,7 +12,6 @@ import { NextRequest, NextResponse } from "next/server";
  * Allowed path prefixes only — no open proxy.
  */
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
 const ALLOWED_PREFIXES = [
   "/anime",

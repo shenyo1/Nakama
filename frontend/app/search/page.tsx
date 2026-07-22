@@ -2,6 +2,8 @@ import { crossSearch } from "../../lib/api";
 import type { ApiKind } from "../../lib/types";
 import { SourceGrid } from "../../components/SourceGrid";
 
+export const runtime = "edge";
+
 export const dynamic = "force-dynamic";
 
 export default async function SearchPage({
