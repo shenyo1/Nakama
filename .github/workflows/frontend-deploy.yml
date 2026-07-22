@@ -40,10 +40,10 @@ jobs:
           echo "registry=https://registry.npmjs.org/" > .npmrc
 
       - name: Install deps
-        run: npm install --no-audit --no-fund
+        run: npm install --no-audit --no-fund --legacy-peer-deps
 
       - name: Build for Cloudflare Pages (next-on-pages)
-        run: npx @cloudflare/next-on-pages@latest
+        run: npx --yes @cloudflare/next-on-pages@1.13.7
         env:
           NEXT_PUBLIC_API_BASE: https://mynakama.web.id
 
