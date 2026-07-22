@@ -43,7 +43,7 @@ function authHeaders(): Record<string, string> {
   return headers;
 }
 
-async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
+export async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${serverApiBase()}${path}`, {
     ...init,
     headers: {
@@ -59,6 +59,9 @@ async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
   }
   return res.json() as Promise<T>;
 }
+
+/** Public alias for getJson — used by analytics page and other public endpoints. */
+export const fetchJson = getJson;
 
 export async function fetchStats(): Promise<Stats> {
   const body = await getJson<{ ok: boolean; data: Stats } | Stats>("/stats");
