@@ -39,11 +39,16 @@ async def anime_index(request: Request):  # noqa: ANN001 — slowapi injects Req
 @limiter.limit(get_settings().rate_limit)
 async def home(source: str, request: Request, page: Optional[int] = Query(None, ge=1), page_size: Optional[int] = Query(None, ge=1)):
     src = _get(source)
-    try:
-        data = await src.home()
-        return ApiResponse(source=source, data=paginate(data, page, page_size))
-    except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+
+    async def _fetch():
+        try:
+            data = await src.home()
+            return ApiResponse(source=source, data=paginate(data, page, page_size)).model_dump()
+        except SourceError as e:
+            raise HTTPException(status_code=502, detail=str(e))
+
+    from ..response_cache import cached_response
+    return await cached_response(request, _fetch, ttl_seconds=300)
 
 
 @router.get("/{source}/search/{query}", response_model=ApiResponse, summary="Search anime")

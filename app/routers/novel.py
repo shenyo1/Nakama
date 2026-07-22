@@ -61,11 +61,16 @@ async def home(
     ``page_size`` paginates the returned slice locally.
     """
     src = _get(source)
-    try:
-        data = await src.home(page or 1)
-        return ApiResponse(source=source, data=paginate(data, None, page_size))
-    except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+
+    async def _fetch():
+        try:
+            data = await src.home(page or 1)
+            return ApiResponse(source=source, data=paginate(data, None, page_size)).model_dump()
+        except SourceError as e:
+            raise HTTPException(status_code=502, detail=str(e))
+
+    from ..response_cache import cached_response
+    return await cached_response(request, _fetch, ttl_seconds=300)
 
 
 @router.get(

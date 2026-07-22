@@ -49,9 +49,14 @@ def _reset_rate_limit_storage():
     storage = limiter._storage
     if storage is not None and hasattr(storage, "reset"):
         storage.reset()
+    # Clear response cache so test ordering doesn't leak payloads.
+    from app.response_cache import clear_cache
+    clear_cache()
     yield
     if storage is not None and hasattr(storage, "reset"):
         storage.reset()
+    from app.response_cache import clear_cache as _cc
+    _cc()
 
 
 @pytest.fixture

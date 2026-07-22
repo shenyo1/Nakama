@@ -2,12 +2,15 @@
 
 [![CI](https://github.com/shenyo1/Nakama/actions/workflows/ci.yml/badge.svg)](https://github.com/shenyo1/Nakama/actions)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Sources](https://img.shields.io/badge/sources-10-7C3AED?style=flat)](#-sources)
-[![Tests](https://img.shields.io/badge/tests-184%20passed-22C55E?style=flat)](#-tests)
+[![Sources](https://img.shields.io/badge/sources-14-7C3AED?style=flat)](#-sources)
+[![Tests](https://img.shields.io/badge/tests-220%20passed-22C55E?style=flat)](#-tests)
+[![Python](https://img.shields.io/badge/python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
+[![Postgres](https://img.shields.io/badge/postgres-16-336791?style=flat&logo=postgresql&logoColor=white)](https://postgresql.org)
+[![Redis](https://img.shields.io/badge/redis-7-DC382D?style=flat&logo=redis&logoColor=white)](https://redis.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-4ECDC4?style=flat)](LICENSE)
 
 A clean, extensible REST API that aggregates anime, comic, and novel data from
-**10 public sources** behind one consistent JSON interface. Built with
+**14 public sources** behind one consistent JSON interface. Built with
 **FastAPI**.
 
 > Repo: [shenyo1/Nakama](https://github.com/shenyo1/Nakama) · Deploy guide: [DEPLOY.md](DEPLOY.md)
