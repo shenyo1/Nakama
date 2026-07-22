@@ -540,7 +540,7 @@ async def probe_source(name: str) -> dict:
     return result
 
 
-async def probe_all(timeout: float = 25.0) -> dict:
+async def probe_all(timeout: float = 60.0) -> dict:
     names = list_anime_sources() + list_comic_sources() + list_novel_sources()
 
     async def _one(n: str):
