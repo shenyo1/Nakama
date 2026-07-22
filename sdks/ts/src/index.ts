@@ -65,6 +65,8 @@ export interface HistoryCreate { "source": string; "content_id": string; "conten
 export interface HistoryEntry { "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }
 export interface LoginBody { "username": string; "password": string }
 export interface NovelDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "status"?: string; "rating"?: string; "latest_chapter"?: string; "author"?: string; "synopsis"?: string; "genres"?: Array<string>; "chapters"?: Array<Record<string, unknown>> }
+export interface PreferencesIn { "payload"?: Record<string, unknown> }
+export interface PreferencesOut { "payload": Record<string, unknown>; "updated_at"?: string }
 export interface RefreshBody { "refresh_token": string }
 export interface RegisterBody { "username": string; "password": string }
 export interface ValidationError { "loc": Array<string | number>; "msg": string; "type": string; "input"?: unknown; "ctx"?: Record<string, unknown> }
@@ -1360,6 +1362,97 @@ export class Stats {
   }
 
 }
+export class Preferences {
+  private readonly _client: NakamaApiClient;
+  constructor(client: NakamaApiClient) {
+    this._client = client;
+  }
+
+  /**
+   * Reset preferences to defaults
+   * @see DELETE /preferences
+   */
+  async delete(): Promise<{ "payload": Record<string, unknown>; "updated_at"?: string }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/preferences${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "DELETE",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "payload": Record<string, unknown>; "updated_at"?: string };
+  }
+
+  /**
+   * Get current user preferences
+   * @see GET /preferences
+   */
+  async get(): Promise<{ "payload": Record<string, unknown>; "updated_at"?: string }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/preferences${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "payload": Record<string, unknown>; "updated_at"?: string };
+  }
+
+  /**
+   * Merge partial update into preferences
+   * @see PATCH /preferences
+   */
+  async patch(params?: { body: { "payload"?: Record<string, unknown> } }): Promise<{ "payload": Record<string, unknown>; "updated_at"?: string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/preferences${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "PATCH",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "payload": Record<string, unknown>; "updated_at"?: string };
+  }
+
+  /**
+   * Replace current user preferences
+   * @see PUT /preferences
+   */
+  async put(params?: { body: { "payload"?: Record<string, unknown> } }): Promise<{ "payload": Record<string, unknown>; "updated_at"?: string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/preferences${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "PUT",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "payload": Record<string, unknown>; "updated_at"?: string };
+  }
+
+}
 
 // -- Top-level client -------------------------------------------------
 
@@ -1372,6 +1465,7 @@ export class NakamaApi {
   readonly history: History;
   readonly ws: Ws;
   readonly stats: Stats;
+  readonly preferences: Preferences;
 
   constructor(opts: NakamaApiOptions) {
     const client: NakamaApiClient = {
@@ -1387,6 +1481,7 @@ export class NakamaApi {
     this.history = new History(client);
     this.ws = new Ws(client);
     this.stats = new Stats(client);
+    this.preferences = new Preferences(client);
   }
 }
 // -- Default export --------------------------------------------------

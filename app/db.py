@@ -24,7 +24,7 @@ import os
 from datetime import datetime
 from typing import AsyncIterator
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Boolean, func, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Boolean, func, UniqueConstraint, JSON
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -164,6 +164,28 @@ class WebhookSubscription(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="webhooks")
+
+
+class UserPreference(Base):
+    """Per-user UI/UX preferences (theme, default source, content filters).
+
+    Single-row-per-user with a JSON ``payload`` so we can evolve the schema
+    without migrations. The ``key`` column lets users have multiple
+    preference objects (e.g. theme on one row, filters on another) but the
+    router treats ``key="default"`` as the primary prefs row.
+    """
+
+    __tablename__ = "user_preferences"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    key: Mapped[str] = mapped_column(String(64), default="default", nullable=False)
+    payload: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 # ---------------------------------------------------------------------------

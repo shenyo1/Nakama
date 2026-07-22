@@ -64,12 +64,13 @@ TAG_GROUP = {
     "ws": "ws",
     "stats": "stats",
     "health": "stats",
+    "preferences": "preferences",
 }
 
 DEFAULT_GROUP = "stats"
 
 # Iteration order used both in the class declarations and the index module.
-GROUP_ORDER = ["anime", "comic", "novel", "search", "image", "history", "ws", "stats"]
+GROUP_ORDER = ["anime", "comic", "novel", "search", "image", "history", "ws", "stats", "preferences"]
 
 
 # ---------------------------------------------------------------------------

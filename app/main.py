@@ -325,6 +325,9 @@ app.include_router(tier5_router.router)
 app.include_router(audit_router)
 app.include_router(sources_router.router)
 
+from .routers.preferences import router as preferences_router
+app.include_router(preferences_router)
+
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def index():
