@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_mcp import FastApiMCP
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.openapi.utils import get_openapi
 from slowapi import _rate_limit_exceeded_handler
@@ -98,6 +99,15 @@ from .idempotency import IdempotencyMiddleware
 app.add_middleware(IdempotencyMiddleware)
 
 
+# --- MCP server (AI agent access to all endpoints) -------------------------
+mcp = FastApiMCP(
+    app,
+    name="Nakama API",
+    description="Multi-source anime, comic, and novel REST API with 20 sources",
+)
+mcp.mount_http(mount_path="/mcp")  # AI agents connect to /mcp
+
+
 # --- API key / JWT authentication middleware -------------------------------
 # Protected routes: /anime, /comic, /novel, /search, /history
 # Accept either:
@@ -165,6 +175,7 @@ async def api_key_auth(request: Request, call_next):
         or path.startswith("/auth")
         or path.startswith("/docs")
         or path.startswith("/redoc")
+        or path.startswith("/mcp")  # MCP server for AI agents
     )
     is_metered = any(path.startswith(p) for p in _METERED_PREFIXES)
 

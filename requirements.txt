@@ -17,3 +17,4 @@ camoufox[geoip]>=0.5
 scrapling>=0.4
 curl_cffi>=0.7
 msgspec>=0.18
+fastapi-mcp>=0.4
