@@ -50,7 +50,7 @@ async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
       ...authHeaders(),
       ...(init?.headers || {}),
     },
-    // Server components: revalidate frequently for demo freshness.
+    // Server components: revalidate frequently for data freshness.
     next: { revalidate: 30 },
   });
   if (!res.ok) {

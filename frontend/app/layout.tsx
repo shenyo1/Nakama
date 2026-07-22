@@ -5,7 +5,7 @@ import { Nav } from "../components/Nav";
 export const metadata: Metadata = {
   title: "Nakama",
   description:
-    "Demo frontend for Nakama: multi-source anime, comic, and novel REST API with live WebSocket updates.",
+    "Nakama: multi-source anime, comic, and novel REST API with live WebSocket updates.",
 };
 
 export default function RootLayout({

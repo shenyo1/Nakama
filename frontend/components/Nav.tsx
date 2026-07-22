@@ -16,7 +16,6 @@ export function Nav() {
       <div className="container-page flex h-14 items-center justify-between gap-4">
         <Link href="/" className="font-display text-lg font-bold tracking-tight">
           <span className="text-sakura-400">Nakama</span>
-          <span className="ml-1 text-ink-300">API Demo</span>
         </Link>
         <nav className="flex flex-wrap items-center gap-1 sm:gap-2">
           {links.map((l) => (
