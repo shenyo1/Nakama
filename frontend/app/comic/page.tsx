@@ -25,7 +25,7 @@ export default async function ComicPage({
       <header className="space-y-2">
         <h1 className="text-3xl font-bold">Comics</h1>
         <p className="text-sm text-ink-400">
-          Home listings from 5 comic sources. Kiryuu/Komikcast may be empty
+          Home listings from 9 comic sources.
           live due to Cloudflare; MangaDex & Shinigami work.
         </p>
       </header>

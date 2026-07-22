@@ -160,7 +160,7 @@ export async function fetchSourceHealth(
   return body as SourceHealthBoard;
 }
 
-export const ANIME_SOURCES = ["otakudesu", "kura", "anilist", "jikan", "samehadaku"] as const;
+export const ANIME_SOURCES = ["otakudesu", "kura", "anilist", "jikan", "samehadaku", "anichin"] as const;
 export const COMIC_SOURCES = [
   "komiku",
   "kiryuu",
@@ -168,8 +168,11 @@ export const COMIC_SOURCES = [
   "komikindo",
   "mangadex",
   "shinigami",
+  "bacakomik",
+  "komikstation",
+  "westmanga",
 ] as const;
-export const NOVEL_SOURCES = ["sakuranovel", "novelbin", "novelfull"] as const;
+export const NOVEL_SOURCES = ["sakuranovel", "novelbin", "novelfull", "meionovels", "novelhubapp"] as const;
 
 // Back-compat alias used by older imports / docs.
 export const API_BASE = PUBLIC_API_BASE;

@@ -25,7 +25,7 @@ export default async function AnimePage({
       <header className="space-y-2">
         <h1 className="text-3xl font-bold">Anime</h1>
         <p className="text-sm text-ink-400">
-          Home listings from 4 anime sources (Otakudesu, Kura, AniList, Jikan).
+          Home listings from 6 anime sources.
         </p>
       </header>
 

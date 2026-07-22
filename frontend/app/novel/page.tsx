@@ -25,7 +25,7 @@ export default async function NovelPage({
       <header className="space-y-2">
         <h1 className="text-3xl font-bold">Novels</h1>
         <p className="text-sm text-ink-400">
-          Sakuranovel adapter. Live scrapes may be blocked by Cloudflare;
+          5 novel sources: Sakuranovel, Novelbin, Novelfull, Meionovels, Novelhub.
           offline fixtures work in CI.
         </p>
       </header>
