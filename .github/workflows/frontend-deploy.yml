@@ -76,4 +76,4 @@ jobs:
           projectName: nakama-frontend
           directory: .vercel/output/static
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          deploymentEnvironment: production
+          branch: main
