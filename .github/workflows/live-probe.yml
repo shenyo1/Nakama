@@ -1,0 +1,41 @@
+name: live-source-probe
+
+# Nightly job that runs the live source probes (tests/live/).
+# Fails if any provider's home() returns fewer items than the threshold.
+# Uses the same OFFLINE_MODE-disabled behavior as the VPS cron.
+
+on:
+  schedule:
+    # Daily at 09:00 UTC (~17:00 WIB, after most Indonesian sites update)
+    - cron: "0 9 * * *"
+  workflow_dispatch:  # allow manual trigger
+
+jobs:
+  live-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run live source probes
+        env:
+          FORCE_LIVE: "1"
+        run: |
+          python -m pytest tests/live/ -v --override-ini="addopts=" \
+            2>&1 | tee live-probe.log
+      - name: Notify on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload-token: ${{ secrets.SLACK_WEBHOOK }}
+          message: |
+            :rotating_light: Nakama live source probe failed.
+            See ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        continue-on-error: true

@@ -9,7 +9,9 @@ from __future__ import annotations
 import os
 
 # Must be set before importing the app so Settings picks it up.
-os.environ.setdefault("OFFLINE_MODE", "1")
+# Skip when running live tests (FORCE_LIVE=1).
+if not os.environ.get("FORCE_LIVE"):
+    os.environ.setdefault("OFFLINE_MODE", "1")
 # Tests default to open access unless a fixture explicitly enables API_KEY.
 # Production .env must not leak into the pytest process.
 os.environ.pop("API_KEY", None)
