@@ -88,28 +88,50 @@ class WestmangaSource(ComicSource):
 
 
 async def _fetch_with_camoufox(url: str, timeout: int = 30) -> Optional[str]:
-    """Fetch a URL using Camoufox and return the rendered HTML."""
+    """Fetch a URL using Camoufox and return the rendered HTML.
+
+    Falls back to FlareSolverr when Camoufox is unavailable.
+    Returns None if neither is available.
+    """
     if os.environ.get("WESTMANGA_USE_CAMOUFOX") == "0":
         return None
+
+    # Try Camoufox first (handles JS-rendered content)
     try:
         from camoufox import AsyncCamoufox
+        try:
+            async with AsyncCamoufox(
+                headless=True, humanize=True, geoip=True, locale="en-US"
+            ) as browser:
+                page = await browser.new_page()
+                await page.goto(url, timeout=timeout * 1000)
+                await asyncio.sleep(3)
+                html = await page.content()
+                await page.close()
+                return html
+        except Exception:
+            pass
     except ImportError:
-        return None
+        pass
+
+    # Fallback: FlareSolverr (bypasses CF but not JS-rendering)
     try:
-        async with AsyncCamoufox(
-            headless=True,
-            humanize=True,
-            geoip=True,
-            locale="en-US",
-        ) as browser:
-            page = await browser.new_page()
-            await page.goto(url, timeout=timeout * 1000)
-            await asyncio.sleep(3)
-            html = await page.content()
-            await page.close()
-            return html
+        from app.config import get_settings
+        s = get_settings()
+        if s.flaresolverr_url:
+            import httpx
+            async with httpx.AsyncClient(timeout=90) as c:
+                r = await c.post(
+                    s.flaresolverr_url,
+                    json={"cmd": "request.get", "url": url, "maxTimeout": 80000},
+                )
+                data = r.json()
+                if data.get("status") == "ok":
+                    return data["solution"]["response"]
     except Exception:
-        return None
+        pass
+
+    return None
 
 
 def _parse_listing(html: str, base_url: str) -> List[dict]:

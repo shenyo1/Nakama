@@ -25,7 +25,7 @@ async def multi_source_search(
     query: str,
     get_factory: Callable[[str], Any],
     list_fn: Callable[[], List[str]],
-    timeout: float = 20.0,
+    timeout: float = 15.0,
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> Dict[str, Any]:

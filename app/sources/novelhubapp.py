@@ -111,6 +111,9 @@ def _resolve_ref(payload: list, idx: Any, depth: int = 0) -> Any:
         if isinstance(val, list) and len(val) == 2 and isinstance(val[0], str):
             if val[0] in ("ShallowReactive", "Reactive", "ShallowRef", "Ref"):
                 return _resolve_ref(payload, val[1], depth + 1)
+        # Resolve dict values recursively
+        if isinstance(val, dict):
+            return {k: _resolve_ref(payload, v, depth + 1) for k, v in val.items()}
         return val
     if isinstance(idx, list):
         return [_resolve_ref(payload, i, depth + 1) for i in idx]
