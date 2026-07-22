@@ -28,6 +28,12 @@ export function Nav() {
               {l.label}
             </Link>
           ))}
+          <Link
+            href="/login"
+            className="whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm text-sakura-400 hover:bg-ink-800"
+          >
+            Login
+          </Link>
         </nav>
       </div>
     </header>

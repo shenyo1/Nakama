@@ -11,9 +11,13 @@ type Item = {
 export function SourceGrid({
   items,
   empty = "No items returned.",
+  source,
+  kind,
 }: {
   items: Item[];
   empty?: string;
+  source?: string;
+  kind?: string;
 }) {
   if (!items.length) {
     return (
@@ -29,6 +33,9 @@ export function SourceGrid({
           subtitle={it.slug ? String(it.slug) : undefined}
           thumbnail={typeof it.thumbnail === "string" ? it.thumbnail : undefined}
           href={typeof it.url === "string" ? it.url : undefined}
+          source={source}
+          kind={kind}
+          slug={typeof it.slug === "string" ? it.slug : undefined}
         />
       ))}
     </div>

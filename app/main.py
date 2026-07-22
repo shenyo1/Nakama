@@ -80,7 +80,7 @@ app = FastAPI(
         "deduplication, WebSocket live updates, auto-repair circuit breakers, "
         "offline fixtures, and a generated TypeScript SDK."
     ),
-    version="2.3.0",
+    version="2.4.0",
     lifespan=lifespan,
 )
 
@@ -276,6 +276,15 @@ async def api_key_auth(request: Request, call_next):
             request.state.quota = q
 
     response = await call_next(request)
+
+    # Expose rate limit info in headers for client awareness
+    quota = getattr(request.state, "quota", None)
+    if quota and isinstance(quota, dict):
+        remaining = quota.get("remaining")
+        limit = quota.get("limit")
+        if remaining is not None and limit is not None:
+            response.headers["X-RateLimit-Limit"] = str(limit)
+            response.headers["X-RateLimit-Remaining"] = str(remaining)
 
     # Audit metered authenticated traffic (best-effort).
     if is_metered and getattr(request.state, "auth_method", None) in ("jwt", "api_key"):

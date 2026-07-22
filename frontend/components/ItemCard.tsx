@@ -4,16 +4,27 @@ type Props = {
   thumbnail?: string;
   href?: string;
   badge?: string;
+  source?: string;
+  kind?: string;
+  slug?: string;
 };
 
-export function ItemCard({ title, subtitle, thumbnail, href, badge }: Props) {
+export function ItemCard({ title, subtitle, thumbnail, href, badge, source, kind, slug }: Props) {
+  // Build internal detail link if source + kind + slug available
+  let internalHref = href;
+  if (!internalHref && source && kind && slug) {
+    if (kind === "comic") internalHref = `/comic/${source}/manga/${slug}`;
+    else if (kind === "anime") internalHref = `/anime/${source}/detail/${slug}`;
+    else if (kind === "novel") internalHref = `/novel/${source}/detail/${slug}`;
+  }
+
   const inner = (
     <article className="card card-hover flex h-full flex-col gap-2 sm:gap-3">
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-ink-800">
         {thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={thumbnail}
+            src={`/api/backend/image?url=${encodeURIComponent(thumbnail)}`}
             alt={title}
             className="h-full w-full object-cover"
             loading="lazy"
@@ -38,9 +49,9 @@ export function ItemCard({ title, subtitle, thumbnail, href, badge }: Props) {
     </article>
   );
 
-  if (href) {
+  if (internalHref) {
     return (
-      <a href={href} target="_blank" rel="noreferrer" className="block h-full">
+      <a href={internalHref} className="block h-full">
         {inner}
       </a>
     );
