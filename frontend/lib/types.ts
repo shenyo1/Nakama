@@ -57,6 +57,10 @@ export interface SearchResults {
   sources_tried: string[];
   sources_failed: { source: string; error: string }[];
   results: Record<string, unknown[]>;
+  // New multi-source merge format
+  items?: Record<string, unknown>[];
+  sources_queried?: string[];
+  merged_unique_titles?: number;
 }
 
 export interface WsEvent {

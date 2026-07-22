@@ -137,6 +137,12 @@ export interface SourceHealthBoard {
   };
   sources: SourceHealthRow[];
   infra?: Record<string, unknown>;
+  auto_repair?: {
+    enabled: boolean;
+    open_breakers?: string[];
+    stale_count?: number;
+  };
+  stale_adapters?: { name: string; age_days: number }[];
 }
 
 export async function fetchSourceHealth(

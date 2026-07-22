@@ -24,22 +24,31 @@ export default async function SearchPage({
     }
   }
 
+  // New format: items[] with _sources, _source_count
+  // Old format (comic_fallback): results{} keyed by source
+  const mergedItems = results?.items || [];
   const flatItems =
-    results && results.results
-      ? Object.entries(results.results).flatMap(([source, items]) =>
-          (items || []).slice(0, 8).map((it) => ({
-            ...(it as object),
-            badge: source,
-          }))
-        )
-      : [];
+    mergedItems.length > 0
+      ? mergedItems.map((it: Record<string, unknown>) => ({
+          ...it,
+          badge: (it._sources as string[])?.join(", ") || "",
+        }))
+      : results?.results
+        ? Object.entries(results.results).flatMap(([source, items]) =>
+            (items || []).slice(0, 8).map((it) => ({
+              ...(it as object),
+              badge: source,
+            }))
+          )
+        : [];
 
   return (
     <div className="space-y-6">
       <header className="space-y-2">
         <h1 className="text-3xl font-bold">Cross-source search</h1>
         <p className="text-sm text-ink-400">
-          Hits every registered source of the selected type.
+          Hits every registered source of the selected type. Results are merged
+          and deduplicated — each item shows which sources carry it.
         </p>
       </header>
 
@@ -75,8 +84,13 @@ export default async function SearchPage({
       {results ? (
         <div className="space-y-3 text-sm text-ink-400">
           <p>
-            Tried: {(results.sources_tried || []).join(", ") || "—"} · Failed:{" "}
-            {(results.sources_failed || []).length}
+            Sources queried: {(results.sources_queried || results.sources_tried || []).join(", ") || "—"}
+            {results.merged_unique_titles != null ? (
+              <> · {results.merged_unique_titles} unique titles</>
+            ) : null}
+            {results.sources_failed?.length ? (
+              <> · {results.sources_failed.length} failed</>
+            ) : null}
           </p>
           <SourceGrid items={flatItems as never[]} empty="No matches." />
         </div>

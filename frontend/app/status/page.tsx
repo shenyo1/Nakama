@@ -136,6 +136,44 @@ export default async function StatusPage({
         </section>
       ) : null}
 
+      {board?.auto_repair ? (
+        <section className="card space-y-3 text-sm">
+          <h2 className="font-semibold">Auto-Repair</h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <span className="text-ink-400">Status:</span>{" "}
+              <span className={board.auto_repair.enabled ? "text-neon-400" : "text-ink-300"}>
+                {board.auto_repair.enabled ? "Enabled" : "Disabled"}
+              </span>
+            </div>
+            <div>
+              <span className="text-ink-400">Circuit breakers:</span>{" "}
+              <span className={board.auto_repair.open_breakers?.length ? "text-sakura-300" : "text-neon-400"}>
+                {board.auto_repair.open_breakers?.length || 0} open
+              </span>
+            </div>
+            <div>
+              <span className="text-ink-400">Stale adapters:</span>{" "}
+              <span className={board.auto_repair.stale_count ? "text-amber-300" : "text-ink-200"}>
+                {board.auto_repair.stale_count || 0}
+              </span>
+            </div>
+          </div>
+          {board.auto_repair.open_breakers?.length ? (
+            <p className="text-xs text-sakura-300">
+              Open: {(board.auto_repair.open_breakers as string[]).join(", ")}
+            </p>
+          ) : null}
+          {board.stale_adapters?.length ? (
+            <div className="mt-2 text-xs text-amber-300">
+              {board.stale_adapters.map((s: { name: string; age_days: number }) => (
+                <span key={s.name} className="mr-3">{s.name} ({s.age_days}d)</span>
+              ))}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Sources</h2>
         <div className="overflow-x-auto rounded-xl border border-ink-700/60">
