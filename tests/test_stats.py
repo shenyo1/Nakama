@@ -54,7 +54,7 @@ async def test_stats_has_eight_sources(client):
     """NakamaApi exposes source adapters in total (kura is an alias of otakudesu)."""
     r = await client.get("/stats")
     data = r.json()["data"]
-    assert data["total_sources"] == 20, (
+    assert data["total_sources"] == 21, (
         f"expected 20 sources, got {data['total_sources']}: {data['sources']}"
     )
 

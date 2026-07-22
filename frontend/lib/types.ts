@@ -61,6 +61,9 @@ export interface SearchResults {
   items?: Record<string, unknown>[];
   sources_queried?: string[];
   merged_unique_titles?: number;
+  page?: number;
+  page_size?: number;
+  total?: number;
 }
 
 export interface WsEvent {

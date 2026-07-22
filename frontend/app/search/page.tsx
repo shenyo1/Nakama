@@ -93,6 +93,32 @@ export default async function SearchPage({
             ) : null}
           </p>
           <SourceGrid items={flatItems as never[]} empty="No matches." />
+          {results.total != null && results.page != null ? (
+            <div className="flex items-center justify-between pt-3">
+              <span className="text-xs">
+                Page {results.page} of {Math.ceil((results.total || 0) / (results.page_size || 20))}
+                {" "}({results.total} total)
+              </span>
+              <div className="flex gap-2">
+                {results.page > 1 ? (
+                  <a
+                    href={`/search?q=${encodeURIComponent(q)}&type=${type}&page=${results.page - 1}`}
+                    className="btn-ghost text-xs"
+                  >
+                    Previous
+                  </a>
+                ) : null}
+                {(results.page * (results.page_size || 20)) < (results.total || 0) ? (
+                  <a
+                    href={`/search?q=${encodeURIComponent(q)}&type=${type}&page=${(results.page || 1) + 1}`}
+                    className="btn-ghost text-xs"
+                  >
+                    Next
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : !q ? (
         <div className="card text-sm text-ink-400">Enter a query to search.</div>

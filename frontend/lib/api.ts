@@ -101,10 +101,12 @@ export async function fetchSourceSearch(
 
 export async function crossSearch(
   q: string,
-  type: ApiKind = "comic"
+  type: ApiKind = "comic",
+  page?: number,
 ): Promise<SearchResults> {
   // Use the new multi-source search endpoints for merged results
-  const path = `/${type}/search/${encodeURIComponent(q)}`;
+  let path = `/${type}/search/${encodeURIComponent(q)}`;
+  if (page && page > 1) path += `?page=${page}`;
   const body = await getJson<ApiEnvelope<SearchResults> | SearchResults>(path);
   if (body && typeof body === "object" && "data" in body && body.data) {
     return body.data as SearchResults;
@@ -163,7 +165,7 @@ export async function fetchSourceHealth(
   return body as SourceHealthBoard;
 }
 
-export const ANIME_SOURCES = ["otakudesu", "kura", "anilist", "jikan", "samehadaku", "anichin"] as const;
+export const ANIME_SOURCES = ["otakudesu", "kura", "anilist", "jikan", "samehadaku", "anichin", "anoboy"] as const;
 export const COMIC_SOURCES = [
   "komiku",
   "kiryuu",
