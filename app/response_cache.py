@@ -157,6 +157,25 @@ async def cached_response(
     return result
 
 
+def add_etag(response: Response, body: bytes):
+    """Add ETag header based on content hash."""
+    etag = hashlib.sha1(body).hexdigest()[:16]
+    response.headers["ETag"] = f'W/"{etag}"'
+    response.headers["Cache-Control"] = "public, max-age=300, must-revalidate"
+
+
+def check_etag(request: Request, body: bytes) -> Optional[Response]:
+    """Return 304 Not Modified if If-None-Match matches ETag of body."""
+    if_none_match = request.headers.get("If-None-Match", "").strip()
+    if not if_none_match:
+        return None
+    etag = hashlib.sha1(body).hexdigest()[:16]
+    expected = f'W/"{etag}"'
+    if if_none_match == expected or if_none_match == etag:
+        return Response(status_code=304)
+    return None
+
+
 def cache_stats() -> dict:
     return _cache.stats()
 

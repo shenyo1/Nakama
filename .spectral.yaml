@@ -1,0 +1,20 @@
+extends: ["spectral:oas", "spectral:asyncapi"]
+
+rules:
+  # Require descriptions on all endpoints
+  operation-description: error
+  operation-summary: warn
+  
+  # Require tags for organization
+  operation-tags: warn
+  
+  # Path conventions
+  path-params: error
+  no-http-verbs-in-path: off  # We use /home, /search etc — fine for this API
+  
+  # Response conventions
+  operation-success-response: warn
+  
+  # Security
+  oas3-api-servers: off
+  oas3-valid-media-example: off

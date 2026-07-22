@@ -83,9 +83,6 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-# --- CORS middleware -------------------------------------------------------
-# Permissive CORS so any frontend (localhost dev, a static SPA, an embedded
-# widget) can call the API directly from the browser. The wildcard origin is
 # safe here because the API is read-only public data; tighten via env (e.g.
 # ALLOW_ORIGINS="https://app.example.com,https://staging.example.com") if the
 # deployment ever exposes user-scoped data.
@@ -95,6 +92,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- Idempotency middleware (Stripe pattern) --------------------------------
+from .idempotency import IdempotencyMiddleware
+app.add_middleware(IdempotencyMiddleware)
 
 
 # --- API key / JWT authentication middleware -------------------------------
