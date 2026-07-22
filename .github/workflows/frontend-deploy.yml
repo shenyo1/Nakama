@@ -69,11 +69,11 @@ jobs:
           "
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CF_PAGES_DEPLOY_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          projectName: nakama-frontend
-          directory: .vercel/output/static
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
+        run: |
+          npx wrangler@3 pages deploy .vercel/output/static \
+            --project-name=nakama-frontend \
+            --branch=main \
+            --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_PAGES_DEPLOY_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
