@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import time
 from typing import Any, Dict, List, Optional
 
@@ -317,11 +318,29 @@ def _pack(sources: List[dict]) -> dict:
         "unknown": sum(1 for s in sources if s["status"] == "unknown"),
         "total": len(sources),
     }
+    # Auto-repair circuit-breaker state for each known source
+    breakers: dict = {}
+    try:
+        from .auto_repair import breaker_status
+
+        breakers = breaker_status()
+    except Exception:
+        breakers = {}
+
     return {
         "summary": summary,
         "sources": sources,
         "infra": _infra_status(),
         "backend": "redis" if (_REDIS is not None and not _REDIS_FAILED) else "memory",
+        "circuit_breakers": breakers,
+        "auto_repair": {
+            "enabled": True,
+            "failure_threshold": int(os.getenv("SOURCE_FAILURE_THRESHOLD", "5")),
+            "cooldown_seconds": float(os.getenv("SOURCE_COOLDOWN_SECONDS", "120")),
+            "open_breakers": [
+                name for name, bs in breakers.items() if bs.get("state") == "open"
+            ],
+        },
     }
 
 
