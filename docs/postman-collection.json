@@ -1,0 +1,1015 @@
+{
+  "info": {
+    "_postman_id": "nakama-2025",
+    "name": "Nakama API",
+    "description": "REST API for anime & comic data, aggregating multiple public sources behind one consistent JSON interface. Set OFFLINE_MODE=1 to serve local fixtures (no network required).\n\nProduction: https://mynakama.web.id\nSources: 3 endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://mynakama.web.id"
+    },
+    {
+      "key": "api_key",
+      "value": "YOUR_API_KEY_HERE"
+    }
+  ],
+  "item": [
+    {
+      "name": "admin",
+      "item": [
+        {
+          "name": "Manually broadcast a JSON event to every connected /ws client",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/broadcast",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "broadcast"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "analytics",
+      "item": [
+        {
+          "name": "Cache + cost guard analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "anime",
+      "item": [
+        {
+          "name": "Anime documentation / source list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/anime/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anime"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Anime detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/anime/{source}/detail/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anime",
+                "{source}",
+                "detail",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Stream/download links for an episode",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/anime/{source}/episode/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anime",
+                "{source}",
+                "episode",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Anime in a genre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/anime/{source}/genre/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anime",
+                "{source}",
+                "genre",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "All genres",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/anime/{source}/genres",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anime",
+                "{source}",
+                "genres"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Latest ongoing anime",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/anime/{source}/home",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anime",
+                "{source}",
+                "home"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search anime",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/anime/{source}/search/{query}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anime",
+                "{source}",
+                "search",
+                "{query}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "audit",
+      "item": [
+        {
+          "name": "Recent audit log entries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/audit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audit"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "Login and get JWT pair",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Current user from Bearer token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Quota remaining for current principal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/quota",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "quota"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh access token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register a user",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "bookmarks",
+      "item": [
+        {
+          "name": "Create Bookmark",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/bookmarks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookmarks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Bookmarks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/bookmarks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookmarks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Bookmark",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/bookmarks/{bookmark_id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookmarks",
+                "{bookmark_id}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "comic",
+      "item": [
+        {
+          "name": "Comic documentation / source list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Chapter images across comic sources with fallback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/chapter/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic",
+                "chapter",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Find manga detail across comic sources with fallback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/manga/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic",
+                "manga",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search across comic sources with fallback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/search/{query}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic",
+                "search",
+                "{query}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Chapter image list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/{source}/chapter/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic",
+                "{source}",
+                "chapter",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Comics in a genre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/{source}/genre/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic",
+                "{source}",
+                "genre",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Latest comics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/{source}/home",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic",
+                "{source}",
+                "home"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Recently updated comics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/{source}/latest",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic",
+                "{source}",
+                "latest"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Comic detail + chapter list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/{source}/manga/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic",
+                "{source}",
+                "manga",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Popular comics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/{source}/popular",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic",
+                "{source}",
+                "popular"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search comics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comic/{source}/search/{query}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comic",
+                "{source}",
+                "search",
+                "{query}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "health",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "history",
+      "item": [
+        {
+          "name": "Record a reading event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "history"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List reading history for a user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "history"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "image",
+      "item": [
+        {
+          "name": "Proxy a remote image with SSRF protection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/image",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "image"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "novel",
+      "item": [
+        {
+          "name": "Novel documentation / source list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/novel/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novel"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Chapter text (novel prose)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/novel/{source}/chapter/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novel",
+                "{source}",
+                "chapter",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Novel detail + chapter list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/novel/{source}/detail/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novel",
+                "{source}",
+                "detail",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Novels in a genre (paginated upstream)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/novel/{source}/genre/{slug}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novel",
+                "{source}",
+                "genre",
+                "{slug}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "All genres",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/novel/{source}/genres",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novel",
+                "{source}",
+                "genres"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Latest novels (paginated upstream)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/novel/{source}/home",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novel",
+                "{source}",
+                "home"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Popular novels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/novel/{source}/popular",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novel",
+                "{source}",
+                "popular"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search novels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/novel/{source}/search/{query}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novel",
+                "{source}",
+                "search",
+                "{query}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "outages",
+      "item": [
+        {
+          "name": "Recent outage / recovery events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/outages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "outages"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "recommend",
+      "item": [
+        {
+          "name": "Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/recommend/{content_type}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "recommend",
+                "{content_type}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "search",
+      "item": [
+        {
+          "name": "Cross-source search (anime/comic/novel)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/search",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "search"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sources",
+      "item": [
+        {
+          "name": "Source health scoreboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sources/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sources",
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Probe a single source",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sources/health/{name}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sources",
+                "health",
+                "{name}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "stats",
+      "item": [
+        {
+          "name": "Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "trending",
+      "item": [
+        {
+          "name": "Trending titles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trending/{content_type}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trending",
+                "{content_type}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "webhooks",
+      "item": [
+        {
+          "name": "List Webhooks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/webhooks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "webhooks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Webhook",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/webhooks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "webhooks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Test Webhook",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/webhooks/test/{webhook_id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "webhooks",
+                "test",
+                "{webhook_id}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Webhook",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/webhooks/{webhook_id}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "webhooks",
+                "{webhook_id}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

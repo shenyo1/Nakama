@@ -33,17 +33,46 @@ async def test_cache_key_built_from_method_path_query():
 async def test_cache_stats_returns_dict():
     stats = cache_stats()
     assert isinstance(stats, dict)
-    assert "size" in stats
+    assert "backend" in stats
+    assert stats["backend"] in ("memory", "redis")
+
+
+@pytest.mark.asyncio
+async def test_cache_backend_defaults_to_memory(monkeypatch):
+    """Without RESPONSE_CACHE_REDIS_URL env, backend should be 'memory'."""
+    # Read the module-level state directly without reload (reload pollutes other tests).
+    import app.response_cache as rc
+    if "RESPONSE_CACHE_REDIS_URL" not in __import__("os").environ:
+        assert rc._BACKEND_KIND == "memory"
+        assert rc.cache_stats()["backend"] == "memory"
+
+
+@pytest.mark.asyncio
+async def test_cache_backend_redis_when_env_set():
+    """With RESPONSE_CACHE_REDIS_URL, backend should be 'redis'.
+    We test the build function directly without module-level reload.
+    """
+    import os
+    import app.response_cache as rc
+    old = os.environ.pop("RESPONSE_CACHE_REDIS_URL", None)
+    kind, url = rc._build_backend()
+    assert kind == "memory"
+    os.environ["RESPONSE_CACHE_REDIS_URL"] = "redis://localhost:6379/15"
+    kind, url = rc._build_backend()
+    assert kind == "redis"
+    assert url == "redis://localhost:6379/15"
+    # Restore
+    if old:
+        os.environ["RESPONSE_CACHE_REDIS_URL"] = old
+    else:
+        os.environ.pop("RESPONSE_CACHE_REDIS_URL", None)
 
 
 @pytest.mark.asyncio
 async def test_home_endpoint_returns_consistent_response(client):
     """Two back-to-back requests should return identical JSON (cache hit on 2nd)."""
-    # offline test — public health endpoint may not need auth
     r1 = await client.get("/anime/otakudesu/home")
     r2 = await client.get("/anime/otakudesu/home")
-    # Both should succeed or both fail consistently (cache shouldn't change semantics)
     assert r1.status_code == r2.status_code
-    # Body should match (cached payload or upstream error both deterministic)
     if r1.status_code == 200:
         assert r1.json() == r2.json()
