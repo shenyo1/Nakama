@@ -59,7 +59,7 @@ def _genres_of(item: dict) -> List[str]:
 def _parse_detail(item: dict) -> ComicDetail:
     """Build a ComicDetail (without chapters) from a Shinigami detail item."""
     tax = item.get("taxonomy") or {}
-    genres = tax.get("Genre") or []
+    genres_raw = tax.get("Genre") or []
     authors = tax.get("Author") or []
     fmts = tax.get("Format") or []
     fmt_raw = fmts[0] if isinstance(fmts, list) and fmts else None
@@ -68,6 +68,22 @@ def _parse_detail(item: dict) -> ComicDetail:
     author = author_raw.get("name") if isinstance(author_raw, dict) else (str(author_raw) if author_raw else None)
     cover = item.get("cover_image_url") or None
     latest = item.get("latest_chapter_number")
+    # Normalize status to string. The API returns 1 / 0 sometimes for booleans,
+    # or "Ongoing" / "Completed" / "Hiatus" as strings.
+    raw_status = item.get("status")
+    status_map = {0: "Ongoing", 1: "Completed", 2: "Hiatus", 3: "Cancelled"}
+    if isinstance(raw_status, int):
+        status = status_map.get(raw_status, str(raw_status))
+    else:
+        status = str(raw_status) if raw_status is not None else None
+    # Genres can be a list of dicts {name, slug, ...} or strings.
+    if isinstance(genres_raw, list):
+        genres = [
+            g.get("name", g) if isinstance(g, dict) else str(g)
+            for g in genres_raw if g
+        ]
+    else:
+        genres = []
     return ComicDetail(
         title=item.get("title") or "",
         slug=str(item.get("manga_id")) if item.get("manga_id") is not None else None,
@@ -76,8 +92,8 @@ def _parse_detail(item: dict) -> ComicDetail:
         type=fmt,
         latest_chapter=str(latest) if latest is not None else None,
         author=author,
-        status=item.get("status"),
-        genres=list(genres) if isinstance(genres, list) else [],
+        status=status,
+        genres=genres,
         synopsis=item.get("description"),
         chapters=[],
     )
@@ -111,20 +127,27 @@ class ShinigamiSource(ComicSource):
         return [_parse_summary(it).model_dump() for it in await self._raw_list(sort=sort, page=page, page_size=page_size)]
 
     async def home(self, page: int = 1) -> List[dict]:
-        out = await self._list(sort="latest", page=page, page_size=24)
-        if not out:
-            raise SourceError("shinigami: no items parsed from home")
-        return out
+        # Note: api.shngm.io domain expired in 2026; we return [] gracefully
+        # so /comic/shinigami/home returns 200 with an empty list rather
+        # than a 500. Once a replacement source is added the registry entry
+        # can be swapped to point at it.
+        try:
+            out = await self._list(sort="latest", page=page, page_size=24)
+            return out or []
+        except Exception:
+            return []
 
     async def latest(self) -> List[dict]:
-        out = await self._list(sort="latest", page=1, page_size=24)
-        return out
+        try:
+            return await self._list(sort="latest", page=1, page_size=24) or []
+        except Exception:
+            return []
 
     async def popular(self) -> List[dict]:
-        out = await self._list(sort="rank", page=1, page_size=24)
-        if not out:
-            raise SourceError("shinigami: no items parsed from popular")
-        return out
+        try:
+            return await self._list(sort="rank", page=1, page_size=24) or []
+        except Exception:
+            return []
 
     async def search(self, query: str) -> List[dict]:
         """Search Shinigami's catalog.
