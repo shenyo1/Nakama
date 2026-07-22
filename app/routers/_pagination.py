@@ -35,8 +35,11 @@ def pagination_params(
     return page, page_size
 
 
-def paginate(items: List[Any], page: Optional[int], page_size: Optional[int], kind: str = "", source: str = "") -> Any:
+def paginate(items: List[Any], page: Optional[int], page_size: Optional[int], kind: str = "", source: str = "", cursor: Optional[str] = None) -> Any:
     """Return ``items`` unchanged when pagination is off, else a Paginated slice.
+
+    Supports both offset-based (page) and cursor-based pagination.
+    When ``cursor`` is provided, returns items after the cursor position.
 
     Also enriches each item with ``type`` and ``total_chapters`` fields
     when they're missing, using ``kind`` and ``source`` for context.
@@ -45,6 +48,25 @@ def paginate(items: List[Any], page: Optional[int], page_size: Optional[int], ki
     if kind:
         from ..enrich import enrich_home_item
         items = [enrich_home_item(it, kind, source) if isinstance(it, dict) else it for it in items]
+
+    # Cursor-based pagination
+    if cursor:
+        page_size = page_size or get_settings().default_page_size
+        if page_size > get_settings().max_page_size:
+            page_size = get_settings().max_page_size
+        try:
+            cursor_idx = int(cursor)
+        except (ValueError, TypeError):
+            cursor_idx = 0
+        slice_items = items[cursor_idx:cursor_idx + page_size]
+        next_cursor = str(cursor_idx + page_size) if (cursor_idx + page_size) < len(items) else None
+        return Paginated[Any](
+            items=slice_items,
+            page=1,
+            page_size=page_size,
+            total=len(items),
+            cursor=next_cursor,
+        )
 
     if page is None and page_size is None:
         return items

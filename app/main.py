@@ -6,8 +6,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi_mcp import FastApiMCP
 from fastapi.responses import HTMLResponse, JSONResponse
+
+from .logging import setup_logging, RequestLoggingMiddleware
+
+setup_logging()
 from fastapi.openapi.utils import get_openapi
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -97,6 +102,12 @@ app.add_middleware(
 # --- Idempotency middleware (Stripe pattern) --------------------------------
 from .idempotency import IdempotencyMiddleware
 app.add_middleware(IdempotencyMiddleware)
+
+# --- Request logging middleware (JSON + request IDs) -----------------------
+app.add_middleware(RequestLoggingMiddleware)
+
+# --- GZip compression (reduce JSON response size 2-10x) --------------------
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
 # --- MCP server (AI agent access to all endpoints) -------------------------

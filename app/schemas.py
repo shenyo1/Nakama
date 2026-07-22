@@ -31,6 +31,7 @@ class Paginated(BaseModel, Generic[T]):
     page: int
     page_size: int
     total: Optional[int] = None
+    cursor: Optional[str] = None  # next cursor for cursor-based pagination
 
 
 class Thumbnail(BaseModel):
