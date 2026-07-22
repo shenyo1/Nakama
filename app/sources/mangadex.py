@@ -270,39 +270,47 @@ class MangadexSource(ComicSource):
         detail = _parse_detail(item)
 
         # Chapter feed — MangaDex caps at 500 per request; page if needed.
+        # Accept any translated language, preferring en > id > ja > others
+        # in the result order. MangaDex's own UI shows them all too.
         chapters: List[dict] = []
+        seen_ids: set[str] = set()
         offset = 0
-        while True:
-            feed_url = f"{BASE}/manga/{manga_id}/feed"
-            feed_params = {
-                "limit": "500",
-                "offset": str(offset),
-                "translatedLanguage[]": "en",
-                "order[chapter]": "asc",
-            }
-            feed_payload = await fetch_json(feed_url, params=feed_params, source=self.name)
-            if not isinstance(feed_payload, dict):
-                break
-            ch_items = feed_payload.get("data") or []
-            if not ch_items:
-                break
-            for ch in ch_items:
-                ch_attrs = ch.get("attributes") or {}
-                cid = ch.get("id")
-                cnum = ch_attrs.get("chapter")
-                chapters.append({
-                    "title": ch_attrs.get("title") or (f"Chapter {cnum}" if cnum else None),
-                    "slug": cid,
-                    "number": cnum,
-                    "date": ch_attrs.get("publishAt") or ch_attrs.get("readableAt"),
-                    "url": f"{BASE}/chapter/{cid}" if cid else None,
-                })
-            # stop if fewer than a full page returned
-            if len(ch_items) < 500:
-                break
-            offset += 500
-            if offset > 10000:  # safety bound
-                break
+        for lang in ("en", "id", "ja", "pt-br", "es", "fr", "de", "it"):
+            offset = 0
+            while True:
+                feed_url = f"{BASE}/manga/{manga_id}/feed"
+                feed_params = {
+                    "limit": "500",
+                    "offset": str(offset),
+                    "translatedLanguage[]": lang,
+                    "order[chapter]": "asc",
+                }
+                feed_payload = await fetch_json(feed_url, params=feed_params, source=self.name)
+                if not isinstance(feed_payload, dict):
+                    break
+                ch_items = feed_payload.get("data") or []
+                if not ch_items:
+                    break
+                for ch in ch_items:
+                    cid = ch.get("id")
+                    if not cid or cid in seen_ids:
+                        continue
+                    seen_ids.add(cid)
+                    ch_attrs = ch.get("attributes") or {}
+                    cnum = ch_attrs.get("chapter")
+                    chapters.append({
+                        "title": ch_attrs.get("title") or (f"Chapter {cnum}" if cnum else None),
+                        "slug": cid,
+                        "number": cnum,
+                        "language": ch_attrs.get("translatedLanguage"),
+                        "date": ch_attrs.get("publishAt") or ch_attrs.get("readableAt"),
+                        "url": f"{BASE}/chapter/{cid}" if cid else None,
+                    })
+                if len(ch_items) < 500:
+                    break
+                offset += 500
+                if offset > 5000:  # safety bound per language
+                    break
 
         detail.chapters = chapters
         return detail.model_dump()

@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from ..http import fetch_soup
+from ..http import fetch_soup, fetch_text
 from ..schemas import AnimeDetail, AnimeSummary, Episode, Genre
 from .base import AnimeSource, SourceError
 
@@ -86,7 +86,70 @@ class SamehadakuSource(AnimeSource):
         return AnimeDetail(title=title, slug=slug, url=url, synopsis=synopsis, episodes=eps).model_dump()
 
     async def episode(self, slug: str) -> dict:
-        return {"title": slug, "slug": slug, "url": f"{BASE}/{slug}/", "streams": [], "downloads": []}
+        """Fetch a single episode page and extract the embedded video URLs.
+
+        Samehadaku's player markup is a lite-speed–cached page where the
+        actual <iframe> is loaded lazily; the real URL is in either:
+          * ``data-litespeed-src="https://www.blogger.com/video.g?token=..."``
+          * ``<option value="<base64 iframe HTML>">``
+        We also pick up the "Download" link (gofile.io) as a fallback.
+        """
+        import base64
+        import re
+        from urllib.parse import unquote
+
+        url = f"{BASE}/{slug}/"
+        text = await fetch_text(url, source=self.name)
+        soup = BeautifulSoup(text, "lxml")
+
+        streams: List[dict] = []
+        seen: set[str] = set()
+
+        def _add(url: str, quality: str = "default", source: str = "blogger"):
+            if not url or url in seen:
+                return
+            seen.add(url)
+            streams.append({"quality": quality, "url": url, "source": source})
+
+        # 1) data-litespeed-src on the iframe
+        for iframe in soup.select("iframe[data-litespeed-src]"):
+            src = iframe.get("data-litespeed-src", "").strip()
+            if src and src != "about:blank":
+                _add(src)
+
+        # 2) base64-encoded <option value> in the server dropdown
+        for opt in soup.select("option"):
+            v = opt.get("value", "")
+            if len(v) < 80:
+                continue
+            try:
+                decoded = base64.b64decode(v).decode("utf-8", errors="replace")
+            except Exception:
+                continue
+            m = re.search(r'src="(https?://[^"]+)"', decoded)
+            if m:
+                src = m.group(1).strip()
+                _add(src)
+
+        # 3) Direct iframe src (non-empty, non-placeholder)
+        for iframe in soup.select("iframe"):
+            src = (iframe.get("src") or "").strip()
+            if src and src not in ("about:blank", ""):
+                _add(src)
+
+        # 4) Download link (gofile.io or similar) as fallback
+        for a in soup.select("a[href*='gofile.io'], a[href*='/d/']"):
+            href = a.get("href", "").strip()
+            if href and "gofile.io" in href:
+                _add(href, source="gofile")
+
+        return {
+            "title": slug,
+            "slug": slug,
+            "url": url,
+            "streams": streams,
+            "downloads": [s for s in streams if s.get("source") == "gofile"],
+        }
 
     async def genres(self) -> List[dict]:
         soup = await fetch_soup(f"{BASE}/", source=self.name)
