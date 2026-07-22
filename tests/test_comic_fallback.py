@@ -19,9 +19,10 @@ def _fixture_exists(url: str) -> bool:
 _COMIC_FIXTURES = {
     "komiku": "https://komiku.id/",
     "kiryuu": "https://v7.kiryuu.to/",
+    "komikstation": "https://komikstation.org/",
 }
 _missing = [n for n, u in _COMIC_FIXTURES.items() if not _fixture_exists(u)]
-_SKIP_SEARCH = len(_missing) > 0
+_SKIP_SEARCH = len(_missing) > 1  # allow 1 missing
 
 
 @pytest.fixture(autouse=True)
@@ -29,6 +30,8 @@ def _offline_env(monkeypatch):
     monkeypatch.setenv("OFFLINE_MODE", "1")
     monkeypatch.delenv("API_KEY", raising=False)
     monkeypatch.delenv("FLARESOLVERR_URL", raising=False)
+    from app.config import get_settings
+    get_settings.cache_clear()
 
 
 @pytest.fixture
@@ -39,6 +42,7 @@ async def client():
 
 
 @pytest.mark.skipif(_SKIP_SEARCH, reason="fixtures missing for multi-source search")
+@pytest.mark.network
 @pytest.mark.asyncio
 async def test_fallback_search_ok(client):
     r = await client.get("/comic/search/solo")
@@ -55,6 +59,7 @@ async def test_fallback_search_ok(client):
 
 @pytest.mark.skipif(_SKIP_SEARCH, reason="fixtures missing for multi-source search")
 @pytest.mark.asyncio
+@pytest.mark.network
 async def test_fallback_search_with_primary(client):
     r = await client.get("/comic/search/solo?primary=komiku")
     assert r.status_code == 200
@@ -64,6 +69,7 @@ async def test_fallback_search_with_primary(client):
 
 @pytest.mark.skipif(_SKIP_SEARCH, reason="fixtures missing for multi-source search")
 @pytest.mark.asyncio
+@pytest.mark.network
 async def test_fallback_search_bad_primary(client):
     r = await client.get("/comic/search/solo?primary=does-not-exist")
     assert r.status_code == 404
@@ -71,6 +77,7 @@ async def test_fallback_search_bad_primary(client):
 
 @pytest.mark.skipif(_SKIP_SEARCH, reason="fixtures missing for multi-source search")
 @pytest.mark.asyncio
+@pytest.mark.network
 async def test_fallback_manga_offline(client):
     """In offline mode, manga with slug 'solo-leveling' is in komiku fixtures."""
     r = await client.get("/comic/manga/solo-leveling")
@@ -84,6 +91,7 @@ async def test_fallback_manga_offline(client):
 
 @pytest.mark.skipif(_SKIP_SEARCH, reason="fixtures missing for multi-source search")
 @pytest.mark.asyncio
+@pytest.mark.network
 async def test_fallback_manga_with_primary(client):
     r = await client.get("/comic/manga/solo-leveling?primary=kiryuu")
     assert r.status_code == 200
@@ -92,6 +100,7 @@ async def test_fallback_manga_with_primary(client):
 
 
 @pytest.mark.skipif(_SKIP_SEARCH, reason="fixtures missing for multi-source search")
+@pytest.mark.network  # fans out to all sources including Camoufox-dependent westmanga
 @pytest.mark.asyncio
 async def test_fallback_chapter_returns_metadata_or_502(client):
     """Chapter lookup should return metadata if found, or 502 if no source has it."""

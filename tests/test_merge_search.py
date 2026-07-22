@@ -61,6 +61,7 @@ def client():
 
 
 @pytest.mark.skipif(MISSING_COMIC, reason="too many sources missing offline fixtures")
+@pytest.mark.network
 def test_comic_fallback_returns_merged_key(client):
     """/comic/search/{q} now also returns a 'merged' list of deduped titles."""
     r = client.get("/comic/search/solo")
@@ -78,6 +79,7 @@ def test_comic_fallback_returns_merged_key(client):
 
 
 @pytest.mark.skipif(MISSING_COMIC, reason="too many sources missing offline fixtures")
+@pytest.mark.network
 def test_comic_fallback_merged_items_have_source_annotations(client):
     r = client.get("/comic/search/solo")
     data = r.json()["data"]
@@ -90,6 +92,7 @@ def test_comic_fallback_merged_items_have_source_annotations(client):
 
 
 @pytest.mark.skipif(MISSING_COMIC, reason="too many sources missing offline fixtures")
+@pytest.mark.network
 def test_comic_fallback_merged_sorted_by_coverage(client):
     r = client.get("/comic/search/magic")
     data = r.json()["data"]
@@ -98,6 +101,7 @@ def test_comic_fallback_merged_sorted_by_coverage(client):
 
 
 @pytest.mark.skipif(MISSING_COMIC, reason="too many sources missing offline fixtures")
+@pytest.mark.network
 def test_comic_fallback_primary_param_still_works(client):
     """Backward compat: ?primary=kiryuu still works."""
     r = client.get("/comic/search/solo?primary=kiryuu")
@@ -110,6 +114,7 @@ def test_comic_fallback_primary_param_still_works(client):
 
 
 @pytest.mark.skipif(MISSING_NOVEL, reason="too many novel sources missing offline fixtures")
+@pytest.mark.network
 def test_novel_search_all_returns_merged(client):
     r = client.get("/novel/search/pangeran")
     assert r.status_code == 200
@@ -124,6 +129,7 @@ def test_novel_search_all_returns_merged(client):
 
 
 @pytest.mark.skipif(MISSING_NOVEL, reason="too many novel sources missing offline fixtures")
+@pytest.mark.network
 def test_novel_search_all_items_have_source_annotations(client):
     r = client.get("/novel/search/pangeran")
     data = r.json()["data"]
@@ -135,6 +141,7 @@ def test_novel_search_all_items_have_source_annotations(client):
 
 
 @pytest.mark.skipif(MISSING_NOVEL, reason="too many novel sources missing offline fixtures")
+@pytest.mark.network
 def test_novel_search_all_unknown_query(client):
     r = client.get("/novel/search/zzzznomatchxxxxx")
     assert r.status_code == 200

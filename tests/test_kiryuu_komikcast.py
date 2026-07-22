@@ -87,6 +87,7 @@ async def test_komikcast_manga(client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.network
 async def test_komikcast_chapter(client):
     r = await client.get("/comic/komikcast/chapter/one-piece-chapter-1")
     assert r.status_code == 200
