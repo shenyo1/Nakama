@@ -19,6 +19,7 @@ from ..config import get_settings
 from ..http import fetch_json
 from ..schemas import ChapterDetail, ChapterImage, ComicDetail, ComicSummary, Genre
 from .base import ComicSource, SourceError
+from .source_meta import SourceMeta
 
 
 def _clean_html(text: str) -> str:
@@ -53,12 +54,36 @@ def _summary(item: dict) -> dict:
 
 class KiryuuSource(ComicSource):
     name = "kiryuu"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://v7.kiryuu.to/wp-json/wp/v2/posts",
+        selectors=["article.bs", ".bsx", ".listupd .bs", ".postbody"],
+        alt_domains=["kiryuu.id", "kiryuu.co", "kiryuu.cc", "kiryuu.to"],
+        notes="WP-JSON /posts endpoint; switches domains weekly. Use alt_domains fallback.",
+    )
 
     def __init__(self) -> None:
         self.base_url = get_settings().kiryuu_base_url
         self._api = f"{self.base_url}/wp-json/wp/v2"
 
+    async def _ensure_base_url(self) -> str:
+        """Resolve the working base URL via domain_rotation if not cached."""
+        from .domain_rotation import resolve_base_url
+
+        resolved = await resolve_base_url(
+            "kiryuu",
+            get_settings().kiryuu_base_url,
+            alt_domains=KiryuuSource.meta.alt_domains,
+        )
+        if resolved:
+            self.base_url = resolved
+            self._api = f"{self.base_url}/wp-json/wp/v2"
+        return self.base_url
+
     async def _manga_list(self, **params) -> List[dict]:
+        # On every call, attempt to resolve base URL — cheap if cached
+        await self._ensure_base_url()
         q = {"per_page": params.pop("per_page", 24), "_embed": "1", **params}
         try:
             data = await fetch_json(

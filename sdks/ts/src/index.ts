@@ -101,6 +101,36 @@ export class Anime {
   }
 
   /**
+   * Search across all anime sources (deduplicated, scored)
+   * @see GET /anime/search/{query}
+   * Search every anime source concurrently, deduplicate by normalized title.
+   * 
+   * Returns a unified list with each item annotated by ``_sources`` showing
+   * which sources returned this title. Useful for finding the most widely
+   * available show.
+   */
+  async search(query: string, params?: { "page"?: number; "page_size"?: number }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/anime/search/${query}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
    * Anime detail
    * @see GET /anime/{source}/detail/{slug}
    */
@@ -219,7 +249,7 @@ export class Anime {
    * Search anime
    * @see GET /anime/{source}/search/{query}
    */
-  async search(source: string, query: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async search_get(source: string, query: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.page !== undefined) search.set("page", String(p.page));

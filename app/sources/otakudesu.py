@@ -17,6 +17,7 @@ from bs4 import BeautifulSoup
 from ..http import fetch_soup, fetch_text
 from ..schemas import AnimeDetail, AnimeSummary, Episode, Genre
 from .base import AnimeSource, SourceError
+from .source_meta import SourceMeta
 
 BASE = "https://otakudesu.blog"
 
@@ -339,6 +340,14 @@ def _parse_episode_nav(soup: BeautifulSoup) -> tuple[Optional[str], Optional[str
 class OtakudesuSource(AnimeSource):
     name = "otakudesu"
     base_url = BASE
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://otakudesu.blog/",
+        selectors=[".venz", ".detpost", ".eps", "#venkonten .episodelist"],
+        alt_domains=["otakudesu.cc", "otakudesu.wiki"],
+        notes="Switched to .venz container in 2026-07; .detpost deprecated.",
+    )
 
     async def home(self, page: int = 1) -> List[dict]:
         """Latest ongoing anime. ``page`` >= 2 hits ``/ongoing-anime/page/<n>/``."""

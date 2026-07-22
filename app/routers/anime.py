@@ -1,6 +1,8 @@
 """Anime endpoints: /anime/..."""
 from __future__ import annotations
 
+import asyncio
+import re
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -13,6 +15,110 @@ from ..sources.base import SourceError
 from ._pagination import paginate, pagination_params
 
 router = APIRouter(prefix="/anime", tags=["anime"])
+
+
+# --------------------------------------------------------------------------- #
+# Multi-source search (aggregator)
+# --------------------------------------------------------------------------- #
+
+
+def _normalize_title(t: str) -> str:
+    """Normalize a title for dedup matching."""
+    if not t:
+        return ""
+    t = re.sub(r"[\s\W_]+", " ", t.lower()).strip()
+    t = re.sub(r"\b(episode|ep|chapter|ch)\s*\d+\b", "", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    return t
+
+
+@router.get(
+    "/search/{query}",
+    summary="Search across all anime sources (deduplicated, scored)",
+)
+@limiter.limit(get_settings().rate_limit)
+async def search_all(
+    request: Request,
+    query: str,
+    page: Optional[int] = Query(None, ge=1),
+    page_size: Optional[int] = Query(None, ge=1),
+):
+    """Search every anime source concurrently, deduplicate by normalized title.
+
+    Returns a unified list with each item annotated by ``_sources`` showing
+    which sources returned this title. Useful for finding the most widely
+    available show.
+    """
+    sources = list_anime_sources()
+    if not sources:
+        raise HTTPException(status_code=503, detail="No anime sources configured")
+
+    async def _one(name: str) -> tuple:
+        src = anime_source(name)
+        if src is None:
+            return name, {"error": "not registered"}
+        try:
+            results = await src.search(query)
+            return name, {"ok": True, "items": results if isinstance(results, list) else []}
+        except Exception as e:
+            return name, {"ok": False, "error": str(e)[:200]}
+
+    tasks = [asyncio.wait_for(_one(s), timeout=20.0) for s in sources]
+    finished = await asyncio.gather(*tasks, return_exceptions=True)
+
+    by_source: dict = {}
+    sources_failed: list = []
+    for result in finished:
+        if isinstance(result, BaseException):
+            sources_failed.append({"source": "?", "error": str(result)[:200]})
+            continue
+        # `result` may be (name, data) tuple or BaseException
+        if not isinstance(result, tuple) or len(result) != 2:
+            continue
+        name, data = result  # type: ignore[misc]
+        by_source[name] = data
+        if not data.get("ok"):
+            sources_failed.append({"source": name, "error": data.get("error", "unknown")})
+
+    merged: dict = {}
+    for name, data in by_source.items():
+        for item in data.get("items", []):
+            if not isinstance(item, dict):
+                continue
+            title = item.get("title") or item.get("name") or ""
+            key = _normalize_title(title)
+            if not key:
+                continue
+            if key not in merged:
+                merged[key] = {
+                    **item,
+                    "_sources": [],
+                    "_source_count": 0,
+                }
+            merged[key]["_sources"].append(name)
+            merged[key]["_source_count"] = len(merged[key]["_sources"])
+
+    items = sorted(
+        merged.values(),
+        key=lambda x: (-x.get("_source_count", 0), x.get("title", "")),
+    )
+
+    paged = paginate(items, page, page_size)
+    # paginate returns List when no pagination requested, Paginated model when it is.
+    # Build a uniform dict shape that includes merge-specific metadata.
+    if isinstance(paged, list):
+        result: dict = {
+            "items": paged,
+            "page": page or 1,
+            "page_size": None,
+            "total": len(items),
+        }
+    else:
+        result = paged.model_dump() if hasattr(paged, "model_dump") else dict(paged)
+    result["sources_failed"] = sources_failed
+    result["sources_queried"] = sources
+    result["merged_unique_titles"] = len(merged)
+    return ApiResponse(source="multi", data=result)
 
 
 def _get(source: str):

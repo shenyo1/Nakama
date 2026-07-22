@@ -304,8 +304,29 @@ async def snapshot_async() -> dict:
     sources = []
     for name, kind in names:
         st = await _load_state(name, kind=kind)
-        sources.append(_to_dict(st))
+        meta = _meta_for_source(name)
+        row = _to_dict(st)
+        if meta:
+            row["meta"] = meta
+        sources.append(row)
     return _pack(sources)
+
+
+def _meta_for_source(name: str) -> Optional[dict]:
+    """Return the static SourceMeta for an adapter (or None)."""
+    try:
+        from .registry import anime_source, comic_source, novel_source
+        from .source_meta import SourceMeta
+
+        src = anime_source(name) or comic_source(name) or novel_source(name)
+        if src is None:
+            return None
+        meta = getattr(src, "meta", None)
+        if isinstance(meta, SourceMeta):
+            return meta.to_dict()
+    except Exception:
+        return None
+    return None
 
 
 def _pack(sources: List[dict]) -> dict:
@@ -327,12 +348,42 @@ def _pack(sources: List[dict]) -> dict:
     except Exception:
         breakers = {}
 
+    # Domain rotation cache
+    domain_cache: dict = {}
+    try:
+        from .domain_rotation import cache_status
+
+        domain_cache = cache_status()
+    except Exception:
+        domain_cache = {}
+
+    # Proxy rotation status
+    proxy_status: dict = {}
+    try:
+        from .proxy_rotation import status as proxy_status_fn
+
+        proxy_status = proxy_status_fn()
+    except Exception:
+        proxy_status = {}
+
+    # Stale adapters (adapters with SourceMeta whose verified_on > 30 days ago)
+    stale_adapters: list = []
+    for src_row in sources:
+        meta = src_row.get("meta")
+        if meta and meta.get("is_stale"):
+            stale_adapters.append(
+                {"name": src_row["name"], "age_days": meta.get("age_days", 0)}
+            )
+
     return {
         "summary": summary,
         "sources": sources,
         "infra": _infra_status(),
         "backend": "redis" if (_REDIS is not None and not _REDIS_FAILED) else "memory",
         "circuit_breakers": breakers,
+        "domain_cache": domain_cache,
+        "proxy_rotation": proxy_status,
+        "stale_adapters": stale_adapters,
         "auto_repair": {
             "enabled": True,
             "failure_threshold": int(os.getenv("SOURCE_FAILURE_THRESHOLD", "5")),
@@ -340,6 +391,7 @@ def _pack(sources: List[dict]) -> dict:
             "open_breakers": [
                 name for name, bs in breakers.items() if bs.get("state") == "open"
             ],
+            "stale_count": len(stale_adapters),
         },
     }
 
