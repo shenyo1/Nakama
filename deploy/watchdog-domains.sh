@@ -32,7 +32,9 @@ DOMAINS=(
   "www.novelbin.cc"       # novelbin (novel)
   "novelfull.com"         # novelfull (novel)
   "meionovels.com"        # meionovels (novel)
-  "novelhubapp.com"       # novelhubapp (novel, JS-rendered)
+  "novelhubapp.com"       # novelhubapp (novel, Nuxt SSR)
+  "komikstation.org"      # komikstation (comic)
+  "v1.westmanga.my"       # westmanga (comic, JS-rendered)
 )
 
 ALERTED_FILE=/home/ubuntu/.config/nakama/domains-alerted

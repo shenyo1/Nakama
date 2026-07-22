@@ -29,6 +29,9 @@ def _build() -> None:
     from .anilist import AnilistSource
     from .jikan import JikanSource
     from .samehadaku import SamehadakuSource
+    from .komikstation import KomikstationSource
+    from .westmanga import WestmangaSource
+    from .novelhubapp import NovelhubappSource
 
     _REGISTRY["komiku"] = KomikuSource()
     _REGISTRY["bacakomik"] = BacaKomikSource()
@@ -48,6 +51,9 @@ def _build() -> None:
     _REGISTRY["anilist"] = AnilistSource()
     _REGISTRY["jikan"] = JikanSource()
     _REGISTRY["samehadaku"] = SamehadakuSource()
+    _REGISTRY["komikstation"] = KomikstationSource()
+    _REGISTRY["westmanga"] = WestmangaSource()
+    _REGISTRY["novelhubapp"] = NovelhubappSource()
     _INITIALIZED = True
 
 
