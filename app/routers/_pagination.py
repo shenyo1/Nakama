@@ -35,8 +35,17 @@ def pagination_params(
     return page, page_size
 
 
-def paginate(items: List[Any], page: Optional[int], page_size: Optional[int]) -> Any:
-    """Return ``items`` unchanged when pagination is off, else a Paginated slice."""
+def paginate(items: List[Any], page: Optional[int], page_size: Optional[int], kind: str = "", source: str = "") -> Any:
+    """Return ``items`` unchanged when pagination is off, else a Paginated slice.
+
+    Also enriches each item with ``type`` and ``total_chapters`` fields
+    when they're missing, using ``kind`` and ``source`` for context.
+    """
+    # Enrich items before pagination
+    if kind:
+        from ..enrich import enrich_home_item
+        items = [enrich_home_item(it, kind, source) if isinstance(it, dict) else it for it in items]
+
     if page is None and page_size is None:
         return items
     s = get_settings()

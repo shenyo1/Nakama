@@ -118,7 +118,7 @@ async def search(
     src = _get(source)
     try:
         data = await src.search(query)
-        return ApiResponse(source=source, data=paginate(data, page, page_size))
+        return ApiResponse(source=source, data=paginate(data, page, page_size, kind="novel", source=source))
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -132,7 +132,10 @@ async def search(
 async def detail(source: str, slug: str, request: Request):
     src = _get(source)
     try:
-        return ApiResponse(source=source, data=await src.detail(slug))
+        data = await src.detail(slug)
+        from ..enrich import enrich_detail
+        data = enrich_detail(data, "novel", source)
+        return ApiResponse(source=source, data=data)
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -166,7 +169,7 @@ async def genres(
     src = _get(source)
     try:
         data = await src.genres()
-        return ApiResponse(source=source, data=paginate(data, page, page_size))
+        return ApiResponse(source=source, data=paginate(data, page, page_size, kind="novel", source=source))
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -212,6 +215,6 @@ async def popular(
     src = _get(source)
     try:
         data = await src.popular()
-        return ApiResponse(source=source, data=paginate(data, page, page_size))
+        return ApiResponse(source=source, data=paginate(data, page, page_size, kind="novel", source=source))
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))

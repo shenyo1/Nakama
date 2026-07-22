@@ -43,7 +43,7 @@ async def home(source: str, request: Request, page: Optional[int] = Query(None, 
     async def _fetch():
         try:
             data = await src.home()
-            return ApiResponse(source=source, data=paginate(data, page, page_size)).model_dump()
+            return ApiResponse(source=source, data=paginate(data, page, page_size, kind="comic", source=source)).model_dump()
         except SourceError as e:
             raise HTTPException(status_code=502, detail=str(e))
 
@@ -57,7 +57,7 @@ async def search(source: str, query: str, request: Request, page: Optional[int] 
     src = _get(source)
     try:
         data = await src.search(query)
-        return ApiResponse(source=source, data=paginate(data, page, page_size))
+        return ApiResponse(source=source, data=paginate(data, page, page_size, kind="comic", source=source))
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -67,7 +67,10 @@ async def search(source: str, query: str, request: Request, page: Optional[int] 
 async def manga(source: str, slug: str, request: Request):
     src = _get(source)
     try:
-        return ApiResponse(source=source, data=await src.manga(slug))
+        data = await src.manga(slug)
+        from ..enrich import enrich_detail
+        data = enrich_detail(data, "comic", source)
+        return ApiResponse(source=source, data=data)
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -88,7 +91,7 @@ async def popular(source: str, request: Request, page: Optional[int] = Query(Non
     src = _get(source)
     try:
         data = await src.popular()
-        return ApiResponse(source=source, data=paginate(data, page, page_size))
+        return ApiResponse(source=source, data=paginate(data, page, page_size, kind="comic", source=source))
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -99,7 +102,7 @@ async def genre(source: str, slug: str, request: Request, page: Optional[int] = 
     src = _get(source)
     try:
         data = await src.genre(slug)
-        return ApiResponse(source=source, data=paginate(data, page, page_size))
+        return ApiResponse(source=source, data=paginate(data, page, page_size, kind="comic", source=source))
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -110,6 +113,6 @@ async def latest(source: str, request: Request, page: Optional[int] = Query(None
     src = _get(source)
     try:
         data = await src.latest()
-        return ApiResponse(source=source, data=paginate(data, page, page_size))
+        return ApiResponse(source=source, data=paginate(data, page, page_size, kind="comic", source=source))
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))
