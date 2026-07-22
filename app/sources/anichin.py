@@ -121,12 +121,12 @@ def _parse_detail(soup, slug):
             continue
         # Extract slug: take last path segment excluding the empty trailing one
         parts = [p for p in href.split("/") if p]
-        slug = parts[-1] if parts else ""
+        ep_slug = parts[-1] if parts else ""
         # Strip URL params
-        if "?" in slug:
-            slug = slug.split("?")[0]
+        if "?" in ep_slug:
+            ep_slug = ep_slug.split("?")[0]
         episodes.append({
-            "slug": slug,
+            "slug": ep_slug,
             "title": ep.get_text(strip=True),
             "url": href,
         })
