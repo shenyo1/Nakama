@@ -372,19 +372,23 @@ class OtakudesuSource(AnimeSource):
         return out
 
     async def search(self, query: str) -> List[dict]:
-        # otakudesu search is JS-driven; fall back to genre-list scan is not ideal.
-        # Use the site search endpoint that returns server HTML for many queries.
+        # otakudesu search returns a simple list: li > h2 > a (title + link)
+        # plus div.set > b for Status/Rating.
         soup = await fetch_soup(f"{BASE}/", params={"s": query}, source=self.name)
         out: List[dict] = []
         for li in soup.select("div.venutama li"):
-            d = _parse_detpost(li)
-            if d.title:
-                out.append(d.model_dump())
-        # genre-page style results
-        for con in soup.select("div.col-anime-con"):
-            d = _parse_col_anime(con)
-            if d.title:
-                out.append(d.model_dump())
+            a_tag = li.select_one("h2 a")
+            if not a_tag:
+                continue
+            href = a_tag.get("href", "")
+            title = a_tag.get_text(strip=True)
+            slug = _slug_from(href) if href else ""
+            out.append({
+                "title": title,
+                "slug": slug,
+                "url": _abs(href) if href else "",
+                "source": self.name,
+            })
         return out
 
     async def detail(self, slug: str) -> dict:
