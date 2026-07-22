@@ -16,19 +16,23 @@ TS() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
 # These are the *actual* live domains each adapter scrapes; if any fails DNS
 # the provider is likely down or has migrated.
 DOMAINS=(
-  "otakudesu.blog"      # otakudesu (anime)
-  "samehadaku.li"       # samehadaku (anime)
-  "graphql.anilist.co"  # anilist (anime metadata)
-  "api.jikan.moe"       # jikan (anime metadata)
-  "komiku.id"           # komiku (comic)
-  "kiryuu.id"           # kiryuu (comic)
-  "komikcast.com"       # komikcast (comic)
-  "komikindo.id"        # komikindo (comic)
-  "mangadex.org"        # mangadex (comic)
-  "api.shngm.io"        # shinigami (comic)
-  "sakuranovel.id"      # sakuranovel (novel)
-  "www.novelbin.cc"     # novelbin (novel)
-  "novelfull.com"       # novelfull (novel)
+  "otakudesu.blog"        # otakudesu (anime)
+  "samehadaku.li"         # samehadaku (anime)
+  "graphql.anilist.co"    # anilist (anime metadata)
+  "api.jikan.moe"         # jikan (anime metadata)
+  "anichin.cafe"          # anichin (anime/donghua)
+  "komiku.id"             # komiku (comic)
+  "v7.kiryuu.to"          # kiryuu (comic) — domain_rotation handles weekly migrations
+  "komikcast.com"         # komikcast (comic)
+  "bacakomik.my"          # bacakomik (comic)
+  "komikindo.id"          # komikindo (comic)
+  "mangadex.org"          # mangadex (comic)
+  "api.shngm.io"          # shinigami (comic)
+  "sakuranovel.id"        # sakuranovel (novel)
+  "www.novelbin.cc"       # novelbin (novel)
+  "novelfull.com"         # novelfull (novel)
+  "meionovels.com"        # meionovels (novel)
+  "novelhubapp.com"       # novelhubapp (novel, JS-rendered)
 )
 
 ALERTED_FILE=/home/ubuntu/.config/nakama/domains-alerted
@@ -38,26 +42,23 @@ fail_count=0
 for d in "${DOMAINS[@]}"; do
   if ! getent hosts "$d" >/dev/null 2>&1; then
     fail_count=$((fail_count + 1))
-    # Only alert once per outage — skip if we've already alerted in the past 6h
     last=$(grep -F "$d " "$ALERTED_FILE" 2>/dev/null | tail -1 | awk '{print $1}')
     now=$(date +%s)
     if [[ -z "$last" ]] || (( now - last > 21600 )); then
       echo "[$(TS)] ALERT: DNS resolution failed for $d"
       if [[ -f "$ALERT_FILE" ]]; then
         source "$ALERT_FILE"
-        MSG="⚠️ *Nakama provider DNS down*\ndomain: \`${d}\`\ntime: $(TS)"
+        MSG="⚠️ *Nakama provider DNS down* — domain: \`${d}\` time: $(TS)"
         curl -sS --max-time 5 -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
           -H "Content-Type: application/json" \
           -d "{\"chat_id\":\"${TELEGRAM_CHAT_ID}\",\"text\":\"${MSG}\",\"parse_mode\":\"Markdown\"}" \
           >/dev/null 2>&1 || true
       fi
-      # Move any old entry for $d to top of file
       grep -vF "$d " "$ALERTED_FILE" 2>/dev/null > "$ALERTED_FILE.tmp" || true
       echo "$now $d" >> "$ALERTED_FILE.tmp"
       mv "$ALERTED_FILE.tmp" "$ALERTED_FILE"
     fi
   else
-    # recovered → drop the alerted marker so a new outage alerts again
     grep -vF "$d " "$ALERTED_FILE" 2>/dev/null > "$ALERTED_FILE.tmp" || true
     mv "$ALERTED_FILE.tmp" "$ALERTED_FILE" 2>/dev/null || true
   fi

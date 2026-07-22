@@ -13,32 +13,38 @@ def _build() -> None:
     global _INITIALIZED
     if _INITIALIZED:
         return
+    from .bacakomik import BacaKomikSource
     from .komiku import KomikuSource
     from .kiryuu import KiryuuSource
     from .komikcast import KomikcastSource
     from .komikindo import KomikindoSource
     from .mangadex import MangadexSource
+    from .meionovels import MeioNovelSource
     from .sakuranovel import SakuranovelSource
     from .novelbin import NovelbinSource
     from .novelfull import NovelFullSource
     from .shinigami import ShinigamiSource
+    from .anichin import AnichinSource
     from .otakudesu import OtakudesuSource
     from .anilist import AnilistSource
     from .jikan import JikanSource
     from .samehadaku import SamehadakuSource
 
     _REGISTRY["komiku"] = KomikuSource()
+    _REGISTRY["bacakomik"] = BacaKomikSource()
     _REGISTRY["kiryuu"] = KiryuuSource()
     _REGISTRY["komikcast"] = KomikcastSource()
     _REGISTRY["komikindo"] = KomikindoSource()
     _REGISTRY["mangadex"] = MangadexSource()
     _REGISTRY["shinigami"] = ShinigamiSource()
     _REGISTRY["sakuranovel"] = SakuranovelSource()
+    _REGISTRY["meionovels"] = MeioNovelSource()
     _REGISTRY["novelbin"] = NovelbinSource()
     _REGISTRY["novelfull"] = NovelFullSource()
     # Adult-only sources (nekopoi, mangasusuku) intentionally excluded.
     _REGISTRY["kura"] = OtakudesuSource()  # otakudesu exposed under the "kura" alias
     _REGISTRY["otakudesu"] = OtakudesuSource()
+    _REGISTRY["anichin"] = AnichinSource()
     _REGISTRY["anilist"] = AnilistSource()
     _REGISTRY["jikan"] = JikanSource()
     _REGISTRY["samehadaku"] = SamehadakuSource()
