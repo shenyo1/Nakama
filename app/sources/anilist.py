@@ -11,6 +11,7 @@ from urllib.parse import urljoin
 
 from ..http import fetch_json
 from .base import AnimeSource, SourceError
+from .source_meta import SourceMeta
 
 
 ANILIST_API = "https://graphql.anilist.co"
@@ -60,6 +61,14 @@ def _media_to_detail(media: Dict[str, Any]) -> Dict[str, Any]:
 
 class AnilistSource(AnimeSource):
     name = "anilist"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://graphql.anilist.co",
+        selectors=["GraphQL Page.media", "GraphQL Media.search"],
+        alt_domains=[],
+        notes="AniList GraphQL API; no HTML scraping",
+    )
     base_url = "https://anilist.co"
 
     async def _query(self, query: str, variables: Optional[dict] = None) -> Dict[str, Any]:

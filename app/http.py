@@ -129,8 +129,37 @@ _http: Optional[httpx.AsyncClient] = None
 _lock = asyncio.Lock()
 
 
-async def get_client() -> httpx.AsyncClient:
+async def get_client(source: Optional[str] = None) -> httpx.AsyncClient:
+    """Return a shared httpx client, optionally with proxy rotation.
+
+    When ``source`` is given and a proxy is configured for it, the client
+    routes through the proxy URL returned by ``proxy_rotation.next_proxy()``.
+    If no proxy is configured, returns the shared singleton.
+
+    Set ``PROXY_URL`` (global) or ``PROXY_URL_<SOURCE>`` (per-source) env vars
+    to enable. Disable for specific sources with ``PROXY_DISABLE_FOR``.
+    """
     global _http
+    # Check if this source needs a proxy
+    proxy = None
+    if source:
+        try:
+            from .sources.proxy_rotation import next_proxy
+            proxy = next_proxy(source)
+        except Exception:
+            proxy = None
+
+    if proxy is not None:
+        # Per-request: create a dedicated client with this proxy.
+        # The pool will be reused by httpx internally within the client.
+        return httpx.AsyncClient(
+            proxy=proxy,
+            follow_redirects=True,
+            timeout=get_settings().request_timeout,
+            headers={"User-Agent": get_settings().user_agent},
+        )
+
+    # No proxy: use the shared singleton
     if _http is None:
         async with _lock:
             if _http is None:
@@ -197,7 +226,7 @@ async def fetch_text(
         return text
 
     await throttle_source(source)
-    client = await get_client()
+    client = await get_client(source=source)
     resp = await client.get(url, params=params)
     status = str(resp.status_code)
 
@@ -314,7 +343,7 @@ async def fetch_json(
         return json.loads(text)
 
     await throttle_source(source)
-    client = await get_client()
+    client = await get_client(source=source)
     # One retry on 429 with a short backoff; MangaDex rate-limits at ~5/sec.
     resp = None
     for attempt in range(2):

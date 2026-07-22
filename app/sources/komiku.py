@@ -19,6 +19,7 @@ from ..schemas import (
     Genre,
 )
 from .base import ComicSource, SourceError
+from .source_meta import SourceMeta
 
 BASE = "https://komiku.org"
 
@@ -53,6 +54,14 @@ def _parse_ls4(article: BeautifulSoup) -> ComicSummary:
 
 class KomikuSource(ComicSource):
     name = "komiku"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://komiku.id",
+        selectors=[".daftar .bge a", ".bge", ".chlist a"],
+        alt_domains=["komiku.org", "komiku.com"],
+        notes="Classic Indo comic aggregator",
+    )
     base_url = BASE
 
     async def home(self) -> List[dict]:

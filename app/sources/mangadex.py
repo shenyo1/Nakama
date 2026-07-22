@@ -25,6 +25,7 @@ from urllib.parse import quote
 from ..http import fetch_json
 from ..schemas import ChapterDetail, ChapterImage, ComicDetail, ComicSummary
 from .base import ComicSource, SourceError
+from .source_meta import SourceMeta
 
 BASE = "https://api.mangadex.org"
 COVERS_BASE = "https://uploads.mangadex.org/covers"
@@ -141,6 +142,14 @@ def _parse_detail(item: dict) -> ComicDetail:
 
 class MangadexSource(ComicSource):
     name = "mangadex"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://mangadex.org",
+        selectors=["api.mangadex.org/manga", "api.mangadex.org/chapter"],
+        alt_domains=[],
+        notes="Official MangaDex API (v5)",
+    )
     base_url = BASE
 
     async def _list(

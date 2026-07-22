@@ -25,6 +25,7 @@ from urllib.parse import quote, urljoin
 from ..http import fetch_json
 from ..schemas import ChapterDetail, ChapterImage, ComicDetail, ComicSummary
 from .base import ComicSource, SourceError
+from .source_meta import SourceMeta
 
 BASE = "https://api.shngm.io/v1"
 
@@ -101,6 +102,14 @@ def _parse_detail(item: dict) -> ComicDetail:
 
 class ShinigamiSource(ComicSource):
     name = "shinigami"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://api.shngm.io",
+        selectors=["/api/manga/list", "/api/manga/detail", "/api/chapter"],
+        alt_domains=["shinigami.asia", "shinigami.id"],
+        notes="Shinigami API; has auth; domain rotates",
+    )
     base_url = BASE
 
     async def _raw_list(

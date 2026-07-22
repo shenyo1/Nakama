@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from ..http import fetch_soup
 from ..schemas import ChapterText, Genre, NovelDetail, NovelSummary
 from .base import NovelSource, SourceError
+from .source_meta import SourceMeta
 
 BASE = "https://www.novelbin.cc"
 
@@ -46,6 +47,14 @@ def _parse_row(row: BeautifulSoup) -> dict | None:
 
 class NovelbinSource(NovelSource):
     name = "novelbin"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://www.novelbin.cc",
+        selectors=[".col-novel-main .novel-item", ".chr-c", "#chr-content"],
+        alt_domains=["novelbin.com", "novelbin.net"],
+        notes="NovelBin; English novel source",
+    )
     base_url = BASE
 
     async def _listing(self, url: str) -> List[dict]:

@@ -22,6 +22,7 @@ from ..config import get_settings
 from ..http import fetch_json
 from ..schemas import ChapterDetail, ComicDetail, ComicSummary, Genre
 from .base import ComicSource, SourceError
+from .source_meta import SourceMeta
 
 
 def _data(item: dict) -> dict:
@@ -48,6 +49,14 @@ def _summary(item: dict, site: str) -> dict:
 
 class KomikcastSource(ComicSource):
     name = "komikcast"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://komikcast.com",
+        selectors=[".bsx a", ".listupd .bs", ".eplister a"],
+        alt_domains=["komikcast03.com", "komikcast.me"],
+        notes="komikcast6 theme; uses Appwrite auth",
+    )
 
     def __init__(self) -> None:
         s = get_settings()

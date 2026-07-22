@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from ..http import fetch_soup
 from ..schemas import ChapterDetail, ChapterImage, ComicDetail, ComicSummary
 from .base import ComicSource, SourceError
+from .source_meta import SourceMeta
 
 BASE = "https://komikindo.ch"
 
@@ -45,6 +46,14 @@ def _parse_card(card: BeautifulSoup) -> dict | None:
 
 class KomikindoSource(ComicSource):
     name = "komikindo"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://komikindo.id",
+        selectors=[".bsx a", ".listupd .bs", ".eplister a"],
+        alt_domains=["komikindo.ch", "komikindo.co"],
+        notes="komikcast6 theme; shared with komikcast",
+    )
     base_url = BASE
 
     async def _listing(self, url: str, params: dict | None = None) -> List[dict]:

@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from ..http import fetch_soup, fetch_text
 from ..schemas import AnimeDetail, AnimeSummary, Episode, Genre
 from .base import AnimeSource, SourceError
+from .source_meta import SourceMeta
 
 BASE = "https://samehadaku.li"
 
@@ -47,6 +48,14 @@ def _parse_article(a: BeautifulSoup) -> dict | None:
 
 class SamehadakuSource(AnimeSource):
     name = "samehadaku"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://samehadaku.li",
+        selectors=[".venz", ".detpost", ".eps", ".episodelist"],
+        alt_domains=["samehadaku.how", "samehadaku.care"],
+        notes="JS-rendered episodes; CF-protected",
+    )
     base_url = BASE
 
     async def home(self) -> List[dict]:

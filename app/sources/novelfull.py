@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 from ..http import fetch_soup
 from ..schemas import ChapterText, Genre, NovelDetail, NovelSummary
 from .base import NovelSource, SourceError
+from .source_meta import SourceMeta
 
 BASE = "https://novelfull.com"
 
@@ -51,6 +52,14 @@ def _parse_row(row: BeautifulSoup) -> dict | None:
 
 class NovelFullSource(NovelSource):
     name = "novelfull"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://novelfull.com",
+        selectors=[".col-truyen-main .row", ".list-chapter a", "#chapter-content"],
+        alt_domains=["novelfull.net"],
+        notes="NovelFull; CF-protected; uses FlareSolverr",
+    )
     base_url = BASE
 
     async def _listing(self, url: str) -> List[dict]:

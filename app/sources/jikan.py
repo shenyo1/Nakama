@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from ..http import fetch_json
 from .base import AnimeSource, SourceError
+from .source_meta import SourceMeta
 
 
 JIKAN_API = "https://api.jikan.moe/v4"
@@ -77,6 +78,14 @@ def _mal_to_detail(anime: Dict[str, Any]) -> Dict[str, Any]:
 
 class JikanSource(AnimeSource):
     name = "jikan"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://api.jikan.moe/v4",
+        selectors=["/anime", "/anime/{id}", "/anime/{id}/episodes"],
+        alt_domains=[],
+        notes="Jikan v4 REST API; MyAnimeList proxy; rate-limited",
+    )
     base_url = "https://myanimelist.net"
 
     async def _get(self, path: str, params: Optional[dict] = None) -> Dict[str, Any]:

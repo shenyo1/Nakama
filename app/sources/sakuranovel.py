@@ -37,6 +37,7 @@ from ..schemas import (
     NovelSummary,
 )
 from .base import NovelSource, SourceError
+from .source_meta import SourceMeta
 
 def _base() -> str:
     return get_settings().sakuranovel_base_url
@@ -344,6 +345,14 @@ def _parse_chapter_nav(soup: BeautifulSoup) -> tuple[Optional[str], Optional[str
 
 class SakuranovelSource(NovelSource):
     name = "sakuranovel"
+    meta = SourceMeta(
+        version="2026-07-22",
+        verified_on="2026-07-22",
+        base_url_pattern="https://sakuranovel.id",
+        selectors=[".listupd .bs", ".bixbox .bxcl a", ".chapter-content"],
+        alt_domains=["sakuranovel.cc", "sakuranovel.me"],
+        notes="CF-protected; uses FlareSolverr",
+    )
 
     @property
     def base_url(self) -> str:  # type: ignore[override]
