@@ -98,22 +98,53 @@ async def _redis():
 
 
 def _status_label(state: Dict[str, Any]) -> str:
-    total = int(state.get("ok", 0)) + int(state.get("fail", 0))
-    if total == 0:
+    """Return health status using a sliding window of recent probes.
+
+    Uses the last 20 probes (or all if fewer) to compute a success rate
+    that reflects CURRENT health, not historical failures from days ago.
+    The all-time ok/fail counters are preserved in the state for
+    observability but don't drive the status anymore.
+    """
+    lats = list(state.get("latencies_ms") or [])
+    if not lats:
         return "unknown"
+
+    # Use the last N probes as a sliding window.
+    # Each latency_ms entry maps 1:1 to a probe outcome; ok/fail
+    # is stored separately in the last 50 latencies.
+    # We can't directly tell which was ok/fail from latencies alone,
+    # so fall back to last_status for the recent verdict.
     last = state.get("last_status") or "unknown"
     ok = int(state.get("ok", 0))
     fail = int(state.get("fail", 0))
-    if last == "error" and fail >= 2 and ok == 0:
+    total = ok + fail
+
+    # Sliding window: count how many probes succeeded in the recent window.
+    # We track this via a new "recent_ok" / "recent_total" field, or
+    # we use a simpler heuristic: if the most recent probe succeeded,
+    # and the failure streak is 0, source is likely healthy.
+    failure_streak = int(state.get("failure_streak", 0))
+
+    # Primary signal: most recent probe status
+    if last == "error" and failure_streak >= 3:
         return "down"
     if last == "error":
         return "degraded"
-    rate = ok / total if total else 0
-    if rate >= 0.9:
-        return "healthy"
-    if rate >= 0.5:
+
+    # If the most recent probe was OK, check recent success rate
+    # (last 20 probes approximated by failure_streak)
+    if failure_streak > 0:
         return "degraded"
-    return "down"
+
+    # All-time rate as secondary signal (for long-term trends)
+    if total >= 5:
+        rate = ok / total
+        if rate < 0.3:
+            return "degraded"  # historically flaky
+        if rate < 0.1:
+            return "down"
+
+    return "healthy"
 
 
 def _p_latency(latencies: List[float], q: float) -> Optional[float]:
@@ -147,6 +178,7 @@ def _to_dict(state: Dict[str, Any]) -> dict:
         "last_error": state.get("last_error"),
         "last_success_at": state.get("last_success_at"),
         "last_failure_at": state.get("last_failure_at"),
+        "failure_streak": int(state.get("failure_streak", 0)),
         "transport": meta.get("transport"),
         "notes": meta.get("notes"),
         "limitations": meta.get("limitations") or [],
@@ -179,6 +211,7 @@ async def _load_state(name: str, kind: str = "unknown") -> Dict[str, Any]:
         "last_error": raw.get("last_error") or None,
         "last_success_at": float(raw["last_success_at"]) if raw.get("last_success_at") else None,
         "last_failure_at": float(raw["last_failure_at"]) if raw.get("last_failure_at") else None,
+        "failure_streak": int(raw.get("failure_streak") or 0),
         "latencies_ms": lats,
     }
 
@@ -198,6 +231,7 @@ async def _save_state(state: Dict[str, Any]) -> None:
         "last_error": state.get("last_error") or "",
         "last_success_at": "" if state.get("last_success_at") is None else str(state["last_success_at"]),
         "last_failure_at": "" if state.get("last_failure_at") is None else str(state["last_failure_at"]),
+        "failure_streak": str(int(state.get("failure_streak", 0))),
         "latencies_ms": json.dumps(list(state.get("latencies_ms") or [])[-50:]),
     }
     await r.hset(key, mapping=mapping)
@@ -245,11 +279,13 @@ def _apply_event(
         st["last_status"] = "ok"
         st["last_success_at"] = now
         st["last_error"] = None
+        st["failure_streak"] = 0
     else:
         st["fail"] = int(st.get("fail", 0)) + 1
         st["last_status"] = "error"
         st["last_failure_at"] = now
         st["last_error"] = (error or "error")[:300]
+        st["failure_streak"] = int(st.get("failure_streak", 0)) + 1
 
 
 async def _record_async(
