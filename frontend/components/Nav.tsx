@@ -7,7 +7,7 @@ const links = [
   { href: "/novel", label: "Novel" },
   { href: "/search", label: "Search" },
   { href: "/status", label: "Status" },
-  { href: "/analytics", label: "Metrics" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/ws-test", label: "Live WS" },
 ];
 
