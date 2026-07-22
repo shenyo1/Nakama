@@ -100,9 +100,9 @@ export async function crossSearch(
   q: string,
   type: ApiKind = "comic"
 ): Promise<SearchResults> {
-  const body = await getJson<ApiEnvelope<SearchResults> | SearchResults>(
-    `/search?q=${encodeURIComponent(q)}&type=${type}`
-  );
+  // Use the new multi-source search endpoints for merged results
+  const path = `/${type}/search/${encodeURIComponent(q)}`;
+  const body = await getJson<ApiEnvelope<SearchResults> | SearchResults>(path);
   if (body && typeof body === "object" && "data" in body && body.data) {
     return body.data as SearchResults;
   }

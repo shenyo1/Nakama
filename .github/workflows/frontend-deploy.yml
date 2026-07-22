@@ -42,10 +42,31 @@ jobs:
       - name: Install deps
         run: npm install --no-audit --no-fund --legacy-peer-deps
 
+      - name: Build Next.js (standalone)
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE: https://mynakama.web.id
+
       - name: Build for Cloudflare Pages (next-on-pages)
         run: npx --yes @cloudflare/next-on-pages@1.13.7
         env:
           NEXT_PUBLIC_API_BASE: https://mynakama.web.id
+
+      - name: Patch root route (index.html → SSR function)
+        run: |
+          WORKER=.vercel/output/static/_worker.js/index.js
+          python3 -c "
+          import sys
+          c = open('$WORKER').read()
+          old = '\"/\":{type:\"override\",path:\"/_next/static/not-found.txt\",headers:{\"content-type\":\"text/plain\"}}'
+          new = '\"/\":{type:\"function\",entrypoint:\"__next-on-pages-dist__/functions/index.func.js\"}'
+          if old in c:
+              c = c.replace(old, new)
+              open('$WORKER','w').write(c)
+              print('Root route patched: override → function')
+          else:
+              print('Root route already patched or different format')
+          "
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
@@ -55,6 +76,4 @@ jobs:
           projectName: nakama-frontend
           directory: .vercel/output/static
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          # Optional: trigger a production deploy by default.
-          # Set to "preview" if you want a unique URL per PR.
           deploymentEnvironment: production

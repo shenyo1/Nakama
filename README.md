@@ -2,16 +2,17 @@
 
 [![CI](https://github.com/shenyo1/Nakama/actions/workflows/ci.yml/badge.svg)](https://github.com/shenyo1/Nakama/actions)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Sources](https://img.shields.io/badge/sources-14-7C3AED?style=flat)](#-sources)
-[![Tests](https://img.shields.io/badge/tests-220%20passed-22C55E?style=flat)](#-tests)
+[![Sources](https://img.shields.io/badge/sources-17-7C3AED?style=flat)](#-sources)
+[![Tests](https://img.shields.io/badge/tests-288%20passed-22C55E?style=flat)](#-tests)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![Postgres](https://img.shields.io/badge/postgres-16-336791?style=flat&logo=postgresql&logoColor=white)](https://postgresql.org)
 [![Redis](https://img.shields.io/badge/redis-7-DC382D?style=flat&logo=redis&logoColor=white)](https://redis.io)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-Pages-F38020?style=flat&logo=cloudflare&logoColor=white)](https://pages.cloudflare.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-4ECDC4?style=flat)](LICENSE)
 
 A clean, extensible REST API that aggregates anime, comic, and novel data from
-**14 public sources** behind one consistent JSON interface. Built with
-**FastAPI**.
+**17 public sources** behind one consistent JSON interface. Built with
+**FastAPI**, deployed on **Cloudflare Pages**.
 
 > Repo: [shenyo1/Nakama](https://github.com/shenyo1/Nakama) · Deploy guide: [DEPLOY.md](DEPLOY.md)
 
@@ -19,7 +20,7 @@ A clean, extensible REST API that aggregates anime, comic, and novel data from
 
 ## ✨ Features
 
-- 🔌 **Multi-source architecture** — 8 source adapters behind one consistent
+- 🔌 **Multi-source architecture** — 17 source adapters behind one consistent
   contract (`AnimeSource` / `ComicSource` / `NovelSource`). Add a new site by
   dropping in one file and registering it.
 - 📦 **Consistent JSON envelope** — every response is `{ "ok": true, "source": "...", "data": ... }`.
@@ -42,6 +43,27 @@ A clean, extensible REST API that aggregates anime, comic, and novel data from
 - 📖 **Auto docs** — interactive Swagger UI at `/docs` and ReDoc at `/redoc`.
 - ✅ **80 tests** — pytest suite covering all sources, auth, rate limiting,
   pagination, and the `/stats` endpoint. Fully offline-runnable.
+
+---
+
+
+## 🔍 Multi-Source Search
+
+Search across ALL sources at once with automatic deduplication:
+
+```bash
+# Anime — search across 6 sources
+curl "https://mynakama.web.id/anime/search/horimiya"
+
+# Comic — search across 7 sources (with merged results)
+curl "https://mynakama.web.id/comic/search/magic"
+
+# Novel — search across 4 sources
+curl "https://mynakama.web.id/novel/search/pangeran"
+```
+
+Each response includes `_sources` (which sources have this title) and
+`_source_count` (how many). Failed sources are listed under `sources_failed`.
 
 ---
 
