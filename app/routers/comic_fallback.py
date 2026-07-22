@@ -75,6 +75,30 @@ async def fallback_search(
         by_source[name] = payload
         counts[name] = len(payload) if isinstance(payload, list) else 0
     total = sum(counts.values())
+
+    # Build deduplicated union of results, scored by source coverage.
+    # Imported lazily to avoid routers↔sources circular import at module load.
+    from ..sources.merge_search import normalize_title
+    merged: Dict[str, dict] = {}
+    for name, items in by_source.items():
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            title = item.get("title") or item.get("name") or ""
+            key = normalize_title(title)
+            if not key:
+                continue
+            if key not in merged:
+                merged[key] = {**item, "_sources": [], "_source_count": 0}
+            merged[key]["_sources"].append(name)
+            merged[key]["_source_count"] = len(merged[key]["_sources"])
+    merged_list = sorted(
+        merged.values(),
+        key=lambda x: (-x.get("_source_count", 0), x.get("title", "")),
+    )
+
     return ApiResponse(
         data={
             "query": query,
@@ -84,6 +108,8 @@ async def fallback_search(
             "counts": counts,
             "total": total,
             "results": by_source,
+            "merged": merged_list,
+            "merged_unique_titles": len(merged),
         }
     )
 

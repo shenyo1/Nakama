@@ -15,9 +15,38 @@ from ..ratelimit import limiter
 from ..schemas import ApiResponse, NovelDetail, Paginated
 from ..sources import list_novel_sources, novel_source
 from ..sources.base import SourceError
+from ..sources.merge_search import multi_source_search
 from ._pagination import paginate
 
 router = APIRouter(prefix="/novel", tags=["novel"])
+
+
+@router.get(
+    "/search/{query}",
+    summary="Search across all novel sources (deduplicated, scored)",
+)
+@limiter.limit(get_settings().rate_limit)
+async def search_all(
+    request: Request,
+    query: str,
+    page: Optional[int] = Query(None, ge=1),
+    page_size: Optional[int] = Query(None, ge=1),
+):
+    """Search every novel source concurrently, deduplicate by normalized title.
+
+    Each merged item carries ``_sources`` showing which sources returned it.
+    Sources that fail are listed in ``sources_failed``; the rest still
+    contribute to the merged result.
+    """
+    result = await multi_source_search(
+        kind="novel",
+        query=query,
+        get_factory=novel_source,
+        list_fn=list_novel_sources,
+        page=page,
+        page_size=page_size,
+    )
+    return ApiResponse(source="multi", data=result)
 
 
 def _get(source: str):
