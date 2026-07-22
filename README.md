@@ -2,8 +2,9 @@
 
 [![CI](https://github.com/shenyo1/Nakama/actions/workflows/ci.yml/badge.svg)](https://github.com/shenyo1/Nakama/actions)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Sources](https://img.shields.io/badge/sources-17-7C3AED?style=flat)](#-sources)
-[![Tests](https://img.shields.io/badge/tests-288%20passed-22C55E?style=flat)](#-tests)
+[![Sources](https://img.shields.io/badge/sources-20-7C3AED?style=flat)](#-sources)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-Pages-F38020?style=flat&logo=cloudflare&logoColor=white)](https://app.mynakama.web.id)
+[![Tests](https://img.shields.io/badge/tests-271-brightgreen?style=flat)](#-tests)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![Postgres](https://img.shields.io/badge/postgres-16-336791?style=flat&logo=postgresql&logoColor=white)](https://postgresql.org)
 [![Redis](https://img.shields.io/badge/redis-7-DC382D?style=flat&logo=redis&logoColor=white)](https://redis.io)

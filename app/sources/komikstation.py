@@ -24,7 +24,8 @@ from bs4 import BeautifulSoup
 
 from .base import ComicSource
 from .source_meta import SourceMeta
-from app.http import fetch_soup
+from app.http import fetch_soup, fetch_text
+from .scrapling_helpers import auto_heal_selector
 
 
 class KomikstationSource(ComicSource):
@@ -158,10 +159,23 @@ def _parse_chapter(soup: BeautifulSoup) -> Optional[dict]:
     images: List[str] = []
     for img in container.find_all("img"):
         src = img.get("data-src") or img.get("src") or ""
-        # Filter out SVG placeholders
         if not src or src.startswith("data:image/svg"):
             continue
         images.append(src)
+
+    # Auto-heal: if no images found, try Scrapling selector adaptation
+    if not images:
+        try:
+            from scrapling import Selector
+            html = str(soup)
+            page = Selector(html)
+            healed = auto_heal_selector(page, "#readerarea img", fallback_css=".chapter-content img, .entry-content img")
+            for el in healed:
+                src = el.attrib.get("data-src") or el.attrib.get("src") or ""
+                if src and not src.startswith("data:image/svg"):
+                    images.append(src)
+        except Exception:
+            pass
 
     return {
         "images": images,
