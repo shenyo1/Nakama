@@ -12,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import User, get_session
+from ..dependencies import current_user_required
 from ..quota import peek, quota_for_plan
 from ..ratelimit import limiter
 from ..schemas import ApiResponse
@@ -81,6 +82,11 @@ class ResetBody(BaseModel):
 
 class ConfirmBody(BaseModel):
     token: str = Field(..., min_length=10)
+
+
+class ChangePasswordBody(BaseModel):
+    current_password: str = Field(..., min_length=1, max_length=128)
+    new_password: str = Field(..., min_length=8, max_length=128)
 
 
 class TokenResponse(BaseModel):
@@ -355,3 +361,32 @@ async def quota(request: Request):
     plan = getattr(request.state, "auth_plan", None) or "free"
     q = await peek(principal, plan)
     return ApiResponse(data={"principal": principal, **q})
+
+
+@router.post(
+    "/change-password",
+    response_model=ApiResponse,
+    summary="Change password (authenticated user)",
+)
+@limiter.limit("5/minute")
+async def change_password(
+    request: Request,
+    body: ChangePasswordBody,
+    user: User = Depends(current_user_required),
+    session: AsyncSession = Depends(get_session),
+):
+    """Change the password for the currently authenticated user.
+    Requires the current password to be provided for verification.
+    """
+    from ..security import hash_password, verify_password
+
+    current = (
+        await session.execute(select(User).where(User.id == user.id))
+    ).scalar_one_or_none()
+    if current is None:
+        raise HTTPException(status_code=404, detail="user not found")
+    if not verify_password(body.current_password, current.password_hash):
+        raise HTTPException(status_code=401, detail="current password is incorrect")
+    current.password_hash = hash_password(body.new_password)
+    await session.commit()
+    return ApiResponse(data={"changed": True, "username": current.username})

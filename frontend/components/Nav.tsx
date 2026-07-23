@@ -19,6 +19,7 @@ const authedLinks = [
   { href: "/history", label: "History" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/analytics", label: "Analytics" },
+  { href: "/preferences", label: "Preferences" },
   { href: "/ws-test", label: "Live WS" },
 ];
 

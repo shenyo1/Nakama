@@ -136,6 +136,9 @@ export default function HomePage() {
             <Link href="/dashboard" className="mt-3 block text-xs text-sakura-400 hover:underline">
               View full dashboard →
             </Link>
+            <Link href="/change-password" className="mt-1 block text-xs text-ink-500 hover:text-sakura-400">
+              Change password →
+            </Link>
           </div>
 
           <div className="card">
