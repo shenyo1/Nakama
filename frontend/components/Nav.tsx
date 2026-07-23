@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LanguageToggle } from "../lib/i18n";
 
 const links = [
   { href: "/", label: "Home" },
@@ -6,6 +7,7 @@ const links = [
   { href: "/comic", label: "Comic" },
   { href: "/novel", label: "Novel" },
   { href: "/search", label: "Search" },
+  { href: "/history", label: "History" },
   { href: "/status", label: "Status" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/ws-test", label: "Live WS" },
@@ -28,6 +30,7 @@ export function Nav() {
               {l.label}
             </Link>
           ))}
+          <LanguageToggle />
           <Link
             href="/login"
             className="whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm text-sakura-400 hover:bg-ink-800"

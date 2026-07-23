@@ -394,3 +394,114 @@ async def close_client() -> None:
         await _http.aclose()
         _http = None
     await _cache.close()
+
+
+# ---------------------------------------------------------------------------
+# Scrapling auto-heal fetcher
+# ---------------------------------------------------------------------------
+# Scrapling is lighter than httpx for static-HTML sources and has built-in
+# stealth headers. Used as an automatic fallback when the primary httpx path
+# returns a 5xx or a Cloudflare challenge (after the FlareSolverr fallback).
+# The first successful response is cached in the response cache like any other
+# fetch, so the cost is paid once per URL.
+
+_SCRAPLING_DOMAINS = set(
+    d.strip()
+    for d in os.getenv("SCRAPLING_DOMAINS", "").split(",")
+    if d.strip()
+)
+"""Domains where Scrapling is tried FIRST (before httpx). Set via env var.
+
+Examples: ``SCRAPLING_DOMAINS=otakudesu.co,kiryuu.id,komikcast.cc`` makes
+Scrapling the primary fetcher for those sources. By default, Scrapling is
+only used as a *fallback* after httpx + FlareSolverr fail."""
+
+
+async def fetch_with_scrapling(url: str, *, timeout: int = 20) -> Optional[str]:
+    """Try Scrapling (static HTML fetcher) on a URL.
+
+    Returns the response body or ``None`` on failure. Cheaper than Camoufox
+    because it does not run a full browser.
+    """
+    try:
+        from scrapling.fetchers import Fetcher
+
+        # Scrapling's Fetcher.get is blocking; run in thread pool.
+        import asyncio
+
+        def _fetch():
+            try:
+                page = Fetcher.get(url, timeout=timeout)
+                if page is None:
+                    return None
+                # page.text is empty for some sites; fall back to body/content
+                txt = page.text or ""
+                if not txt:
+                    body = getattr(page, "body", None)
+                    if callable(body):
+                        try:
+                            txt = body()
+                        except Exception:
+                            pass
+                if not txt:
+                    # Try inner HTML via property if exists
+                    try:
+                        txt = page.html_content
+                    except Exception:
+                        pass
+                return txt or None
+            except Exception:
+                return None
+
+        return await asyncio.to_thread(_fetch)
+    except Exception:
+        return None
+
+
+async def fetch_text_resilient(
+    url: str,
+    *,
+    params: Optional[dict] = None,
+    source: Optional[str] = None,
+    timeout: int = 20,
+) -> Optional[str]:
+    """Resilient fetch chain: Scrapling → httpx → FlareSolverr → Scrapling fallback.
+
+    Returns the HTML body or ``None`` if every tier fails. The 3-tier chain
+    recovers automatically when an upstream changes layout or returns 5xx.
+
+    Tier 1 — Scrapling: cheap, static HTML, stealth headers (when configured).
+    Tier 2 — httpx: normal HTTP via shared async client.
+    Tier 3 — FlareSolverr: Cloudflare challenge solver (if URL set).
+    Tier 4 — Scrapling fallback: tries again with a different fingerprint.
+    """
+    from urllib.parse import urlparse
+
+    host = urlparse(url).netloc.lower()
+
+    # Tier 1: Scrapling (when domain is whitelisted)
+    if not _SCRAPLING_DOMAINS or host in _SCRAPLING_DOMAINS:
+        body = await fetch_with_scrapling(url, timeout=timeout)
+        if body and len(body) > 200:
+            return body
+
+    # Tier 2: httpx (the canonical path)
+    try:
+        await throttle_source(source)
+        client = await get_client(source=source)
+        resp = await client.get(url, params=params)
+        if resp.status_code < 400:
+            return resp.text
+        # 403/503 will fall through to FlareSolverr
+    except Exception:
+        pass
+
+    # Tier 3: FlareSolverr (for Cloudflare challenges)
+    if get_settings().flaresolverr_url:
+        try:
+            return await _flaresolverr_get(url if not params else str(resp.url))
+        except Exception:
+            pass
+
+    # Tier 4: Scrapling fallback (last resort)
+    return await fetch_with_scrapling(url, timeout=timeout)

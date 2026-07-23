@@ -271,6 +271,14 @@ Redis health counter and probes 3 times to climb back to **healthy**:
 
 Current health scoreboard: **21/21 sources healthy** (live).
 
+## ✨ v2.5.0 highlights
+
+- **Scrapling auto-heal** — new `fetch_text_resilient()` chain (Scrapling → httpx → FlareSolverr → Scrapling fallback) in `app/http.py`. Domains opt in via `SCRAPLING_DOMAINS` env var.
+- **WS source_health events** — `app/ws.py` `_health_monitor_loop` snapshots `/sources/health` every 60 s and broadcasts `source_health` events when a source's status transitions. Live ticker on dashboard.
+- **Continue Reading (frontend)** — `/history` page lists the user's last reads (JWT-gated); "Resume →" link jumps back to the right chapter/episode. Nav now has a History link.
+- **Multi-language i18n** — new `frontend/lib/i18n.tsx` with `en` / `id` dictionaries; `LanguageToggle` in Nav; `I18nProvider` wraps layout.
+- **Live health ticker** — `frontend/components/LiveHealthTicker.tsx` connects to `/ws` (using API key) and renders the latest transitions in real time.
+
 
 Adult-only sources listed in the original README (Nekopoi, Mangasusuku) are
 **intentionally not implemented** in this project.

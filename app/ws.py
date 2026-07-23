@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import random
 import time
 from typing import Any, Iterable, Optional, Set
@@ -158,6 +159,60 @@ async def _broadcaster_loop(interval: float) -> None:
             logger.exception("ws broadcaster iteration failed: %s", exc)
 
 
+async def _health_monitor_loop(interval: float = 60.0) -> None:
+    """Periodically snapshot source health and broadcast changes.
+
+    Emits ``source_health_changed`` events when a source's status transitions
+    between ``healthy`` / ``degraded`` / ``down``. First iteration sends the
+    full snapshot so newly-connected clients can render immediately.
+
+    Run alongside ``_broadcaster_loop`` from :func:`start_broadcaster`.
+    """
+    from .sources.health import snapshot_async
+
+    last_state: dict[str, str] = {}
+    while True:
+        try:
+            await asyncio.sleep(interval)
+            if manager.client_count == 0:
+                last_state.clear()
+                continue
+            data = await snapshot_async()
+            for src in data.get("sources", []):
+                name = src.get("name", "?")
+                status = src.get("status", "unknown")
+                prev = last_state.get(name)
+                if prev is None:
+                    # First time we see this source — emit initial state so
+                    # newly-connected clients get the snapshot.
+                    last_state[name] = status
+                    await manager.broadcast({
+                        "type": "source_health",
+                        "name": name,
+                        "status": status,
+                        "ok": src.get("ok", 0),
+                        "fail": src.get("fail", 0),
+                        "kind": src.get("kind", "unknown"),
+                        "event": "initial",
+                    })
+                elif prev != status:
+                    last_state[name] = status
+                    await manager.broadcast({
+                        "type": "source_health",
+                        "name": name,
+                        "status": status,
+                        "ok": src.get("ok", 0),
+                        "fail": src.get("fail", 0),
+                        "kind": src.get("kind", "unknown"),
+                        "prev_status": prev,
+                        "event": "changed",
+                    })
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # pragma: no cover
+            logger.exception("ws health monitor failed: %s", exc)
+
+
 def make_simulated_chapter_update() -> dict[str, Any]:
     """Build one random ``chapter_update`` event.
 
@@ -188,29 +243,48 @@ def make_hello_payload(sources: Iterable[str]) -> dict[str, Any]:
     }
 
 
+_BROADCAST_TASK: Optional[asyncio.Task] = None
+_HEALTH_MONITOR_TASK: Optional[asyncio.Task] = None
+
+
+def _health_monitor_interval() -> float:
+    try:
+        return max(5.0, float(os.getenv("WS_HEALTH_INTERVAL", "60")))
+    except ValueError:
+        return 60.0
+
+
 async def start_broadcaster() -> None:
-    """Start the background broadcaster task (idempotent)."""
-    global _BROADCAST_TASK
-    if _BROADCAST_TASK is not None and not _BROADCAST_TASK.done():
-        return
-    _BROADCAST_TASK = asyncio.create_task(
-        _broadcaster_loop(_broadcast_interval()),
-        name="ws-broadcaster",
-    )
+    """Start the background broadcaster + health monitor tasks (idempotent)."""
+    global _BROADCAST_TASK, _HEALTH_MONITOR_TASK
+    if _BROADCAST_TASK is None or _BROADCAST_TASK.done():
+        _BROADCAST_TASK = asyncio.create_task(
+            _broadcaster_loop(_broadcast_interval()),
+            name="ws-broadcaster",
+        )
+    if _HEALTH_MONITOR_TASK is None or _HEALTH_MONITOR_TASK.done():
+        _HEALTH_MONITOR_TASK = asyncio.create_task(
+            _health_monitor_loop(_health_monitor_interval()),
+            name="ws-health-monitor",
+        )
 
 
 async def stop_broadcaster() -> None:
-    """Cancel the broadcaster task and await it. Safe to call repeatedly."""
-    global _BROADCAST_TASK
-    task = _BROADCAST_TASK
-    if task is None:
-        return
-    _BROADCAST_TASK = None
-    if not task.done():
-        task.cancel()
-    try:
-        await task
-    except (asyncio.CancelledError, Exception):  # noqa: BLE001
-        # Any exception here is already recorded/logged in the loop. We just
-        # want the task to be cleanly reaped on shutdown.
+    """Cancel the broadcaster + health monitor tasks. Safe to call repeatedly."""
+    global _BROADCAST_TASK, _HEALTH_MONITOR_TASK
+    for task_ref in (_BROADCAST_TASK, _HEALTH_MONITOR_TASK):
+        task = task_ref
+        if task is None:
+            continue
+        if task is _BROADCAST_TASK:
+            _BROADCAST_TASK = None
+        else:
+            _HEALTH_MONITOR_TASK = None
+        if not task.done():
+            task.cancel()
+        try:
+            await task
+        except (asyncio.CancelledError, Exception):  # noqa: BLE001
+            # Any exception here is already recorded/logged in the loop.
+            pass
         pass

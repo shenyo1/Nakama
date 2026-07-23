@@ -1,4 +1,5 @@
 import { getJson } from "../../lib/api";
+import { LiveHealthTicker } from "../../components/LiveHealthTicker";
 
 export const runtime = "edge";
 
@@ -13,62 +14,55 @@ interface SourceHealth {
   success_rate: number;
   failure_streak: number;
   p50_ms: number | null;
-  last_error: string | null;
-  meta: {
-    version: string;
-    verified_on: string;
-    notes: string;
-  } | null;
 }
 
 interface HealthBoard {
   summary: { healthy: number; degraded: number; down: number; unknown: number; total: number };
   sources: SourceHealth[];
-  auto_repair?: { enabled: boolean; open_breakers: string[] };
-  stale_adapters?: { name: string; age_days: number }[];
+  stale_adapters: Array<{ name: string; age_days: number }>;
+  auto_repair?: { enabled: boolean; open_breakers: string[]; stale_count: number };
 }
 
 interface Analytics {
   uptime_seconds: number;
   workers: number;
-  requests: { last_60s: number; last_5m: number };
-  memory: { VmSize: string; VmRSS: string };
-  cost_guard: { load1: number; cores: number; load_ratio: number; alert: boolean };
-  search_latency?: {
-    samples: number;
-    p50_ms: number;
-    p95_ms: number;
-    avg_ms: number;
-  };
-  source_latency?: Record<string, { p50_ms: number; p95_ms: number; avg_ms: number; samples: number }>;
-  cache_backend?: { backend: string; size: number; max_size: number };
+  requests: { last_60s: number };
+  cost_guard: { load1: number; cores: number; alert: boolean };
+  cache_backend?: { backend: string; size: number | string; max_size: number | string };
+  search_latency?: { p50_ms: number; p95_ms: number; avg_ms: number; samples: number };
 }
 
 function statusColor(status: string): string {
   switch (status) {
-    case "healthy": return "bg-neon-500";
-    case "degraded": return "bg-amber-500";
-    case "down": return "bg-sakura-500";
-    default: return "bg-ink-600";
+    case "healthy":
+      return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+    case "degraded":
+      return "bg-amber-500/20 text-amber-300 border-amber-500/30";
+    case "down":
+      return "bg-sakura-500/20 text-sakura-300 border-sakura-500/30";
+    default:
+      return "bg-ink-800 text-ink-300 border-ink-700";
   }
 }
 
 function statusTextColor(status: string): string {
   switch (status) {
-    case "healthy": return "text-neon-400";
-    case "degraded": return "text-amber-300";
-    case "down": return "text-sakura-300";
-    default: return "text-ink-400";
+    case "healthy":
+      return "text-emerald-400";
+    case "degraded":
+      return "text-amber-400";
+    case "down":
+      return "text-sakura-400";
+    default:
+      return "text-ink-400";
   }
 }
 
 function formatUptime(s: number): string {
-  const d = Math.floor(s / 86400);
-  const h = Math.floor((s % 86400) / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  if (d > 0) return `${d}d ${h}h`;
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
+  if (s < 60) return `${Math.round(s)}s`;
+  if (s < 3600) return `${Math.round(s / 60)}m`;
+  if (s < 86400) return `${(s / 3600).toFixed(1)}h`;
+  return `${(s / 86400).toFixed(1)}d`;
 }
 
 export default async function DashboardPage() {
@@ -77,54 +71,42 @@ export default async function DashboardPage() {
   let error: string | null = null;
 
   try {
-    const [h, a] = await Promise.all([
-      getJson("/sources/health") as Promise<{ data: HealthBoard }>,
-      getJson("/analytics") as Promise<{ data: Analytics }>,
+    const [hb, ab] = await Promise.all([
+      getJson<{ data: HealthBoard }>("/sources/health"),
+      getJson<{ data: Analytics }>("/analytics"),
     ]);
-    health = (h as { data: HealthBoard }).data;
-    analytics = (a as { data: Analytics }).data;
+    health = hb.data;
+    analytics = ab.data;
   } catch (e) {
     error = e instanceof Error ? e.message : String(e);
   }
 
-  const sources = health?.sources || [];
-  const summary = health?.summary;
-  const totalSources = summary?.total ?? sources.length;
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
+        <div className="card text-sm text-sakura-200">{error}</div>
+      </div>
+    );
+  }
+
+  const summary = health?.summary ?? { healthy: 0, degraded: 0, down: 0, unknown: 0, total: 0 };
+  const sources = health?.sources ?? [];
+  const sourcesByKind: Record<string, SourceHealth[]> = {};
+  for (const s of sources) {
+    if (!sourcesByKind[s.kind]) sourcesByKind[s.kind] = [];
+    sourcesByKind[s.kind].push(s);
+  }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-4 sm:space-y-6">
       <header className="space-y-1 sm:space-y-2">
         <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
         <p className="text-sm text-ink-400">
-          Real-time monitoring for {totalSources} sources across anime, comic, and novel providers.
+          Real-time API health, source scoreboard, and traffic stats.
         </p>
       </header>
 
-      {error ? (
-        <div className="card border-sakura-500/40 text-sm text-sakura-200">
-          Failed to load: {error}
-        </div>
-      ) : null}
-
-      {/* Summary row */}
-      {summary ? (
-        <section className="grid gap-2 grid-cols-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {([
-            ["Total", summary.total, "text-ink-50"],
-            ["Healthy", summary.healthy, "text-neon-400"],
-            ["Degraded", summary.degraded, "text-amber-300"],
-            ["Down", summary.down, "text-sakura-300"],
-            ["Unknown", summary.unknown, "text-ink-300"],
-          ] as const).map(([label, value, color]) => (
-            <div key={label} className="card">
-              <p className="text-xs uppercase tracking-wide text-ink-400">{label}</p>
-              <p className={`mt-1 text-2xl font-bold tabular-nums ${color} sm:text-3xl`}>{value}</p>
-            </div>
-          ))}
-        </section>
-      ) : null}
-
-      {/* Runtime metrics */}
       {analytics ? (
         <section className="grid gap-2 grid-cols-2 sm:gap-3 lg:grid-cols-4">
           <MiniMetric
@@ -133,14 +115,13 @@ export default async function DashboardPage() {
             sub={`${analytics.workers} workers`}
           />
           <MiniMetric
-            label="Requests (60s)"
+            label="Req / 60s"
             value={String(analytics.requests.last_60s)}
-            sub={`${analytics.requests.last_5m} in 5min`}
           />
           <MiniMetric
-            label="Memory RSS"
-            value={analytics.memory.VmRSS.replace(" kB", " MB").replace(/(\d+)/, (m) => String(Math.round(Number(m) / 1024)))}
-            sub={analytics.memory.VmSize.replace(" kB", " GB").replace(/(\d+)/, (m) => (Number(m) / 1048576).toFixed(1)) + " total"}
+            label="Cache"
+            value={String(analytics.cache_backend?.size ?? "?")}
+            sub={String(analytics.cache_backend?.backend ?? "n/a")}
           />
           <MiniMetric
             label="CPU Load"
@@ -151,166 +132,122 @@ export default async function DashboardPage() {
         </section>
       ) : null}
 
+      {/* Live WS source health (client-side) */}
+      <LiveHealthTicker />
+
       {/* Search latency + cache stats */}
-      {analytics?.search_latency || analytics?.cache_backend ? (
+      {analytics?.search_latency ? (
         <section className="grid gap-2 grid-cols-2 sm:gap-3 lg:grid-cols-4">
-          {analytics.search_latency ? (
-            <>
-              <MiniMetric
-                label="Search p50"
-                value={`${analytics.search_latency.p50_ms}ms`}
-                sub={`${analytics.search_latency.samples} samples`}
-              />
-              <MiniMetric
-                label="Search p95"
-                value={`${analytics.search_latency.p95_ms}ms`}
-                sub={`avg ${analytics.search_latency.avg_ms}ms`}
-              />
-            </>
-          ) : null}
-          {analytics.cache_backend ? (
-            <MiniMetric
-              label="Cache"
-              value={String(analytics.cache_backend.size)}
-              sub={`${analytics.cache_backend.backend}`}
-            />
-          ) : null}
+          {(() => {
+            const sl = analytics!.search_latency!;
+            const cb = analytics!.cache_backend;
+            return (
+              <>
+                <MiniMetric
+                  label="Search p50"
+                  value={`${sl.p50_ms}ms`}
+                  sub={`${sl.samples} samples`}
+                />
+                <MiniMetric
+                  label="Search p95"
+                  value={`${sl.p95_ms}ms`}
+                  sub={`avg ${sl.avg_ms}ms`}
+                />
+                <MiniMetric
+                  label="Cache backend"
+                  value={String(cb?.backend ?? "memory")}
+                />
+                <MiniMetric
+                  label="Max cache"
+                  value={String(cb?.max_size ?? "?")}
+                />
+              </>
+            );
+          })()}
         </section>
       ) : null}
 
-      {/* Auto-repair status */}
-      {health?.auto_repair ? (
-        <section className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-semibold text-sm sm:text-base">Auto-Repair</h2>
-              <p className="text-xs text-ink-400 mt-0.5">
-                {health.auto_repair.enabled ? "Enabled" : "Disabled"}
-                {health.auto_repair.open_breakers?.length ? ` · ${health.auto_repair.open_breakers.length} breaker(s) open` : ""}
-                {health.stale_adapters?.length ? ` · ${health.stale_adapters.length} stale adapter(s)` : ""}
-              </p>
-            </div>
-            <span className={`inline-flex h-2 w-2 rounded-full ${health.auto_repair.enabled ? "bg-neon-500" : "bg-ink-600"}`} />
-          </div>
-          {health.auto_repair.open_breakers?.length ? (
-            <p className="mt-2 text-xs text-sakura-300">
-              Open: {health.auto_repair.open_breakers.join(", ")}
-            </p>
-          ) : null}
-          {health.stale_adapters?.length ? (
-            <div className="mt-2 flex flex-wrap gap-2 text-xs">
-              {health.stale_adapters.map((s) => (
-                <span key={s.name} className="rounded bg-amber-500/10 px-2 py-0.5 text-amber-300">
-                  {s.name} ({s.age_days}d)
-                </span>
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold sm:text-lg">
+          Source scoreboard
+          <span className="ml-2 text-xs text-ink-400">
+            {summary.healthy}/{summary.total} healthy
+          </span>
+        </h2>
+
+        <div className="grid gap-2 grid-cols-2 sm:grid-cols-4 sm:gap-3">
+          <MiniMetric
+            label="Healthy"
+            value={String(summary.healthy)}
+            sub={summary.total > 0 ? `${Math.round((summary.healthy / summary.total) * 100)}%` : ""}
+          />
+          <MiniMetric
+            label="Degraded"
+            value={String(summary.degraded)}
+            alert={summary.degraded > 0}
+          />
+          <MiniMetric
+            label="Down"
+            value={String(summary.down)}
+            alert={summary.down > 0}
+          />
+          <MiniMetric
+            label="Unknown"
+            value={String(summary.unknown)}
+          />
+        </div>
+
+        {Object.entries(sourcesByKind).map(([kind, items]) => (
+          <div key={kind} className="space-y-1">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+              {kind} ({items.length})
+            </h3>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((s) => (
+                <div
+                  key={s.name}
+                  className={`card flex items-center justify-between border ${statusColor(s.status)}`}
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${statusTextColor(s.status).replace('text-', 'bg-')}`} />
+                      <span className="truncate text-sm font-medium">{s.name}</span>
+                    </div>
+                    <p className="mt-0.5 text-[10px] text-ink-400 sm:text-xs">
+                      ok={s.ok} fail={s.fail} ·{" "}
+                      {s.p50_ms ? `${s.p50_ms}ms` : "n/a"}
+                    </p>
+                  </div>
+                  <span className={`text-xs ${statusTextColor(s.status)}`}>{s.status}</span>
+                </div>
               ))}
             </div>
-          ) : null}
+          </div>
+        ))}
+      </section>
+
+      {health?.stale_adapters && health.stale_adapters.length > 0 ? (
+        <section className="card border-amber-500/30 bg-amber-500/5 text-xs text-amber-200 sm:text-sm">
+          <p className="font-semibold">Stale adapters (&gt;30d)</p>
+          <ul className="mt-1 space-y-0.5">
+            {health.stale_adapters.map((a) => (
+              <li key={a.name}>
+                {a.name} — {a.age_days}d old
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 
-      {/* Source grid */}
-      <section className="space-y-2 sm:space-y-3">
-        <h2 className="text-lg font-semibold sm:text-xl">Sources</h2>
-        <div className="grid gap-2 grid-cols-1 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {sources.map((s) => (
-            <div
-              key={s.name}
-              className={`card border-l-2 ${
-                s.status === "healthy"
-                  ? "border-l-neon-500"
-                  : s.status === "degraded"
-                    ? "border-l-amber-500"
-                    : s.status === "down"
-                      ? "border-l-sakura-500"
-                      : "border-l-ink-600"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-sm truncate">{s.name}</h3>
-                <span className={`inline-flex h-2 w-2 rounded-full shrink-0 ${statusColor(s.status)}`} />
-              </div>
-
-              {/* Success rate bar */}
-              <div className="mb-2">
-                <div className="flex justify-between text-xs text-ink-400 mb-1">
-                  <span>Success rate</span>
-                  <span className="tabular-nums">{Math.round(s.success_rate * 100)}%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-ink-800 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      s.success_rate >= 0.9 ? "bg-neon-500" : s.success_rate >= 0.5 ? "bg-amber-500" : "bg-sakura-500"
-                    }`}
-                    style={{ width: `${Math.round(s.success_rate * 100)}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Stats row */}
-              <div className="grid grid-cols-3 gap-1 text-xs mb-2">
-                <div>
-                  <span className="text-ink-400">OK</span>
-                  <span className="ml-1 text-ink-200 tabular-nums">{s.ok}</span>
-                </div>
-                <div>
-                  <span className="text-ink-400">Fail</span>
-                  <span className="ml-1 text-ink-200 tabular-nums">{s.fail}</span>
-                </div>
-                <div>
-                  <span className="text-ink-400">Streak</span>
-                  <span className={`ml-1 tabular-nums ${s.failure_streak > 0 ? "text-sakura-300" : "text-ink-200"}`}>
-                    {s.failure_streak}
-                  </span>
-                </div>
-              </div>
-
-              {/* Latency + kind */}
-              <div className="flex justify-between text-xs text-ink-400">
-                <span>{s.kind}</span>
-                {s.p50_ms != null ? (
-                  <span className="tabular-nums">{s.p50_ms}ms p50</span>
-                ) : null}
-              </div>
-
-              {/* Error */}
-              {s.last_error ? (
-                <p className="mt-2 text-xs text-sakura-300 truncate" title={s.last_error}>
-                  {s.last_error}
-                </p>
-              ) : null}
-
-              {/* Meta */}
-              {s.meta?.verified_on ? (
-                <p className="mt-2 text-xs text-ink-500">
-                  v{s.meta.version} · verified {s.meta.verified_on}
-                </p>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Quick links */}
-      <section className="border-t border-ink-800 pt-4 text-sm text-ink-400 space-y-1 sm:pt-6">
-        <p className="text-xs sm:text-sm">
-          <a href="https://mynakama.web.id/sources/health" className="text-sakura-400 hover:underline" target="_blank" rel="noreferrer">
-            Health JSON
-          </a>
-          {" · "}
-          <a href="https://mynakama.web.id/analytics" className="text-sakura-400 hover:underline" target="_blank" rel="noreferrer">
-            Analytics JSON
-          </a>
-          {" · "}
-          <a href="https://mynakama.web.id/analytics/search" className="text-sakura-400 hover:underline" target="_blank" rel="noreferrer">
-            Search Analytics
-          </a>
-          {" · "}
-          <a href="https://mynakama.web.id/stats" className="text-sakura-400 hover:underline" target="_blank" rel="noreferrer">
-            Stats JSON
-          </a>
-          {" · "}
-          <a href="https://mynakama.web.id/docs" className="text-sakura-400 hover:underline" target="_blank" rel="noreferrer">
+      <section className="card text-xs text-ink-400 sm:text-sm">
+        <p>
+          Live API:{" "}
+          <a
+            href="https://mynakama.web.id/docs"
+            className="text-sakura-400 hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
             API Docs
           </a>
         </p>
@@ -333,7 +270,11 @@ function MiniMetric({
   return (
     <div className={`card ${alert ? "border-amber-500/40 bg-amber-500/5" : ""}`}>
       <p className="text-xs uppercase tracking-wide text-ink-400">{label}</p>
-      <p className={`mt-1 text-xl font-bold tabular-nums ${alert ? "text-amber-300" : "text-ink-50"} sm:text-2xl`}>
+      <p
+        className={`mt-1 text-xl font-bold tabular-nums ${
+          alert ? "text-amber-300" : "text-ink-50"
+        } sm:text-2xl`}
+      >
         {value}
       </p>
       {sub ? <p className="mt-0.5 text-xs text-ink-400">{sub}</p> : null}
