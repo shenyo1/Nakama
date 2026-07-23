@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ANIME_SOURCES, COMIC_SOURCES, NOVEL_SOURCES } from "../../lib/api";
+import { ANIME_SOURCES, COMIC_SOURCES, NOVEL_SOURCES } from "@/lib/api";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";

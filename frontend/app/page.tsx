@@ -1,24 +1,179 @@
+"use client";
+
 import Link from "next/link";
-import { ANIME_SOURCES, COMIC_SOURCES, NOVEL_SOURCES, fetchStats } from "../lib/api";
+import { useEffect, useState } from "react";
+import { ANIME_SOURCES, COMIC_SOURCES, NOVEL_SOURCES, PUBLIC_API_BASE } from "../lib/api";
 
-export const runtime = "edge";
+interface UserInfo {
+  id?: number;
+  username?: string;
+  email?: string;
+  plan?: string;
+}
 
-export const dynamic = "force-dynamic";
+interface QuotaInfo {
+  plan: string;
+  remaining: number;
+  limit: number;
+  used: number;
+}
 
-export default async function HomePage() {
-  let stats: Awaited<ReturnType<typeof fetchStats>> | null = null;
-  let error: string | null = null;
-  try {
-    stats = await fetchStats();
-  } catch (e) {
-    error = e instanceof Error ? e.message : String(e);
+export default function HomePage() {
+  const [mounted, setMounted] = useState(false);
+  const [authed, setAuthed] = useState(false);
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [quota, setQuota] = useState<QuotaInfo | null>(null);
+  const [history, setHistory] = useState<
+    { kind: string; source: string; title: string; slug: string; read_at: string }[]
+  >([]);
+
+  useEffect(() => {
+    setMounted(true);
+    const token = localStorage.getItem("nakama_token");
+    const raw = localStorage.getItem("nakama_user");
+    if (token) {
+      setAuthed(true);
+      if (raw) setUser(JSON.parse(raw));
+
+      // Fetch quota + recent history in parallel
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      };
+
+      fetch(`${PUBLIC_API_BASE}/auth/quota`, { headers })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.ok && d.data) setQuota(d.data);
+        })
+        .catch(() => {});
+
+      fetch(`${PUBLIC_API_BASE}/history?limit=5`, { headers })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.ok && d.data && Array.isArray(d.data)) setHistory(d.data);
+        })
+        .catch(() => {});
+    }
+  }, []);
+
+  const totalSources = ANIME_SOURCES.length + COMIC_SOURCES.length + NOVEL_SOURCES.length;
+
+  // Don't flash wrong content during hydration
+  if (!mounted) {
+    return (
+      <div className="space-y-8 sm:space-y-12">
+        <div className="space-y-4 pt-4">
+          <div className="h-4 w-48 rounded bg-ink-800 animate-pulse" />
+          <div className="h-12 w-3xl max-w-3xl rounded bg-ink-800 animate-pulse" />
+          <div className="h-4 w-2xl max-w-2xl rounded bg-ink-800 animate-pulse" />
+        </div>
+      </div>
+    );
   }
 
-  const totalSources = stats?.total_sources ?? ANIME_SOURCES.length + COMIC_SOURCES.length + NOVEL_SOURCES.length;
-  const animeCount = stats?.source_counts?.anime ?? ANIME_SOURCES.length;
-  const comicCount = stats?.source_counts?.comic ?? COMIC_SOURCES.length;
-  const novelCount = stats?.source_counts?.novel ?? NOVEL_SOURCES.length;
+  // ── Logged-in: personal home ──────────────────────────────────────
+  if (authed) {
+    return (
+      <div className="space-y-6 sm:space-y-8">
+        {/* Welcome header */}
+        <section className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sakura-400">
+            Welcome back
+          </p>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">
+            Hi, <span className="text-sakura-400">{user?.username || "user"}</span> 👋
+          </h1>
+          <p className="text-sm text-ink-400">
+            {totalSources} sources available · {quota?.plan || "free"} plan
+          </p>
+        </section>
 
+        {/* Quick actions */}
+        <section className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-4">
+          <QuickLink href="/anime" label="Browse Anime" sub={`${ANIME_SOURCES.length} sources`} />
+          <QuickLink href="/comic" label="Browse Comics" sub={`${COMIC_SOURCES.length} sources`} />
+          <QuickLink href="/novel" label="Browse Novels" sub={`${NOVEL_SOURCES.length} sources`} />
+          <QuickLink href="/search" label="Cross-Search" sub="All sources" />
+        </section>
+
+        {/* Quota + Analytics */}
+        <section className="grid gap-2 sm:gap-4 md:grid-cols-2">
+          <div className="card">
+            <h3 className="mb-3 font-semibold text-sm">Usage Quota</h3>
+            {quota ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink-400">Plan</span>
+                  <span className="font-mono text-sakura-400">{quota.plan}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink-400">Remaining</span>
+                  <span className="font-mono tabular-nums text-ink-50">{quota.remaining}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink-400">Used</span>
+                  <span className="font-mono tabular-nums text-ink-300">
+                    {quota.used} / {quota.limit}
+                  </span>
+                </div>
+                {/* Progress bar */}
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink-800">
+                  <div
+                    className="h-full rounded-full bg-sakura-500 transition-all"
+                    style={{
+                      width: `${quota.limit > 0 ? Math.min(100, (quota.used / quota.limit) * 100) : 0}%`,
+                    }}
+                    role="progressbar"
+                    aria-valuenow={quota.used}
+                    aria-valuemax={quota.limit}
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-ink-400">Loading quota…</p>
+            )}
+            <Link href="/dashboard" className="mt-3 block text-xs text-sakura-400 hover:underline">
+              View full dashboard →
+            </Link>
+          </div>
+
+          <div className="card">
+            <h3 className="mb-3 font-semibold text-sm">Recent Reading</h3>
+            {history.length > 0 ? (
+              <ul className="space-y-2">
+                {history.map((h, i) => (
+                  <li key={i} className="text-sm">
+                    <Link
+                      href={`/${h.kind}/${h.source}/detail/${h.slug}`}
+                      className="text-ink-200 hover:text-sakura-400 hover:underline"
+                    >
+                      {h.title}
+                    </Link>
+                    <p className="text-xs text-ink-500">
+                      {h.kind} · {h.source} · {new Date(h.read_at).toLocaleDateString()}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-ink-400">
+                No reading history yet.{" "}
+                <Link href="/anime" className="text-sakura-400 hover:underline">
+                  Start browsing →
+                </Link>
+              </p>
+            )}
+            <Link href="/history" className="mt-3 block text-xs text-sakura-400 hover:underline">
+              View all history →
+            </Link>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  // ── Logged-out: marketing landing ─────────────────────────────────
   return (
     <div className="space-y-8 sm:space-y-12">
       {/* Hero */}
@@ -32,23 +187,21 @@ export default async function HomePage() {
           through one REST API.
         </h1>
         <p className="max-w-2xl text-sm text-ink-300 leading-relaxed sm:text-base">
-          Nakama aggregates {totalSources} public sources ({animeCount} anime, {comicCount} comic, {novelCount} novel) behind
+          Nakama aggregates {totalSources} public sources ({ANIME_SOURCES.length} anime,
+          {" "}{COMIC_SOURCES.length} comic, {NOVEL_SOURCES.length} novel) behind
           a consistent JSON interface. Multi-source search with automatic
           deduplication, offline fixtures, WebSocket live updates, auto-repair
           circuit breakers, and a generated TypeScript SDK.
         </p>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           <Link href="/anime" className="btn-primary">
-            Anime
+            Browse Anime
           </Link>
           <Link href="/comic" className="btn-primary">
-            Comics
+            Browse Comics
           </Link>
-          <Link href="/novel" className="btn-primary">
-            Novels
-          </Link>
-          <Link href="/search" className="btn-ghost">
-            Cross-source search
+          <Link href="/register" className="btn-ghost">
+            Create Account
           </Link>
         </div>
       </section>
@@ -56,56 +209,16 @@ export default async function HomePage() {
       {/* Stats */}
       <section className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-4">
         <StatCard label="Total sources" value={totalSources} />
-        <StatCard
-          label="Anime sources"
-          value={animeCount}
-        />
-        <StatCard
-          label="Comic sources"
-          value={comicCount}
-        />
-        <StatCard
-          label="Novel sources"
-          value={novelCount}
-        />
-      </section>
-
-      {error ? (
-        <div className="card border-sakura-500/40 text-sm text-sakura-200">
-          Backend unreachable: <code className="text-xs">{error}</code>
-        </div>
-      ) : null}
-
-      {/* Source lists */}
-      <section className="space-y-3 sm:space-y-4">
-        <h2 className="text-lg font-semibold sm:text-xl">Registered sources</h2>
-        <div className="grid gap-2 sm:gap-4 md:grid-cols-3">
-          <SourceList
-            title="Anime"
-            subtitle={`${animeCount} sources`}
-            items={[...ANIME_SOURCES]}
-            href="/anime"
-          />
-          <SourceList
-            title="Comic"
-            subtitle={`${comicCount} sources`}
-            items={[...COMIC_SOURCES]}
-            href="/comic"
-          />
-          <SourceList
-            title="Novel"
-            subtitle={`${novelCount} sources`}
-            items={[...NOVEL_SOURCES]}
-            href="/novel"
-          />
-        </div>
+        <StatCard label="Anime sources" value={ANIME_SOURCES.length} />
+        <StatCard label="Comic sources" value={COMIC_SOURCES.length} />
+        <StatCard label="Novel sources" value={NOVEL_SOURCES.length} />
       </section>
 
       {/* Feature highlights */}
       <section className="grid gap-3 sm:gap-6 md:grid-cols-2">
         <FeatureCard
           title="Multi-source search"
-          description={`Search across all ${comicCount} comic, ${animeCount} anime, or ${novelCount} novel sources at once. Results are deduplicated and ranked by coverage.`}
+          description={`Search across all ${COMIC_SOURCES.length} comic, ${ANIME_SOURCES.length} anime, or ${NOVEL_SOURCES.length} novel sources at once. Results are deduplicated and ranked by coverage.`}
           href="/search"
         />
         <FeatureCard
@@ -114,13 +227,13 @@ export default async function HomePage() {
           href="/status"
         />
         <FeatureCard
-          title="Offline-first testing"
-          description="271 tests run without network. HTML fixtures capture real responses for deterministic CI. Add a source, save its fixture, ship with confidence."
-          href="/status"
+          title="Personal reading history"
+          description="Create an account to sync bookmarks, track reading progress, and personalize your experience across devices."
+          href="/register"
         />
         <FeatureCard
           title="TypeScript SDK"
-          description="Generated from OpenAPI schema. 52 endpoints, 19 schemas. Drop it into any frontend project."
+          description="Generated from OpenAPI schema. 58 endpoints, 22 schemas. Drop it into any frontend project."
         />
       </section>
 
@@ -128,7 +241,7 @@ export default async function HomePage() {
       <section className="border-t border-ink-800 pt-4 text-sm text-ink-400 space-y-1 sm:pt-6">
         <p>
           <a
-            href="https://github.com/afifghaffarr-source/Nakama"
+            href="https://github.com/shenyo1/Nakama"
             className="text-sakura-400 hover:underline"
             target="_blank"
             rel="noreferrer"
@@ -159,57 +272,21 @@ export default async function HomePage() {
   );
 }
 
-function StatCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number;
-}) {
+function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="card">
       <p className="text-xs uppercase tracking-wide text-ink-400">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-ink-50 tabular-nums sm:text-3xl">
-        {value}
-      </p>
+      <p className="mt-1 text-2xl font-bold text-ink-50 tabular-nums sm:text-3xl">{value}</p>
     </div>
   );
 }
 
-function SourceList({
-  title,
-  subtitle,
-  items,
-  href,
-}: {
-  title: string;
-  subtitle: string;
-  items: string[];
-  href: string;
-}) {
+function QuickLink({ href, label, sub }: { href: string; label: string; sub: string }) {
   return (
-    <div className="card">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h3 className="font-semibold text-sm sm:text-base">{title}</h3>
-          <p className="text-xs text-ink-400">{subtitle}</p>
-        </div>
-        <Link
-          href={href}
-          className="text-xs text-sakura-400 hover:underline shrink-0"
-        >
-          browse
-        </Link>
-      </div>
-      <ul className="space-y-1 text-sm text-ink-300">
-        {items.map((s) => (
-          <li key={s} className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-neon-500 shrink-0" />
-            {s}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Link href={href} className="card card-hover text-center">
+      <p className="font-semibold text-sm sm:text-base">{label}</p>
+      <p className="mt-1 text-xs text-ink-400">{sub}</p>
+    </Link>
   );
 }
 

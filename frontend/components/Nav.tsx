@@ -18,6 +18,7 @@ const authedLinks = [
   ...publicLinks,
   { href: "/history", label: "History" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/analytics", label: "Analytics" },
   { href: "/ws-test", label: "Live WS" },
 ];
 
