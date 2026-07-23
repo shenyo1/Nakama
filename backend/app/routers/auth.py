@@ -36,6 +36,7 @@ from ..auth_tokens import (
     reset_link,
 )
 from ..emailer import is_disabled, send_email
+from ..email_templates import email_template as _email_template
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +160,14 @@ async def register(
         base = os.getenv("PUBLIC_BASE_URL", "https://mynakama.web.id")
         link = confirm_link(base, token)
         if not is_disabled() and user.email:
+            html = _email_template(
+                title="Welcome to Nakama! 🎉",
+                greeting=f"Hi {user.username},",
+                message="Confirm your email address to activate your account:",
+                button_text="Confirm Email",
+                button_url=link,
+                footer="If you didn't create this account, you can safely ignore this email.",
+            )
             background.add_task(
                 send_email,
                 to=user.email,
@@ -169,6 +178,7 @@ async def register(
                     f"{link}\n\n"
                     f"If you didn't create this account, ignore this email."
                 ),
+                html=html,
             )
         else:
             confirmation = {"confirmation_link": link}
@@ -250,6 +260,14 @@ async def forgot(
         )
         link = reset_link(base, token)
         if not is_disabled():
+            html = _email_template(
+                title="Reset Your Password",
+                greeting=f"Hi {user.username},",
+                message="We received a request to reset your Nakama password. Click below to choose a new one:",
+                button_text="Reset Password",
+                button_url=link,
+                footer="This link expires in 2 hours. If you didn't request a password reset, you can safely ignore this email.",
+            )
             background.add_task(
                 send_email,
                 to=user.email,
@@ -259,6 +277,7 @@ async def forgot(
                     f"Reset your password by visiting:\n{link}\n\n"
                     f"This link expires in 2 hours."
                 ),
+                html=html,
             )
         else:
             reset = {"reset_link": link}
