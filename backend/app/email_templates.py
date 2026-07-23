@@ -99,12 +99,6 @@ def email_template(
                 </tr>
               </table>
 
-              <!-- Link fallback (for clients that block buttons) -->
-              <p style="margin:20px 0 0 0;font-size:13px;color:#666688;text-align:center;line-height:1.5;">
-                If the button doesn't work, copy this link:<br>
-                <a href="{button_url}" style="color:#ff6b9d;word-break:break-all;text-decoration:underline;">{button_url}</a>
-              </p>
-
               {f'<p style="margin:24px 0 0 0;font-size:13px;color:#666688;text-align:center;line-height:1.5;border-top:1px solid #2a2a4a;padding-top:20px;">{footer}</p>' if footer else ''}
             </td>
           </tr>
