@@ -10,7 +10,7 @@
   "containers": [
     {
       "class_name": "NakamaContainer",
-      "image": "./Dockerfile.cloudflare",
+      "image": "../backend/Dockerfile.cloudflare",
       "max_instances": 3,
       "instance_type": "basic",
       "name": "nakama-api"

@@ -3,7 +3,7 @@
 set -euo pipefail
 
 CONF="${NAKAMA_MONITOR_CONF:-/home/ubuntu/.config/nakama/monitor.env}"
-APP_DIR="${NAKAMA_APP_DIR:-/home/ubuntu/projects/nakama}"
+APP_DIR="${NAKAMA_APP_DIR:-/home/ubuntu/projects/nakama/backend}"
 # shellcheck disable=SC1090
 source "$CONF"
 : "${TELEGRAM_BOT_TOKEN:?missing TELEGRAM_BOT_TOKEN}"
@@ -59,7 +59,7 @@ fi
 # docker status
 docker_line="n/a"
 if command -v docker >/dev/null 2>&1; then
-  docker_line=$(docker compose --env-file "$APP_DIR/.env.production" -f "$APP_DIR/docker-compose.prod.yml" ps --format '{{.Name}}={{.Status}}' 2>/dev/null | tr '\n' '; ' | head -c 400)
+  docker_line=$(docker compose --env-file "$APP_DIR/.env.production" -f "$APP_DIR/../infra/docker-compose.prod.yml" ps --format '{{.Name}}={{.Status}}' 2>/dev/null | tr '\n' '; ' | head -c 400)
 fi
 
 # disk / mem

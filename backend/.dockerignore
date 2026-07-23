@@ -1,0 +1,49 @@
+# Backend Docker build context is backend/ — ignore everything not needed.
+
+# Local Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+.probe/
+*.log
+
+# Local secrets / state
+.env
+.env.local
+.env.production
+*.sqlite
+*.sqlite-journal
+nakamadb.sqlite
+
+# Git / IDE
+.git/
+.gitignore
+.github/
+
+# Docker compose / test helpers (keep main Dockerfile for builds)
+docker-compose.yml
+docker-compose.prod.yml
+.dockerignore
+Dockerfile.test
+Dockerfile.cloudflare
+
+# SDK + docs (not needed in runtime image)
+sdks/
+docs/
+scripts/
+deploy/
+tests/
+
+# OS junk
+.DS_Store
+Thumbs.db

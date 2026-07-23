@@ -59,6 +59,9 @@ COPY --from=builder /install /usr/local
 COPY --chown=nakama:nakama app ./app
 COPY --chown=nakama:nakama fixtures ./fixtures
 
+# OpenAPI spec for SDK regeneration
+COPY --chown=nakama:nakama openapi.json ./openapi.json
+
 USER nakama
 
 EXPOSE 8000

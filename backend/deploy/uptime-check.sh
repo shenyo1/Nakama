@@ -8,7 +8,7 @@ CONF="${NAKAMA_MONITOR_CONF:-/home/ubuntu/.config/nakama/monitor.env}"
 STATE_DIR="${NAKAMA_MONITOR_STATE:-/home/ubuntu/.config/nakama/monitor-state}"
 LOG_FILE="${NAKAMA_MONITOR_LOG:-/home/ubuntu/.config/nakama/uptime.log}"
 OUTAGES_FILE="${NAKAMA_OUTAGES_FILE:-/home/ubuntu/.config/nakama/outages.jsonl}"
-DATA_OUTAGES="/home/ubuntu/projects/nakama/data/outages.jsonl"
+DATA_OUTAGES="/home/ubuntu/projects/nakama/backend/data/outages.jsonl"
 mkdir -p "$STATE_DIR" "$(dirname "$DATA_OUTAGES")"
 touch "$LOG_FILE" 2>/dev/null || LOG_FILE="/home/ubuntu/.config/nakama/uptime.log"
 touch "$OUTAGES_FILE" 2>/dev/null || true

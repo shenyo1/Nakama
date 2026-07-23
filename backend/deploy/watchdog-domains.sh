@@ -4,10 +4,10 @@
 # Telegram alert (best-effort).
 #
 # Add to crontab:
-#   */5 * * * * /home/ubuntu/projects/nakama/deploy/watchdog-domains.sh >> /home/ubuntu/.config/nakama/domains.log 2>&1
+#   */5 * * * * /home/ubuntu/projects/nakama/backend/deploy/watchdog-domains.sh >> /home/ubuntu/.config/nakama/domains.log 2>&1
 set -uo pipefail
 
-PROJECT=/home/ubuntu/projects/nakama
+PROJECT=/home/ubuntu/projects/nakama/backend
 ALERT_FILE=/home/ubuntu/.config/nakama/monitor.env
 LOG=/home/ubuntu/.config/nakama/domains.log
 TS() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }

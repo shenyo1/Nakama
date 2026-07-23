@@ -3,11 +3,11 @@
 # Telegram if a restart was needed (since that's an ops signal).
 #
 # Add to crontab:
-#   */2 * * * * /home/ubuntu/projects/nakama/deploy/watchdog-flaresolverr.sh >> /home/ubuntu/.config/nakama/watchdog.log 2>&1
+#   */2 * * * * /home/ubuntu/projects/nakama/backend/deploy/watchdog-flaresolverr.sh >> /home/ubuntu/.config/nakama/watchdog.log 2>&1
 set -euo pipefail
 
-PROJECT=/home/ubuntu/projects/nakama
-COMPOSE="docker compose --env-file $PROJECT/.env.production -f $PROJECT/docker-compose.prod.yml"
+PROJECT=/home/ubuntu/projects/nakama/backend
+COMPOSE="docker compose --env-file $PROJECT/.env.production -f $PROJECT/../infra/docker-compose.prod.yml"
 HEALTH_TIMEOUT=5
 ALERT_FILE=/home/ubuntu/.config/nakama/monitor.env
 LOG=/home/ubuntu/.config/nakama/watchdog.log

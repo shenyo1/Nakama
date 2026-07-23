@@ -677,6 +677,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     parser.add_argument(
         "--output",
         default="./sdks/ts/src/index.ts",
+# When run from backend/, this resolves to backend/sdks/ts/src/index.ts
         help="Destination .ts file (default: %(default)s)",
     )
     args = parser.parse_args(list(argv) if argv is not None else None)

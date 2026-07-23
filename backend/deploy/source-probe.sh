@@ -45,7 +45,7 @@ from pathlib import Path
 
 state_dir = Path(os.environ.get("NAKAMA_MONITOR_STATE", os.path.expanduser("~/.config/nakama/monitor-state")))
 outages = Path(os.environ.get("NAKAMA_OUTAGES_FILE", os.path.expanduser("~/.config/nakama/outages.jsonl")))
-data_outages = Path("/home/ubuntu/projects/nakama/data/outages.jsonl")
+data_outages = Path("/home/ubuntu/projects/nakama/backend/data/outages.jsonl")
 state_dir.mkdir(parents=True, exist_ok=True)
 data_outages.parent.mkdir(parents=True, exist_ok=True)
 

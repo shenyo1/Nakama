@@ -2,7 +2,7 @@
 # Daily SQLite + compose snapshot backup for Nakama.
 set -euo pipefail
 
-APP_DIR="${NAKAMA_APP_DIR:-/home/ubuntu/projects/nakama}"
+APP_DIR="${NAKAMA_APP_DIR:-/home/ubuntu/projects/nakama/backend}"
 BACKUP_ROOT="${NAKAMA_BACKUP_ROOT:-/home/ubuntu/backups/nakama}"
 KEEP_DAYS="${NAKAMA_BACKUP_KEEP_DAYS:-14}"
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
@@ -31,7 +31,7 @@ else
 fi
 
 # 2) Non-secret compose + nginx snapshot
-cp -a "$APP_DIR/docker-compose.prod.yml" "$DEST/" 2>/dev/null || true
+cp -a "$APP_DIR/../infra/docker-compose.prod.yml" "$DEST/" 2>/dev/null || true
 cp -a "$APP_DIR/deploy/nginx-mynakama.conf" "$DEST/" 2>/dev/null || true
 # env keys only (no values)
 if [[ -f "$APP_DIR/.env.production" ]]; then
@@ -40,7 +40,7 @@ fi
 
 # 3) Container status snapshot
 if command -v docker >/dev/null 2>&1; then
-  docker compose --env-file "$APP_DIR/.env.production" -f "$APP_DIR/docker-compose.prod.yml" ps >"$DEST/compose-ps.txt" 2>/dev/null || true
+  docker compose --env-file "$APP_DIR/.env.production" -f "$APP_DIR/../infra/docker-compose.prod.yml" ps >"$DEST/compose-ps.txt" 2>/dev/null || true
 fi
 
 # 4) Manifest

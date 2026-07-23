@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-PROJECT=/home/ubuntu/projects/nakama
+PROJECT=/home/ubuntu/projects/nakama/backend
 ALERT_FILE=/home/ubuntu/.config/nakama/monitor.env
 
 TS() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
@@ -50,8 +50,8 @@ time: $(TS)"
 
   if [ "$DOWN_COUNT" -ge 4 ]; then
     echo "[$(TS)] auto-repair: restarting nakama-api container"
-    docker compose --env-file "$PROJECT/.env.production" \
-      -f "$PROJECT/docker-compose.prod.yml" \
+    docker compose --env-file "/.env.production" \
+      -f "$PROJECT/../infra/docker-compose.prod.yml" \
       restart api 2>&1 | tail -2
 
     send_telegram "🔧 *Nakama auto-repair*
