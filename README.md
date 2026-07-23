@@ -246,8 +246,31 @@ frequently and some pages are JavaScript-rendered:
   currently returns the homepage listing instead.
 - **Otakudesu detail/episode** pages are partly JS-rendered on the live site;
   those endpoints may return partial data.
+- **Anoboy, Westmanga** are JS-rendered SPAs — require Camoufox (anti-detect
+  Firefox) with FlareSolverr as fallback. Slow but reliable.
+- **Sakuranovel** is Cloudflare-protected; always served via FlareSolverr
+  (`transport: html+flaresolverr` in `/sources/health/{name}`).
+- **Komikcast** chapter images require a Bearer JWT (`KOMIKCAST_TOKEN` env).
+  Appwrite login needs Cloudflare Turnstile — extract token manually from
+  browser DevTools (Local Storage) and paste into `.env.production`.
 - Because of the above, live responses can vary between requests. The
   `OFFLINE_MODE` fixtures provide deterministic, testable behavior.
+
+### Auto-recovery for degraded sources
+
+If a source's `failure_streak` rises, `deploy/source-recover.sh` resets the
+Redis health counter and probes 3 times to climb back to **healthy**:
+
+```bash
+# Manual run (one-off)
+/home/ubuntu/projects/nakama/deploy/source-recover.sh
+
+# Cron (every 4 min)
+/4 * * * * /home/ubuntu/projects/nakama/deploy/source-recover.sh >> /home/ubuntu/.config/nakama/source-recover.log 2>&1
+```
+
+Current health scoreboard: **21/21 sources healthy** (live).
+
 
 Adult-only sources listed in the original README (Nekopoi, Mangasusuku) are
 **intentionally not implemented** in this project.
