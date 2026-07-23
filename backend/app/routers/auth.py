@@ -292,23 +292,39 @@ async def reset(body: ResetBody, session: AsyncSession = Depends(get_session)):
     return ApiResponse(data={"reset": True, "username": user.username})
 
 
-@router.api_route(
+@router.get(
     "/confirm",
-    methods=["GET", "POST"],
     response_model=ApiResponse,
-    summary="Confirm an email address via token",
-    operation_id="auth_confirm",
+    summary="Confirm an email address via token (email link)",
+    operation_id="auth_confirm_get",
 )
-async def confirm(
+async def confirm_get(
     token: Optional[str] = None,
-    body: Optional[ConfirmBody] = None,
     session: AsyncSession = Depends(get_session),
 ):
-    """Accept token via query string (GET — email link) or JSON body (POST — API)."""
-    tok = token or (body.token if body else None)
-    if not tok:
+    """Accept token via query string (GET — email link)."""
+    if not token:
         raise HTTPException(status_code=400, detail="missing token")
-    user = await confirm_email(session, tok)
+    user = await confirm_email(session, token)
+    if user is None:
+        raise HTTPException(
+            status_code=400, detail="invalid confirmation token"
+        )
+    return ApiResponse(data={"confirmed": True, "username": user.username})
+
+
+@router.post(
+    "/confirm",
+    response_model=ApiResponse,
+    summary="Confirm an email address via token (JSON body)",
+    operation_id="auth_confirm",
+)
+async def confirm_post(
+    body: ConfirmBody,
+    session: AsyncSession = Depends(get_session),
+):
+    """Accept token via JSON body (POST — API)."""
+    user = await confirm_email(session, body.token)
     if user is None:
         raise HTTPException(
             status_code=400, detail="invalid confirmation token"

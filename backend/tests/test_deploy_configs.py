@@ -8,33 +8,48 @@ from pathlib import Path
 
 import pytest
 
+# After monorepo restructure, deploy configs live in infra/ (one level up
+# from backend/). Fall back to ROOT for backwards compatibility.
 ROOT = Path(__file__).resolve().parents[1]
+INFRA = ROOT.parent / "infra"
+
+
+def _find(name: str) -> Path:
+    """Locate a deploy config in infra/ or backend/ (legacy)."""
+    for base in (INFRA, ROOT):
+        p = base / name
+        if p.exists():
+            return p
+    return ROOT / name  # return missing path for assertion message
 
 
 @pytest.fixture(scope="module")
 def railway_toml() -> str:
-    p = ROOT / "railway.toml"
-    assert p.exists(), "railway.toml missing"
+    p = _find("railway.toml")
+    assert p.exists(), "railway.toml missing in infra/ and backend/"
     return p.read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
 def render_yaml() -> str:
-    p = ROOT / "render.yaml"
-    assert p.exists(), "render.yaml missing"
+    p = _find("render.yaml")
+    assert p.exists(), "render.yaml missing in infra/ and backend/"
     return p.read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
 def fly_toml() -> str:
-    p = ROOT / "fly.toml"
-    assert p.exists(), "fly.toml missing"
+    p = _find("fly.toml")
+    assert p.exists(), "fly.toml missing in infra/ and backend/"
     return p.read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
 def deploy_md() -> str:
-    p = ROOT / "DEPLOY.md"
+    p = _find("DEPLOY.md")
+    if not p.exists():
+        # DEPLOY.md may live in backend/docs/ after restructure
+        p = ROOT / "docs" / "DEPLOY.md"
     assert p.exists(), "DEPLOY.md missing"
     return p.read_text(encoding="utf-8")
 

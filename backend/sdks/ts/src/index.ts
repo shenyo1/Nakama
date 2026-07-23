@@ -59,6 +59,8 @@ export interface ApiResponse_ComicDetail { "ok"?: boolean; "source"?: string; "d
 export interface ApiResponse_NovelDetail { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "status"?: string; "rating"?: string; "latest_chapter"?: string; "author"?: string; "synopsis"?: string; "genres"?: Array<string>; "chapters"?: Array<Record<string, unknown>> } }
 export interface BookmarkCreate { "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "title"?: string; "thumbnail"?: string; "note"?: string }
 export interface BroadcastBody { "event": Record<string, unknown> }
+export interface ChangePasswordBody { "current_password": string; "new_password": string }
+export interface ClientError { "message": string; "stack"?: string; "source"?: string; "severity"?: string; "extra"?: Record<string, unknown> }
 export interface ComicDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> }
 export interface ConfirmBody { "token": string }
 export interface ForgotBody { "email": string; "base_url"?: string }
@@ -870,6 +872,32 @@ export class Stats {
   }
 
   /**
+   * List recent errors (admin)
+   * @see GET /admin/errors
+   * Return the most recent client/server errors. Requires X-API-Key.
+   */
+  async list_get_x(params?: { "limit"?: number; "severity"?: string }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    if (p.severity !== undefined) search.set("severity", String(p.severity));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/admin/errors${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
    * Cache + cost guard analytics
    * @see GET /analytics
    * Lightweight ops analytics for Tier 3.
@@ -947,20 +975,18 @@ export class Stats {
   }
 
   /**
-   * Confirm an email address via token
-   * @see GET /auth/confirm
-   * Accept token via query string (GET — email link) or JSON body (POST — API).
+   * Change password (authenticated user)
+   * @see POST /auth/change-password
+   * Change the password for the currently authenticated user.
+   * Requires the current password to be provided for verification.
    */
-  async auth(params?: { "token"?: string; body: { "token": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async change(params?: { body: { "current_password": string; "new_password": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
-    const search = new URLSearchParams();
-    if (p.token !== undefined) search.set("token", String(p.token));
-    const qs = search.toString();
-    const suffix = qs ? `?${qs}` : "";
-    const url = `${this._client.baseUrl}/auth/confirm${suffix}`;
+    const suffix = "";
+    const url = `${this._client.baseUrl}/auth/change-password${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
     const init: RequestInit = {
-      method: "GET",
+      method: "POST",
       headers: hdrs,
       body: JSON.stringify(p.body),
     };
@@ -973,16 +999,38 @@ export class Stats {
   }
 
   /**
-   * Confirm an email address via token
-   * @see POST /auth/confirm
-   * Accept token via query string (GET — email link) or JSON body (POST — API).
+   * Confirm an email address via token (email link)
+   * @see GET /auth/confirm
+   * Accept token via query string (GET — email link).
    */
-  async auth_post(params?: { "token"?: string; body: { "token": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async auth(params?: { "token"?: string }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.token !== undefined) search.set("token", String(p.token));
     const qs = search.toString();
     const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/auth/confirm${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Confirm an email address via token (JSON body)
+   * @see POST /auth/confirm
+   * Accept token via JSON body (POST — API).
+   */
+  async auth_post(params?: { body: { "token": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
     const url = `${this._client.baseUrl}/auth/confirm${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
     const init: RequestInit = {
@@ -1292,6 +1340,32 @@ export class Stats {
       throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as unknown;
+  }
+
+  /**
+   * Report a client-side error
+   * @see POST /errors
+   * Called by the browser/Next.js error boundary when something blows up.
+   * 
+   * Cheap to call, rate-limited globally, and never raises — a downstream
+   * error tracker that itself errors is worse than no tracker.
+   */
+  async report(params?: { body: { "message": string; "stack"?: string; "source"?: string; "severity"?: string; "extra"?: Record<string, unknown> } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/errors${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
   }
 
   /**
