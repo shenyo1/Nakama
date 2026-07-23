@@ -1,19 +1,46 @@
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
 .venv/
 venv/
+
+# Test artifacts
 .pytest_cache/
-*.log
-.env
-.env.production
+.coverage
+htmlcov/
 .probe/
+*.log
+
+# Local secrets / state
+.env
+.env.local
+.env.production
+*.sqlite
+*.sqlite-journal
 nakamadb.sqlite
-data/
+
+# Runtime data
+backend/data/
+
+# Node
 node_modules/
-.wrangler/
 dist/
+
+# Cloudflare / Wrangler
+.wrangler/
 worker-configuration.d.ts
 
-# runtime outage log
-data/outages.jsonl
-frontend/.vercel/
+# Build artifacts
+.vercel/
+.next/
+
+# Codegraph cache
+.codegraph/
+
+# OS junk
+.DS_Store
+Thumbs.db
