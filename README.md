@@ -271,6 +271,75 @@ Redis health counter and probes 3 times to climb back to **healthy**:
 
 Current health scoreboard: **21/21 sources healthy** (live).
 
+## ✨ v2.7.0 — Observability, security, accessibility
+
+Major release that closes several production-readiness gaps. All changes
+keep the existing v2.6 contract — purely additive.
+
+### 🆕 New: client + server error reporting
+
+- `POST /errors` — clients (frontend ErrorBoundary, future mobile) can
+  report exceptions, including a stack and a `severity` of
+  `debug|info|warning|error|critical`. Stored in a 200-entry in-memory
+  ring buffer plus a durable JSONL file at
+  `data/errors.jsonl` (override via `NAKAMA_ERRORS_FILE`).
+- `GET /admin/errors?limit=50&severity=...` — admin-only listing
+  (requires `X-API-Key`). Returns the most recent entries first.
+- `critical`-severity errors are forwarded to Telegram via the existing
+  bot, throttled to 1 per 60 s.
+- A global `Exception` handler now feeds every 500 into the same
+  pipeline, so production errors are visible without needing Sentry.
+
+### 🆕 Per-endpoint rate limits
+
+`@limiter.limit(...)` was missing on the auth router, so `/auth/login`
+etc. were only protected by the global 60/minute cap. New limits:
+
+| Endpoint               | Limit        |
+| ---------------------- | ------------ |
+| `POST /auth/register`  | `10/minute`  |
+| `POST /auth/login`     | `20/minute`  |
+| `POST /auth/refresh`   | `60/minute`  |
+| `POST /auth/forgot`    | `5/minute`   |
+
+The global `RATE_LIMIT` env still applies as a backstop.
+
+### 🆕 WebSocket transitions on health events
+
+`app/sources/health.py::_record_async` now broadcasts a
+`source_health` event with `event: "transition"` whenever a source's
+status changes between `healthy` / `degraded` / `down`. The dashboard
+now reacts in real time instead of waiting for the 60 s polling loop.
+Simulated `chapter_update` events still flow as before.
+
+### ♿ Accessibility audit
+
+- `aria-required`, `aria-invalid`, `aria-busy` on form controls in
+  `/login` and `/register`.
+- `role="status"` / `role="alert"` + `aria-live` for result messages;
+  focus is moved to the message after submission so screen readers
+  announce it.
+- Skip-to-content link in `app/layout.tsx` (visible only on focus).
+- `<label htmlFor>` and `aria-describedby` for form fields using
+  `useId()` for unique IDs.
+- Footer GitHub link fixed: was `afifghaffarr-source/Nakama` (404),
+  now `shenyo1/Nakama`.
+
+### 📈 Metrics
+
+`/metrics` is now exercised by the new endpoints, so Prometheus
+counters for `http_requests_total{path="/errors",...}` and
+`/admin/errors` appear automatically.
+
+### ✅ Tests
+
+- 285 pass, 1 pre-existing failure in `tests/test_ts_sdk.py`
+  (`test_canonical_sdk_matches_in_process_render`) — the in-process
+  FastAPI client renders a slightly different OpenAPI document than
+  the live worker (the test was already broken on the v2.6.2 commit;
+  not introduced by v2.7.0). The committed `sdks/ts/src/index.ts`
+  matches the live API.
+
 ## ✨ v2.6.2 — Source probe worker stability
 
 Fixes the recurring "Nakama source probe failed (HTTP 502)" Telegram alert:

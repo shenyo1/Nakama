@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import User, get_session
 from ..quota import peek, quota_for_plan
+from ..ratelimit import limiter
 from ..schemas import ApiResponse
 from ..security import (
     ACCESS_TTL_SECONDS,
@@ -114,7 +115,9 @@ def _build_token_pair(user: User) -> TokenResponse:
 
 
 @router.post("/register", response_model=ApiResponse, summary="Register a user")
+@limiter.limit("10/minute")
 async def register(
+    request: Request,
     body: RegisterBody,
     background: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
@@ -170,7 +173,12 @@ async def register(
 
 
 @router.post("/login", response_model=ApiResponse, summary="Login and get JWT pair")
-async def login(body: LoginBody, session: AsyncSession = Depends(get_session)):
+@limiter.limit("20/minute")
+async def login(
+    request: Request,
+    body: LoginBody,
+    session: AsyncSession = Depends(get_session),
+):
     username = body.username.strip().lower()
     user = (
         await session.execute(select(User).where(User.username == username))
@@ -181,7 +189,12 @@ async def login(body: LoginBody, session: AsyncSession = Depends(get_session)):
 
 
 @router.post("/refresh", response_model=ApiResponse, summary="Refresh access token")
-async def refresh(body: RefreshBody, session: AsyncSession = Depends(get_session)):
+@limiter.limit("60/minute")
+async def refresh(
+    request: Request,
+    body: RefreshBody,
+    session: AsyncSession = Depends(get_session),
+):
     try:
         data = decode_token(body.refresh_token, expected_type="refresh")
     except Exception:
@@ -206,7 +219,9 @@ async def refresh(body: RefreshBody, session: AsyncSession = Depends(get_session
     response_model=ApiResponse,
     summary="Request a password-reset link",
 )
+@limiter.limit("5/minute")
 async def forgot(
+    request: Request,
     body: ForgotBody,
     background: BackgroundTasks,
     session: AsyncSession = Depends(get_session),

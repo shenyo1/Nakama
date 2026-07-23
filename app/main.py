@@ -80,7 +80,7 @@ app = FastAPI(
         "deduplication, WebSocket live updates, auto-repair circuit breakers, "
         "offline fixtures, and a generated TypeScript SDK."
     ),
-    version="2.6.2",
+    version="2.7.0",
     lifespan=lifespan,
 )
 
@@ -382,6 +382,21 @@ app.include_router(auth_router.router)
 app.include_router(tier5_router.router)
 app.include_router(audit_router)
 app.include_router(sources_router.router)
+from .routers.errors import router as errors_router  # noqa: E402
+app.include_router(errors_router)
+
+# Global exception handler: capture every 500 into the error tracker.
+from .routers.errors import capture_server_error  # noqa: E402
+
+@app.exception_handler(Exception)
+async def _unhandled_exception_handler(request: Request, exc: Exception):
+    """Capture and re-raise as 500 so FastAPI still sends a clean response."""
+    capture_server_error(request, exc, status_code=500)
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=500,
+        content={"ok": False, "error": "internal_error", "detail": str(exc)[:200]},
+    )
 
 from .routers.preferences import router as preferences_router
 app.include_router(preferences_router)

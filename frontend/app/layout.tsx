@@ -31,20 +31,27 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body>
+        {/* Skip-to-content for keyboard/screen-reader users */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-sakura-500 focus:px-3 focus:py-2 focus:text-ink-50"
+        >
+          Skip to main content
+        </a>
         <I18nProvider>
           <Nav />
-          <main className="container-page py-6 animate-fade-in sm:py-8">
+          <main id="main-content" className="container-page py-6 animate-fade-in sm:py-8">
             <ErrorBoundary>{children}</ErrorBoundary>
           </main>
           <footer className="container-page border-t border-ink-800 py-6 text-center text-xs text-ink-500 sm:py-8">
             Powered by{" "}
             <a
               className="text-sakura-400 hover:underline"
-              href="https://github.com/afifghaffarr-source/Nakama"
+              href="https://github.com/shenyo1/Nakama"
               target="_blank"
               rel="noreferrer"
             >
-              afifghaffarr-source/Nakama
+              shenyo1/Nakama
             </a>{" "}
             · Nakama FastAPI backend
           </footer>

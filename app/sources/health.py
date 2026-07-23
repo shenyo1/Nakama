@@ -298,8 +298,28 @@ async def _record_async(
 ) -> None:
     try:
         st = await _load_state(source, kind=kind)
+        prev_status = st.get("status")
         _apply_event(st, success=success, latency_ms=latency_ms, error=error)
         await _save_state(st)
+        # Fire-and-forget WebSocket broadcast on status transitions so
+        # the dashboard can react instantly instead of waiting for the
+        # 60 s health-monitor loop.
+        new_status = st.get("status")
+        if prev_status and new_status and prev_status != new_status:
+            try:
+                from ..ws import manager as _ws_manager
+                await _ws_manager.broadcast({
+                    "type": "source_health",
+                    "name": source,
+                    "kind": kind,
+                    "status": new_status,
+                    "ok": st.get("ok", 0),
+                    "fail": st.get("fail", 0),
+                    "event": "transition",
+                    "from": prev_status,
+                })
+            except Exception:
+                pass
     except Exception:
         # Never break request path for health accounting.
         pass
