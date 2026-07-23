@@ -22,9 +22,9 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Boolean, func, UniqueConstraint, JSON
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Boolean, func, UniqueConstraint, JSON, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -70,6 +70,11 @@ class User(Base):
 
     ``password_hash`` carries the bcrypt/argon2 hash (never the plaintext).
     ``created_at`` is server-side default-Now for stable ordering.
+
+    Email + confirmation + reset tokens are optional. They enable password
+    reset flows and email verification but are not enforced at registration
+    time (backward-compatible with username-only accounts created before
+    v2.6.0).
     """
 
     __tablename__ = "users"
@@ -77,6 +82,11 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    email_confirmed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    email_confirm_token: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
+    password_reset_token: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
+    password_reset_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -224,14 +234,41 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
 
 
 async def init_db() -> None:
-    """Create all tables. Called from the FastAPI lifespan on startup.
+    """Create all tables and apply lightweight forward-compat migrations.
 
     Safe to call repeatedly: ``create_all`` is a no-op for tables that
-    already exist with the same shape.
+    already exist with the same shape. After ``create_all`` we run a small
+    list of ``ALTER TABLE ... ADD COLUMN IF NOT EXISTS`` statements to
+    bring existing databases up to the current model without requiring a
+    full Alembic setup. Each statement is wrapped in its own try block so
+    a partial failure never blocks startup.
     """
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Forward-compat column adds (Postgres IF NOT EXISTS keeps this idempotent).
+    forward_columns = [
+        ("users", "email", "VARCHAR(255)"),
+        ("users", "email_confirmed", "BOOLEAN DEFAULT FALSE"),
+        ("users", "email_confirm_token", "VARCHAR(128)"),
+        ("users", "password_reset_token", "VARCHAR(128)"),
+        ("users", "password_reset_expires_at", "TIMESTAMP WITH TIME ZONE"),
+    ]
+    for table, col, sqltype in forward_columns:
+        try:
+            async with engine.begin() as conn:
+                await conn.execute(
+                    text(
+                        f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS '
+                        f'{col} {sqltype}'
+                    )
+                )
+        except Exception:
+            # SQLite (used in tests) has no IF NOT EXISTS for ADD COLUMN.
+            # The model is the source of truth there, and tests run on a
+            # fresh DB each time, so silently skipping is acceptable.
+            pass
 
 
 async def dispose_engine() -> None:

@@ -60,6 +60,8 @@ export interface ApiResponse_NovelDetail { "ok"?: boolean; "source"?: string; "d
 export interface BookmarkCreate { "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "title"?: string; "thumbnail"?: string; "note"?: string }
 export interface BroadcastBody { "event": Record<string, unknown> }
 export interface ComicDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> }
+export interface ConfirmBody { "token": string }
+export interface ForgotBody { "email": string; "base_url"?: string }
 export interface HTTPValidationError { "detail"?: Array<{ "loc": Array<string | number>; "msg": string; "type": string; "input"?: unknown; "ctx"?: Record<string, unknown> }> }
 export interface HistoryCreate { "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "chapter_id": string; "user_id"?: number }
 export interface HistoryEntry { "id": number; "user_id": number; "source": string; "content_id": string; "content_type": string; "chapter_id": string; "read_at": string }
@@ -68,7 +70,8 @@ export interface NovelDetail { "title": string; "slug"?: string; "url"?: string;
 export interface PreferencesIn { "payload"?: Record<string, unknown> }
 export interface PreferencesOut { "payload": Record<string, unknown>; "updated_at"?: string }
 export interface RefreshBody { "refresh_token": string }
-export interface RegisterBody { "username": string; "password": string }
+export interface RegisterBody { "username": string; "password": string; "email"?: string }
+export interface ResetBody { "token": string; "new_password": string }
 export interface ValidationError { "loc": Array<string | number>; "msg": string; "type": string; "input"?: unknown; "ctx"?: Record<string, unknown> }
 export interface WebhookCreate { "url": string; "source"?: string; "content_type"?: "anime" | "comic" | "novel"; "secret"?: string }
 
@@ -944,6 +947,53 @@ export class Stats {
   }
 
   /**
+   * Confirm an email address via token
+   * @see POST /auth/confirm
+   */
+  async confirm(params?: { body: { "token": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/auth/confirm${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Request a password-reset link
+   * @see POST /auth/forgot
+   * Always returns 200 to avoid user-enumeration. The reset link is sent
+   * via SMTP when configured, or returned in the response payload when
+   * SMTP is disabled (so local installs still work).
+   */
+  async forgot(params?: { body: { "email": string; "base_url"?: string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/auth/forgot${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
    * Login and get JWT pair
    * @see POST /auth/login
    */
@@ -1031,10 +1081,32 @@ export class Stats {
    * Register a user
    * @see POST /auth/register
    */
-  async register(params?: { body: { "username": string; "password": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async register(params?: { body: { "username": string; "password": string; "email"?: string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const suffix = "";
     const url = `${this._client.baseUrl}/auth/register${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Complete a password reset
+   * @see POST /auth/reset
+   */
+  async reset(params?: { body: { "token": string; "new_password": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/auth/reset${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
     const init: RequestInit = {
       method: "POST",

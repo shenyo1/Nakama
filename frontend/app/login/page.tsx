@@ -80,6 +80,12 @@ export default function LoginPage() {
         Don&apos;t have an account?{" "}
         <a href="/register" className="text-sakura-400 hover:underline">Register</a>
       </p>
+      <p className="text-center text-xs text-ink-500">
+        Forgot your password?{" "}
+        <a href="/forgot-password" className="text-sakura-400 hover:underline">
+          Reset it
+        </a>
+      </p>
     </div>
   );
 }

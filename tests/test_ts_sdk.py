@@ -177,10 +177,25 @@ def test_nakama_uses_platform_fetch_only(sdk_source: str) -> None:
     assert "opts.fetch ?? " in sdk_source
 
     # No axios / node-fetch / got / request references.
+    # Use word-boundary-ish boundaries (paren/space/quote) so endpoint names
+    # like "forgot" don't trip the matcher (e.g. "forgot(" matches "got(").
     for forbidden in ("axios", "node-fetch", "require(", "got(", "request("):
-        assert forbidden not in sdk_source, (
-            f"unexpected dependency reference in SDK: {forbidden!r}"
-        )
+        # Only flag real call sites — require/got/request must be followed by
+        # a parenthesised argument list. We check for "got(" + digit or quote.
+        if forbidden in ("got(", "request("):
+            # Match a function-style call: name followed by ( and an arg.
+            assert f"{forbidden.rstrip('(')}\"" not in sdk_source
+            assert f"{forbidden.rstrip('(')}'" not in sdk_source
+            # as identifier (variable/param): got followed by ( but not word char
+            import re as _re
+
+            assert not _re.search(rf"\b{forbidden.rstrip('(')}\(", sdk_source), (
+                f"unexpected dependency reference in SDK: {forbidden!r}"
+            )
+        else:
+            assert forbidden not in sdk_source, (
+                f"unexpected dependency reference in SDK: {forbidden!r}"
+            )
 
 
 def test_round_trip_is_deterministic(client) -> None:

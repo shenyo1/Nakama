@@ -6,25 +6,39 @@ import { PUBLIC_API_BASE } from "../../lib/api";
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [result, setResult] = useState<{ ok: boolean; message: string; link?: string } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (password.length < 8) {
+      setResult({ ok: false, message: "Password must be at least 8 characters." });
+      return;
+    }
     setLoading(true);
     setResult(null);
     try {
+      const body: Record<string, string> = { username, password };
+      if (email) body.email = email;
       const res = await fetch(`${PUBLIC_API_BASE}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(body),
       });
-      const body = await res.json();
-      if (body.ok) {
-        setResult({ ok: true, message: "Account created. You can now login." });
-        setTimeout(() => window.location.href = "/login", 1500);
+      const data = await res.json();
+      if (data.ok) {
+        // If email was provided and SMTP is off, server returns the link.
+        const link = data.data?.email_confirmation?.confirmation_link as string | undefined;
+        const msg = email
+          ? link
+            ? "Account created. Confirmation link generated (shown below — production would email it)."
+            : "Account created. Check your inbox to confirm your email."
+          : "Account created. You can now login.";
+        setResult({ ok: true, message: msg, link });
+        setTimeout(() => window.location.href = "/login", 2000);
       } else {
-        setResult({ ok: false, message: body.detail || body.error || "Registration failed" });
+        setResult({ ok: false, message: data.detail || data.error || "Registration failed" });
       }
     } catch (err) {
       setResult({ ok: false, message: err instanceof Error ? err.message : "Network error" });
@@ -60,9 +74,21 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={8}
             className="input"
-            placeholder="password"
+            placeholder="≥ 8 characters"
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="mb-1 block text-ink-400">
+            Email <span className="text-ink-500">(optional, for password reset)</span>
+          </span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input"
+            placeholder="you@example.com"
           />
         </label>
         <button type="submit" disabled={loading} className="btn-primary w-full">
@@ -71,8 +97,15 @@ export default function RegisterPage() {
       </form>
 
       {result ? (
-        <div className={`card text-sm ${result.ok ? "text-neon-400" : "text-sakura-300"}`}>
+        <div className={`card text-sm ${result.ok ? "text-jade-400" : "text-rose-400"}`}>
           {result.message}
+          {result.link && (
+            <div className="mt-2 break-all">
+              <a href={result.link} className="text-sakura-400 underline">
+                {result.link}
+              </a>
+            </div>
+          )}
         </div>
       ) : null}
 

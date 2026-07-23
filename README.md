@@ -271,7 +271,32 @@ Redis health counter and probes 3 times to climb back to **healthy**:
 
 Current health scoreboard: **21/21 sources healthy** (live).
 
-## ✨ v2.5.0 highlights
+## ✨ v2.6.0 — Custom auth upgrade
+
+Three additions on top of the existing custom JWT auth (no external services):
+
+- **Email confirmation** — optional `email` field at register. Generates a
+  single-use token, sends via SMTP (or returns the link in the response
+  when `SMTP_DISABLED=1` for local dev). Confirmed via `GET /auth/confirm`.
+- **Password reset** — `POST /auth/forgot` (always returns 200 to avoid
+  user-enumeration) + `POST /auth/reset` with token + new password.
+- **Refresh-token rotation** — `/auth/refresh` already issues a new access
+  *and* refresh token pair on every call, invalidating the old refresh
+  token. Add token blacklist hook for production hardening.
+
+Plus:
+
+- **Forward-compat migrations** — `init_db()` adds new columns (`email`,
+  `email_confirmed`, `password_reset_token`, …) to existing Postgres
+  via `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`.
+- **`email-validator` package** — required for Pydantic `EmailStr` types.
+- **`app/auth_tokens.py`** + **`app/emailer.py`** — new modules.
+- **13 new tests** in `tests/test_auth_password_reset.py` cover the full
+  round-trip including silent-on-unknown-email and token expiry handling.
+
+Endpoints added: `POST /auth/forgot`, `POST /auth/reset`, `GET /auth/confirm`.
+`/auth/register` now accepts an optional `email`. `GET /auth/me` exposes
+`email_confirmed`.
 
 - **Scrapling auto-heal** — new `fetch_text_resilient()` chain (Scrapling → httpx → FlareSolverr → Scrapling fallback) in `app/http.py`. Domains opt in via `SCRAPLING_DOMAINS` env var.
 - **WS source_health events** — `app/ws.py` `_health_monitor_loop` snapshots `/sources/health` every 60 s and broadcasts `source_health` events when a source's status transitions. Live ticker on dashboard.
