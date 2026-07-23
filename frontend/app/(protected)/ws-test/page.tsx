@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { wsUrl } from "../../lib/api";
-import type { WsEvent } from "../../lib/types";
+import { wsUrl } from "@/lib/api";
+import type { WsEvent } from "@/lib/types";
 
 export default function WsTestPage() {
   const [status, setStatus] = useState<"idle" | "connecting" | "open" | "closed" | "error">(

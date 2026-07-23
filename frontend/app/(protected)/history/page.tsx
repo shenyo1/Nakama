@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PUBLIC_API_BASE } from "../../lib/api";
+import { PUBLIC_API_BASE } from "@/lib/api";
 
 interface HistoryEntry {
   id: number;

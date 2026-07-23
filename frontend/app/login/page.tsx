@@ -30,7 +30,10 @@ export default function LoginPage() {
         localStorage.setItem("nakama_token", body.data.access_token);
         localStorage.setItem("nakama_user", JSON.stringify(body.data.user || {}));
         setResult({ ok: true, message: "Login successful" });
-        setTimeout(() => (window.location.href = "/"), 1000);
+        // Redirect to the page the user was trying to reach, or home.
+        const params = new URLSearchParams(window.location.search);
+        const dest = params.get("redirect") || "/";
+        setTimeout(() => (window.location.href = dest), 800);
       } else {
         setResult({ ok: false, message: body.detail || body.error || "Login failed" });
       }

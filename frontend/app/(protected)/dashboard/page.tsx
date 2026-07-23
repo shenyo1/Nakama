@@ -1,5 +1,5 @@
-import { getJson } from "../../lib/api";
-import { LiveHealthTicker } from "../../components/LiveHealthTicker";
+import { getJson } from "@/lib/api";
+import { LiveHealthTicker } from "@/components/LiveHealthTicker";
 
 export const runtime = "edge";
 
