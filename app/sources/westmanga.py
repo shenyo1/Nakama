@@ -104,11 +104,15 @@ async def _fetch_with_camoufox(url: str, timeout: int = 30) -> Optional[str]:
                 headless=True, humanize=True, geoip=True, locale="en-US"
             ) as browser:
                 page = await browser.new_page()
-                await page.goto(url, timeout=timeout * 1000)
-                await asyncio.sleep(3)
-                html = await page.content()
-                await page.close()
-                return html
+                try:
+                    await page.goto(url, timeout=timeout * 1000)
+                    await asyncio.sleep(3)
+                    return await page.content()
+                finally:
+                    try:
+                        await page.close()
+                    except Exception:
+                        pass
         except Exception:
             pass
     except ImportError:

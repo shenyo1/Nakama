@@ -92,6 +92,14 @@ class _RedisResponseCache:
         except Exception:
             pass
 
+    async def stats(self) -> dict:
+        try:
+            client = await self._client()
+            keys = await client.keys("nakama-resp:*")
+            return {"backend": "redis", "size": len(keys), "max_size": "unlimited"}
+        except Exception:
+            return {"backend": "redis", "size": 0, "max_size": "unlimited", "error": "redis unavailable"}
+
     async def close(self) -> None:
         if self._redis is not None:
             try:
@@ -177,7 +185,23 @@ def check_etag(request: Request, body: bytes) -> Optional[Response]:
 
 
 def cache_stats() -> dict:
-    return _cache.stats()
+    """Get cache backend stats (sync wrapper for async Redis)."""
+    if hasattr(_cache, "stats"):
+        stats = _cache.stats()
+        # Handle async Redis stats
+        if hasattr(stats, "__await__"):
+            # It's a coroutine — run it in event loop if possible
+            try:
+                import asyncio
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Can't run in running loop — return placeholder
+                    return {"backend": "redis", "size": "?", "max_size": "unlimited"}
+                return loop.run_until_complete(stats)
+            except RuntimeError:
+                return {"backend": "redis", "size": "?", "max_size": "unlimited"}
+        return stats
+    return {"backend": _BACKEND_KIND, "size": 0, "max_size": "unknown"}
 
 
 def clear_cache() -> None:

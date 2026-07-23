@@ -24,6 +24,7 @@ from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
 
 from .base import AnimeSource
+from ..http import _flaresolverr_get
 from .source_meta import SourceMeta
 
 
@@ -83,20 +84,35 @@ class AnoboySource(AnimeSource):
 
 
 async def _fetch_with_camoufox(url: str, timeout: int = 30) -> Optional[str]:
-    """Fetch a URL using Camoufox and return the rendered HTML."""
+    """Fetch a URL using Camoufox and return the rendered HTML.
+
+    Falls back to FlareSolverr if Camoufox fails (e.g. browser crashed in
+    headless container). Returns None on total failure so the caller can
+    return empty results instead of raising.
+    """
     try:
         from camoufox import AsyncCamoufox
         async with AsyncCamoufox(
             headless=True, humanize=True, geoip=True, locale="en-US"
         ) as browser:
             page = await browser.new_page()
-            await page.goto(url, timeout=timeout * 1000, wait_until="domcontentloaded")
-            await asyncio.sleep(4)
-            html = await page.content()
-            await page.close()
-            return html
+            try:
+                await page.goto(
+                    url, timeout=timeout * 1000, wait_until="domcontentloaded"
+                )
+                await asyncio.sleep(4)
+                return await page.content()
+            finally:
+                try:
+                    await page.close()
+                except Exception:
+                    pass
     except Exception:
-        return None
+        # Camoufox unavailable / crashed — try FlareSolverr
+        try:
+            return await _flaresolverr_get(url)
+        except Exception:
+            return None
 
 
 def _parse_listing(html: str, base_url: str) -> List[dict]:
