@@ -948,11 +948,41 @@ export class Stats {
 
   /**
    * Confirm an email address via token
-   * @see POST /auth/confirm
+   * @see GET /auth/confirm
+   * Accept token via query string (GET — email link) or JSON body (POST — API).
    */
-  async confirm(params?: { body: { "token": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async auth(params?: { "token"?: string; body: { "token": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
-    const suffix = "";
+    const search = new URLSearchParams();
+    if (p.token !== undefined) search.set("token", String(p.token));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/auth/confirm${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Confirm an email address via token
+   * @see POST /auth/confirm
+   * Accept token via query string (GET — email link) or JSON body (POST — API).
+   */
+  async auth_post(params?: { "token"?: string; body: { "token": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.token !== undefined) search.set("token", String(p.token));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
     const url = `${this._client.baseUrl}/auth/confirm${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
     const init: RequestInit = {

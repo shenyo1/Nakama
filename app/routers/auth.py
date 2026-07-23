@@ -20,6 +20,8 @@ from ..security import (
     create_access_token,
     create_refresh_token,
     decode_token,
+    revoke_refresh_token,
+    is_refresh_revoked,
     hash_password,
     verify_password,
 )
@@ -184,16 +186,18 @@ async def refresh(body: RefreshBody, session: AsyncSession = Depends(get_session
         data = decode_token(body.refresh_token, expected_type="refresh")
     except Exception:
         raise HTTPException(status_code=401, detail="invalid refresh token")
+    # Check JTI denylist (rotation-invalidation)
+    if await is_refresh_revoked(body.refresh_token):
+        raise HTTPException(status_code=401, detail="refresh token revoked")
     user_id = int(data["sub"])
     user = (
         await session.execute(select(User).where(User.id == user_id))
     ).scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=401, detail="user not found")
-    # Issue a new pair — the old refresh token is invalidated implicitly
-    # because we rotate the JTI / issued-at timestamp. Storing revoked
-    # tokens would require a denylist; for self-hosted usage the rotation
-    # + short TTL is sufficient.
+    # Revoke the consumed refresh token before issuing a new pair
+    await revoke_refresh_token(body.refresh_token)
+    # Issue a new pair — the old refresh token is now invalid
     return ApiResponse(data=_build_token_pair(user).model_dump())
 
 
@@ -267,13 +271,23 @@ async def reset(body: ResetBody, session: AsyncSession = Depends(get_session)):
     return ApiResponse(data={"reset": True, "username": user.username})
 
 
-@router.post(
+@router.api_route(
     "/confirm",
+    methods=["GET", "POST"],
     response_model=ApiResponse,
     summary="Confirm an email address via token",
+    operation_id="auth_confirm",
 )
-async def confirm(body: ConfirmBody, session: AsyncSession = Depends(get_session)):
-    user = await confirm_email(session, body.token)
+async def confirm(
+    token: Optional[str] = None,
+    body: Optional[ConfirmBody] = None,
+    session: AsyncSession = Depends(get_session),
+):
+    """Accept token via query string (GET — email link) or JSON body (POST — API)."""
+    tok = token or (body.token if body else None)
+    if not tok:
+        raise HTTPException(status_code=400, detail="missing token")
+    user = await confirm_email(session, tok)
     if user is None:
         raise HTTPException(
             status_code=400, detail="invalid confirmation token"

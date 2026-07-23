@@ -81,3 +81,56 @@ def decode_token(token: str, *, expected_type: Optional[str] = "access") -> Dict
 
 ACCESS_TTL_SECONDS = _ACCESS_TTL
 REFRESH_TTL_SECONDS = _REFRESH_TTL
+
+
+# ---------------------------------------------------------------------------
+# Refresh-token revocation (JTI denylist)
+# ---------------------------------------------------------------------------
+# Backed by Redis so it survives restarts. Key: ``revoked_jti:<jti>`` with TTL
+# equal to the refresh-token's remaining lifetime so the entry self-cleans.
+# All operations are async — call from an async endpoint context.
+
+async def revoke_refresh_token(token: str) -> bool:
+    """Add the JTI of ``token`` to the denylist. Returns False if invalid.
+
+    Safe to call with malformed/expired tokens (returns False silently).
+    """
+    try:
+        data = decode_token(token, expected_type="refresh")
+    except Exception:
+        return False
+    jti = data.get("jti")
+    if not jti:
+        return False
+    exp = int(data.get("exp", 0))
+    remaining = max(1, exp - int(time.time()))
+    try:
+        from app.cache import get_redis  # type: ignore
+
+        r = get_redis()
+        if r is None:
+            return False
+        await r.setex(f"revoked_jti:{jti}", remaining, "1")
+        return True
+    except Exception:
+        return False
+
+
+async def is_refresh_revoked(token: str) -> bool:
+    """Check whether ``token``'s JTI has been revoked."""
+    try:
+        data = decode_token(token, expected_type="refresh")
+    except Exception:
+        return False
+    jti = data.get("jti")
+    if not jti:
+        return False
+    try:
+        from app.cache import get_redis  # type: ignore
+
+        r = get_redis()
+        if r is None:
+            return False
+        return bool(await r.exists(f"revoked_jti:{jti}"))
+    except Exception:
+        return False

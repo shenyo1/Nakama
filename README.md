@@ -271,6 +271,19 @@ Redis health counter and probes 3 times to climb back to **healthy**:
 
 Current health scoreboard: **21/21 sources healthy** (live).
 
+## ✨ v2.6.1 — Refresh-token rotation lockout
+
+- **`/auth/refresh`** now revokes the consumed refresh token via a Redis-backed
+  JTI denylist (`revoked_jti:<jti>` with TTL = remaining refresh lifetime).
+  Reusing a previously-rotated refresh token returns
+  `401 {"detail":"refresh token revoked"}` instead of silently issuing a new
+  pair.
+- **`/auth/confirm`** now accepts both `GET ?token=...` (browser-friendly
+  email link) and `POST {"token":"..."}` (API call).
+- Tests: **284 passed** (271 baseline + 13 new auth tests).
+- Frontend: `/forgot-password`, `/reset-password`, `/confirm-email` live on
+  CF Pages.
+
 ## ✨ v2.6.0 — Custom auth upgrade
 
 Three additions on top of the existing custom JWT auth (no external services):

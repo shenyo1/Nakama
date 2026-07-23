@@ -33,6 +33,14 @@ get_settings.cache_clear()
 
 # Ensure the test DB has tables before tests run.
 def _init_test_db() -> None:
+    # Drop the sqlite file so schema migrations always start from a fresh
+    # baseline (the file lives in /tmp and persists across pytest runs).
+    import glob
+    for path in glob.glob("/tmp/nakama-test.sqlite*"):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
     try:
         loop = _asyncio.get_event_loop()
         if loop.is_closed():
