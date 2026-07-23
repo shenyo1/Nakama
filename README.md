@@ -271,6 +271,26 @@ Redis health counter and probes 3 times to climb back to **healthy**:
 
 Current health scoreboard: **21/21 sources healthy** (live).
 
+## ✨ v2.6.2 — Source probe worker stability
+
+Fixes the recurring "Nakama source probe failed (HTTP 502)" Telegram alert:
+
+- **`probe_all` (app/sources/health.py)** now caps concurrency to 6 via an
+  `asyncio.Semaphore` so 21 sources fanning out simultaneously do not exhaust
+  Playwright browser sockets. Previously the two Camoufox-using sources
+  (anoboy, westmanga) plus 19 other parallel probes could crash the uvicorn
+  worker mid-request, leaving every subsequent probe returning empty
+  reply → Cloudflare 502.
+- Each probe remains wrapped in `asyncio.wait_for(timeout=20s)` so a single
+  hung source cannot stall the worker. Per-source failures are still
+  recorded to the Redis health board so the scoreboard is complete even
+  if a subset of probes times out.
+- **`deploy/source-probe.sh`** now retries up to 3 times with a 10 s backoff
+  before alerting, so a single mid-restart 502 does not page the user.
+  Alert text now reads "after 3 attempts (HTTP ...)" when all retries fail.
+- Verified: 3 back-to-back `?probe=true` calls return 200 in ~30 s each,
+  19/21 sources healthy, 0 worker deaths in logs.
+
 ## ✨ v2.6.1 — Refresh-token rotation lockout
 
 - **`/auth/refresh`** now revokes the consumed refresh token via a Redis-backed

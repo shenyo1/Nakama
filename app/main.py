@@ -80,7 +80,7 @@ app = FastAPI(
         "deduplication, WebSocket live updates, auto-repair circuit breakers, "
         "offline fixtures, and a generated TypeScript SDK."
     ),
-    version="2.6.1",
+    version="2.6.2",
     lifespan=lifespan,
 )
 

@@ -541,16 +541,49 @@ async def probe_source(name: str) -> dict:
 
 
 async def probe_all(timeout: float = 60.0) -> dict:
+    """Probe every source concurrently with a per-source timeout.
+
+    Concurrency is capped (default 6) so heavy Camoufox-based sources
+    (anoboy, westmanga) do not exhaust Playwright/browser sockets and
+    crash the worker. Each probe is wrapped in ``asyncio.wait_for`` so a
+    single source cannot hang the worker. Per-source failures are
+    recorded to the health board so a partial result is still returned.
+    """
     names = list_anime_sources() + list_comic_sources() + list_novel_sources()
+    sem = asyncio.Semaphore(6)
 
     async def _one(n: str):
-        try:
-            return await asyncio.wait_for(probe_source(n), timeout=timeout)
-        except Exception as e:  # noqa: BLE001
-            await _record_async(
-                n, success=False, latency_ms=timeout * 1000, error=str(e)[:200], kind="unknown"
-            )
-            return _to_dict(await _load_state(n))
+        async with sem:
+            try:
+                return await asyncio.wait_for(probe_source(n), timeout=timeout)
+            except Exception as e:  # noqa: BLE001
+                try:
+                    await _record_async(
+                        n,
+                        success=False,
+                        latency_ms=timeout * 1000,
+                        error=str(e)[:200],
+                        kind="unknown",
+                    )
+                except Exception:
+                    pass
+                try:
+                    return _to_dict(await _load_state(n))
+                except Exception:
+                    return {"name": n, "status": "unknown", "error": str(e)[:200]}
 
-    await asyncio.gather(*[_one(n) for n in names])
+    results = await asyncio.gather(*[_one(n) for n in names], return_exceptions=True)
+    # Normalise any escaped exceptions so they are recorded, not swallowed.
+    for n, r in zip(names, results):
+        if isinstance(r, Exception):
+            try:
+                await _record_async(
+                    n,
+                    success=False,
+                    latency_ms=timeout * 1000,
+                    error=str(r)[:200],
+                    kind="unknown",
+                )
+            except Exception:
+                pass
     return await snapshot_async()

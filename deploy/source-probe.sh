@@ -14,14 +14,27 @@ source "$CONF"
 
 UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36'
 # probe=true is slow (hits every source). Run every 30 min via cron.
-code=$(curl -sS -o /tmp/nakama_src_health.json -w '%{http_code}' --max-time 180 \
-  -H "User-Agent: $UA" \
-  'https://mynakama.web.id/sources/health?probe=true' || echo 000)
+# Retry up to 3 times before alerting — a single 502 may just mean the
+# worker was mid-restart. Only alert if all 3 attempts fail.
+MAX_ATTEMPTS=3
+ATTEMPT=1
+code=000
+while [[ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]]; do
+  code=$(curl -sS -o /tmp/nakama_src_health.json -w '%{http_code}' --max-time 180 \
+    -H "User-Agent: $UA" \
+    'https://mynakama.web.id/sources/health?probe=true' || echo 000)
+  if [[ "$code" == "200" ]]; then
+    break
+  fi
+  echo "probe attempt $ATTEMPT failed (HTTP ${code}); retrying in 10s" >&2
+  sleep 10
+  ATTEMPT=$((ATTEMPT + 1))
+done
 
 if [[ "$code" != "200" ]]; then
   curl -sS --max-time 15 -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
     --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-    --data-urlencode "text=⚠️ Nakama source probe failed (HTTP ${code})" \
+    --data-urlencode "text=⚠️ Nakama source probe failed after ${MAX_ATTEMPTS} attempts (HTTP ${code})" \
     -o /dev/null || true
   exit 1
 fi
