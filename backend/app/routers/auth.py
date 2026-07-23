@@ -318,6 +318,7 @@ async def reset(body: ResetBody, session: AsyncSession = Depends(get_session)):
     operation_id="auth_confirm_get",
 )
 async def confirm_get(
+    request: Request,
     token: Optional[str] = None,
     session: AsyncSession = Depends(get_session),
 ):
@@ -329,6 +330,9 @@ async def confirm_get(
         raise HTTPException(
             status_code=400, detail="invalid confirmation token"
         )
+    bg = BackgroundTasks()
+    _maybe_send_welcome(user, bg)
+    await bg()  # Run background tasks immediately for GET
     return ApiResponse(data={"confirmed": True, "username": user.username})
 
 
@@ -340,6 +344,7 @@ async def confirm_get(
 )
 async def confirm_post(
     body: ConfirmBody,
+    background: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
 ):
     """Accept token via JSON body (POST — API)."""
@@ -348,6 +353,7 @@ async def confirm_post(
         raise HTTPException(
             status_code=400, detail="invalid confirmation token"
         )
+    _maybe_send_welcome(user, background)
     return ApiResponse(data={"confirmed": True, "username": user.username})
 
 
@@ -391,10 +397,62 @@ async def me(request: Request, session: AsyncSession = Depends(get_session)):
 
 
 @router.get("/quota", response_model=ApiResponse, summary="Quota remaining for current principal")
-async def quota(request: Request):
+async def quota(
+    request: Request,
+    background: BackgroundTasks,
+    session: AsyncSession = Depends(get_session),
+):
     principal = getattr(request.state, "auth_principal", None) or "anon"
     plan = getattr(request.state, "auth_plan", None) or "free"
     q = await peek(principal, plan)
+    remaining = q.get("remaining")
+    limit = q.get("limit") or 0
+
+    # Quota warning email at 80% usage (once per day)
+    if (
+        remaining is not None
+        and limit > 0
+        and remaining <= limit * 0.2  # ≤20% remaining = ≥80% used
+        and principal != "anon"
+    ):
+        # Look up user to check if we already warned today
+        db_user = (
+            await session.execute(select(User).where(User.username == principal))
+        ).scalar_one_or_none()
+        if db_user and db_user.email:
+            now = datetime.utcnow()
+            already_warned = (
+                db_user.quota_warned_at is not None
+                and (now - db_user.quota_warned_at).total_seconds() < 86400  # 24h
+            )
+            if not already_warned:
+                db_user.quota_warned_at = now
+                await session.commit()
+                html = _email_template(
+                    title="⚠️ Quota Warning",
+                    greeting=f"Hi {db_user.username},",
+                    message=(
+                        f"You've used {limit - remaining} of {limit} daily API requests "
+                        f"({int((1 - remaining / limit) * 100)}%). "
+                        "You still have some requests left today, but they're running low."
+                    ),
+                    button_text="View Dashboard",
+                    button_url="https://app.mynakama.web.id/dashboard",
+                    footer="This warning is sent once per day. Quota resets daily.",
+                )
+                background.add_task(
+                    send_email,
+                    to=db_user.email,
+                    subject="⚠️ Nakama quota warning — 80% used",
+                    body=(
+                        f"Hi {db_user.username},\n\n"
+                        f"You've used {limit - remaining} of {limit} daily API requests.\n"
+                        f"Quota resets daily.\n\n"
+                        f"View dashboard: https://app.mynakama.web.id/dashboard"
+                    ),
+                    html=html,
+                )
+
     return ApiResponse(data={"principal": principal, **q})
 
 
@@ -425,3 +483,33 @@ async def change_password(
     current.password_hash = hash_password(body.new_password)
     await session.commit()
     return ApiResponse(data={"changed": True, "username": current.username})
+
+
+def _maybe_send_welcome(user: User, background: BackgroundTasks) -> None:
+    """Send a welcome email after email confirmation (best-effort)."""
+    if not user.email or is_disabled():
+        return
+    html = _email_template(
+        title="Welcome to Nakama! 🎉",
+        greeting=f"Welcome, {user.username}!",
+        message=(
+            "Your email is confirmed and your account is ready. "
+            "You can now browse anime, comics, and novels from 21 sources, "
+            "save reading history, and customize your preferences."
+        ),
+        button_text="Start Browsing",
+        button_url="https://app.mynakama.web.id/anime",
+        footer="Thanks for joining Nakama — enjoy your reading!",
+    )
+    background.add_task(
+        send_email,
+        to=user.email,
+        subject="Welcome to Nakama! 🎉",
+        body=(
+            f"Welcome, {user.username}!\n\n"
+            f"Your email is confirmed and your account is ready.\n"
+            f"Start browsing: https://app.mynakama.web.id/anime\n\n"
+            f"Thanks for joining Nakama!"
+        ),
+        html=html,
+    )

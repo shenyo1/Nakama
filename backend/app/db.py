@@ -87,6 +87,7 @@ class User(Base):
     email_confirm_token: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
     password_reset_token: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
     password_reset_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    quota_warned_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -254,6 +255,7 @@ async def init_db() -> None:
         ("users", "email_confirm_token", "VARCHAR(128)"),
         ("users", "password_reset_token", "VARCHAR(128)"),
         ("users", "password_reset_expires_at", "TIMESTAMP WITH TIME ZONE"),
+        ("users", "quota_warned_at", "TIMESTAMP WITH TIME ZONE"),
     ]
     for table, col, sqltype in forward_columns:
         try:
