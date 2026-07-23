@@ -40,6 +40,7 @@ fi
 
 # 3) Container status snapshot
 if command -v docker >/dev/null 2>&1; then
+  export COMPOSE_PROJECT_NAME=nakama
   docker compose --env-file "$APP_DIR/.env.production" -f "$APP_DIR/../infra/docker-compose.prod.yml" ps >"$DEST/compose-ps.txt" 2>/dev/null || true
 fi
 

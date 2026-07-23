@@ -59,6 +59,7 @@ fi
 # docker status
 docker_line="n/a"
 if command -v docker >/dev/null 2>&1; then
+  export COMPOSE_PROJECT_NAME=nakama
   docker_line=$(docker compose --env-file "$APP_DIR/.env.production" -f "$APP_DIR/../infra/docker-compose.prod.yml" ps --format '{{.Name}}={{.Status}}' 2>/dev/null | tr '\n' '; ' | head -c 400)
 fi
 

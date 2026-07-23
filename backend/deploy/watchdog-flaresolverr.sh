@@ -7,6 +7,7 @@
 set -euo pipefail
 
 PROJECT=/home/ubuntu/projects/nakama/backend
+export COMPOSE_PROJECT_NAME=nakama
 COMPOSE="docker compose --env-file $PROJECT/.env.production -f $PROJECT/../infra/docker-compose.prod.yml"
 HEALTH_TIMEOUT=5
 ALERT_FILE=/home/ubuntu/.config/nakama/monitor.env
