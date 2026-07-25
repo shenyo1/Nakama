@@ -185,7 +185,9 @@ def check_etag(request: Request, body: bytes) -> Optional[Response]:
 
 
 def cache_stats() -> dict:
-    """Get cache backend stats (sync wrapper for async Redis)."""
+    """Sync wrapper for cache stats. Returns placeholder '?' if called from
+    inside a running event loop (FastAPI endpoints). Use
+    ``cache_stats_async()`` instead from async contexts."""
     if hasattr(_cache, "stats"):
         stats = _cache.stats()
         # Handle async Redis stats
@@ -200,6 +202,25 @@ def cache_stats() -> dict:
                 return loop.run_until_complete(stats)
             except RuntimeError:
                 return {"backend": "redis", "size": "?", "max_size": "unlimited"}
+        return stats
+    return {"backend": _BACKEND_KIND, "size": 0, "max_size": "unknown"}
+
+
+async def cache_stats_async() -> dict:
+    """Async version of cache_stats() — await's the underlying Redis
+    DBSIZE query. Use this from FastAPI endpoints (running event loop)."""
+    if hasattr(_cache, "stats"):
+        stats = _cache.stats()
+        if hasattr(stats, "__await__"):
+            try:
+                return await stats
+            except Exception as e:
+                return {
+                    "backend": "redis",
+                    "size": "?",
+                    "max_size": "unlimited",
+                    "error": f"{type(e).__name__}: {str(e)[:100]}",
+                }
         return stats
     return {"backend": _BACKEND_KIND, "size": 0, "max_size": "unknown"}
 

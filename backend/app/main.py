@@ -1,6 +1,8 @@
 """FastAPI application entrypoint for Nakama."""
 from __future__ import annotations
 
+import asyncio
+import logging
 import time
 from contextlib import asynccontextmanager
 
@@ -55,6 +57,9 @@ _APP_STARTED_AT: float = time.monotonic()
 from .ratelimit import limiter  # noqa: E402
 
 
+logger = logging.getLogger(__name__)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create tables on startup. Safe no-op when they already exist; supports
@@ -65,6 +70,24 @@ async def lifespan(app: FastAPI):
     # Start the per-source chapter-update poller. No-op when OFFLINE_MODE
     # is set — the simulated broadcaster above carries the demo load.
     await start_scheduler()
+    # Kick off initial source probe in background so /sources/health and
+    # dashboard have data immediately after startup (was previously empty
+    # until first request). Bounded by 30s so slow sources don't block
+    # app startup. Skipped in offline mode.
+    if not get_settings().offline_mode:
+        async def _initial_probe():
+            try:
+                from .sources.health import probe_all
+                # 30s total budget; probe_all handles its own per-source
+                # concurrency. Logs results instead of raising so a
+                # partial probe still leaves us with some data.
+                result = await probe_all(timeout=30.0)
+                healthy = sum(1 for s in result.get("sources", []) if s.get("status") == "healthy")
+                total = len(result.get("sources", []))
+                logger.info(f"startup probe: {healthy}/{total} sources healthy")
+            except Exception as e:
+                logger.warning(f"startup probe failed (non-fatal): {e}")
+        asyncio.create_task(_initial_probe())
     yield
     await stop_scheduler()
     await stop_broadcaster()
@@ -80,7 +103,7 @@ app = FastAPI(
         "deduplication, WebSocket live updates, auto-repair circuit breakers, "
         "offline fixtures, and a generated TypeScript SDK."
     ),
-    version="2.7.3",
+    version="2.7.4",
     lifespan=lifespan,
 )
 

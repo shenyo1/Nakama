@@ -13,7 +13,7 @@ from ..config import get_settings
 from ..quota import PLAN_QUOTAS
 from ..ratelimit import limiter
 from ..schemas import ApiResponse
-from ..response_cache import cache_stats
+from ..response_cache import cache_stats, cache_stats_async
 
 router = APIRouter(tags=["ops"])
 
@@ -163,7 +163,7 @@ async def analytics(request: Request):
                 "search_max_age": 30,
                 "health_no_store": True,
             },
-            "cache_backend": cache_stats(),
+            "cache_backend": await cache_stats_async(),
             "search_latency": search_stats,
             "source_latency": source_latency,
             "quota_tiers": {
