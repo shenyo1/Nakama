@@ -14,9 +14,9 @@ All three honor ``?primary=<source>`` to bias one source first (e.g. when the
 caller already knows the upstream series is on a particular scraper).
 """
 from __future__ import annotations
-
 import asyncio
 import re
+import time
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -57,6 +57,8 @@ async def fallback_search(
     from ..response_cache import cached_response
 
     async def _fetch():
+        import time as _time
+        _fetch_start = _time.perf_counter()
         # Per-source timeout (seconds). Most sources complete <1s; 8s is a
         # generous ceiling that lets slow-network sources still contribute
         # instead of dragging the whole fan-out to 30-80s.
@@ -186,6 +188,17 @@ async def fallback_search(
             merged.values(),
             key=lambda x: (-x.get("_source_count", 0), x.get("title", "")),
         )
+
+        # Record search latency for /analytics dashboard (inside _fetch so
+        # we have access to by_source + names; only runs on cache miss
+        # because cached_response short-circuits cache hits before _fetch).
+        try:
+            from ..routers.analytics import note_search_latency
+            _duration_ms = (time.perf_counter() - _fetch_start) * 1000
+            ok_count = sum(1 for v in by_source.values() if isinstance(v, list))
+            note_search_latency("comic", query, _duration_ms, ok_count, len(names))
+        except Exception:
+            pass
 
         return ApiResponse(
             data={

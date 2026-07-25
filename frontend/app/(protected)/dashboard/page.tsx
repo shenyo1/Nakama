@@ -139,19 +139,23 @@ export default async function DashboardPage() {
       {analytics?.search_latency ? (
         <section className="grid gap-2 grid-cols-2 sm:gap-3 lg:grid-cols-4">
           {(() => {
-            const sl = analytics!.search_latency!;
+            const sl = analytics!.search_latency;
             const cb = analytics!.cache_backend;
+            // Graceful degradation: if search_latency is missing or empty
+            // (e.g. container just restarted, no searches yet), show "—"
+            // instead of "undefinedms" / "undefined samples".
+            const hasData = sl && typeof sl.p50_ms === "number";
             return (
               <>
                 <MiniMetric
                   label="Search p50"
-                  value={`${sl.p50_ms}ms`}
-                  sub={`${sl.samples} samples`}
+                  value={hasData ? `${sl.p50_ms}ms` : "—"}
+                  sub={hasData ? `${sl.samples} samples` : "no data yet"}
                 />
                 <MiniMetric
                   label="Search p95"
-                  value={`${sl.p95_ms}ms`}
-                  sub={`avg ${sl.avg_ms}ms`}
+                  value={hasData ? `${sl.p95_ms}ms` : "—"}
+                  sub={hasData ? `avg ${sl.avg_ms}ms` : "no data yet"}
                 />
                 <MiniMetric
                   label="Cache backend"
