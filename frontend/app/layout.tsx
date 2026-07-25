@@ -4,6 +4,16 @@ import { Nav } from "../components/Nav";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { I18nProvider } from "../lib/i18n";
 
+// Inline service worker registration. Renders on the client after hydration.
+// Avoids a separate /register-sw route and keeps the install lightweight.
+const swRegister = `
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+`;
+
 export const metadata: Metadata = {
   title: "Nakama",
   description:
@@ -56,6 +66,10 @@ export default function RootLayout({
             · Nakama FastAPI backend
           </footer>
         </I18nProvider>
+        <script
+          dangerouslySetInnerHTML={{ __html: swRegister }}
+          suppressHydrationWarning
+        />
       </body>
     </html>
   );

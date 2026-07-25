@@ -1,5 +1,6 @@
 import { getJson } from "../../../../../lib/api";
 import { SourceGrid } from "../../../../../components/SourceGrid";
+import { BookmarkButton } from "../../../../../components/BookmarkButton";
 import Link from "next/link";
 
 export const runtime = "edge";
@@ -75,6 +76,15 @@ export default async function ComicMangaPage({
         ) : null}
         <div className="min-w-0 space-y-2">
           <h1 className="text-xl font-bold sm:text-2xl">{detail.title || slug}</h1>
+          <div className="flex items-center gap-2">
+            <BookmarkButton
+              contentType="comic"
+              contentId={slug}
+              source={source}
+              title={detail.title || slug}
+              thumbnail={detail.thumbnail}
+            />
+          </div>
           {detail.author ? (
             <p className="text-sm text-ink-400">Author: {detail.author}</p>
           ) : null}
