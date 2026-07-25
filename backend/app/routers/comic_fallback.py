@@ -59,10 +59,10 @@ async def fallback_search(
     async def _fetch():
         import time as _time
         _fetch_start = _time.perf_counter()
-        # Per-source timeout (seconds). Most sources complete <1s; 8s is a
-        # generous ceiling that lets slow-network sources still contribute
-        # instead of dragging the whole fan-out to 30-80s.
-        PER_SOURCE_TIMEOUT = 8.0
+        # Per-source timeout (seconds). Most comic sources complete <1s;
+        # 5s is a generous ceiling — sources that need more are usually
+        # down anyway and Semaphore(6) limits blast radius.
+        PER_SOURCE_TIMEOUT = 5.0
         # Max concurrent sources. Matches probe_all (option 6) which fixed
         # the v2.6.2 502 cascade. Concurrency >6 overwhelms Camoufox/FS.
         MAX_CONCURRENT = 6
@@ -90,7 +90,15 @@ async def fallback_search(
                 if src is None:
                     return name, {"error": f"unknown comic source '{name}'"}
                 try:
+                    _t0 = time.perf_counter()
                     res = await asyncio.wait_for(src.search(query), timeout=PER_SOURCE_TIMEOUT)
+                    _dur_ms = (time.perf_counter() - _t0) * 1000
+                    # Emit per-source latency for /analytics dashboard.
+                    try:
+                        from ..routers.analytics import note_source_latency
+                        note_source_latency(src.name, _dur_ms)
+                    except Exception:
+                        pass
                     return name, res
                 except asyncio.TimeoutError:
                     return name, {"error": f"timeout after {PER_SOURCE_TIMEOUT}s"}

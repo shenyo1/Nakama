@@ -54,7 +54,15 @@ async def _gather_search(source_names: List[str], kind: str, query: str) -> Dict
         if src is None:
             return name, {"error": f"source '{name}' is not a {kind} source"}
         try:
-            return name, await src.search(query)
+            _t0 = time.perf_counter()
+            res = await src.search(query)
+            _dur_ms = (time.perf_counter() - _t0) * 1000
+            try:
+                from ..routers.analytics import note_source_latency
+                note_source_latency(name, _dur_ms)
+            except Exception:
+                pass
+            return name, res
         except SourceError as e:
             return name, {"error": str(e)}
         except Exception as e:  # noqa: BLE001 — guard against adapter bugs
