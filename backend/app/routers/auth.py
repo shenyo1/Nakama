@@ -244,12 +244,17 @@ async def forgot(
 ):
     """Always returns 200 to avoid user-enumeration. The reset link is sent
     via SMTP when configured, or returned in the response payload when
-    SMTP is disabled (so local installs still work)."""
-    user = (
-        await session.execute(
-            select(User).where(User.email == body.email.lower())
-        )
-    ).scalar_one_or_none()
+    SMTP is disabled (so local installs still work).
+
+    Uses ``scalars().first()`` instead of ``scalar_one_or_none()`` to be
+    resilient to duplicate email rows (defensive — the DB has a partial
+    UNIQUE index on non-empty emails, but legacy data or races could
+    still produce dupes). If multiple rows match, picks the first.
+    """
+    result = await session.execute(
+        select(User).where(User.email == body.email.lower())
+    )
+    user = result.scalars().first()
 
     reset: Optional[dict] = None
     if user is not None:
