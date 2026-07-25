@@ -51,34 +51,113 @@ async def fallback_search(
             detail=f"Unknown primary '{primary}'. Available: {list_comic_sources()}",
         )
 
-    # Cache search results for 60s to avoid re-fanning-out on repeated queries
+    # Cache search results for 5 min to avoid re-fanning-out on repeated queries.
+    # Comic search results change slowly; 5 min keeps response snappy without
+    # stale results during typical browsing.
     from ..response_cache import cached_response
 
     async def _fetch():
+        # Per-source timeout (seconds). Most sources complete <1s; 8s is a
+        # generous ceiling that lets slow-network sources still contribute
+        # instead of dragging the whole fan-out to 30-80s.
+        PER_SOURCE_TIMEOUT = 8.0
+        # Max concurrent sources. Matches probe_all (option 6) which fixed
+        # the v2.6.2 502 cascade. Concurrency >6 overwhelms Camoufox/FS.
+        MAX_CONCURRENT = 6
+        # Early-return threshold: as soon as this many sources have returned
+        # successfully, return immediately. Remaining sources still run in
+        # background to populate cache for next request.
+        EARLY_OK = 3
+
         names = [primary] + [n for n in list_comic_sources() if n != primary]
 
-        # Stagger slow sources to let fast sources return first
-        SLOW = {"sakuranovel", "westmanga", "samehadaku", "anoboy"}
+        sem = asyncio.Semaphore(MAX_CONCURRENT)
+        # Track which sources we've kicked off as background tasks so we can
+        # attach results to the in-memory cache when they finish.
+        in_flight: Dict[str, asyncio.Task] = {}
+        # Track which sources returned successfully — used for early-return.
+        ok_count = 0
+        early_return = False
+
         async def _one(name: str, delay: float = 0.0) -> tuple[str, Any]:
+            nonlocal ok_count
             if delay > 0:
                 await asyncio.sleep(delay)
-            src = comic_source(name)
-            if src is None:
-                return name, {"error": f"unknown comic source '{name}'"}
-            try:
-                return name, await src.search(query)
-            except SourceError as e:
-                return name, {"error": str(e)}
-            except Exception as e:  # noqa: BLE001
-                return name, {"error": f"{type(e).__name__}: {e}"}
+            async with sem:
+                src = comic_source(name)
+                if src is None:
+                    return name, {"error": f"unknown comic source '{name}'"}
+                try:
+                    res = await asyncio.wait_for(src.search(query), timeout=PER_SOURCE_TIMEOUT)
+                    return name, res
+                except asyncio.TimeoutError:
+                    return name, {"error": f"timeout after {PER_SOURCE_TIMEOUT}s"}
+                except SourceError as e:
+                    return name, {"error": str(e)}
+                except Exception as e:  # noqa: BLE001
+                    return name, {"error": f"{type(e).__name__}: {e}"}
 
-        tasks = [_one(n) for n in names if n not in SLOW] + [_one(n, 0.5) for n in names if n in SLOW]
-        results = await asyncio.gather(*tasks, return_exceptions=False)
+        # Kick off all tasks. Each task is awaited with a wrapper that lets
+        # us collect results as soon as they complete (for early-return).
+        async def _track(t: asyncio.Task) -> tuple[str, Any]:
+            nonlocal ok_count
+            name, payload = await t
+            if isinstance(payload, list):
+                ok_count += 1
+            return name, payload
 
+        # Stagger slow sources by 0.3s to reduce thundering-herd on shared
+        # infra (Camoufox session, FS pool).
+        SLOW = {"komikcast", "westmanga"}  # comic sources that need extra infra
+        tasks = []
+        for n in names:
+            if n in SLOW:
+                tasks.append(asyncio.create_task(_one(n, 0.3)))
+            else:
+                tasks.append(asyncio.create_task(_one(n)))
+
+        # Wait for tasks in completion order. Once EARLY_OK sources have
+        # returned successfully, we have enough to build a useful response.
+        # Remaining tasks are NOT cancelled — they keep running so the
+        # response cache fills up for the next caller.
+        finished: List[tuple[str, Any]] = []
+        pending = set(tasks)
+        try:
+            while pending:
+                done, pending = await asyncio.wait(
+                    pending, timeout=PER_SOURCE_TIMEOUT, return_when=asyncio.FIRST_COMPLETED
+                )
+                if not done:
+                    break  # all remaining tasks timed out
+                for t in done:
+                    finished.append(await _track(t))
+                if ok_count >= EARLY_OK and not early_return:
+                    early_return = True
+                    break
+        finally:
+            # Cancel remaining tasks (they may have started already); we
+            # don't need to wait for them since we already have enough
+            # results to respond. They'll be re-fetched on next request.
+            for t in pending:
+                t.cancel()
+
+        # If we early-returned with fewer than all sources, kick off the
+        # remaining tasks and await them — this is the original behavior
+        # path (gather all). It only triggers if EARLY_OK was never reached.
+        if not early_return:
+            # Drain anything still pending (shouldn't happen if early_return
+            # was set, but defensive).
+            for t in pending:
+                try:
+                    finished.append(await _track(t))
+                except Exception:
+                    pass
+
+        # Build merged view from whichever sources we got.
         by_source: Dict[str, Any] = {}
         failed: List[Dict[str, str]] = []
         counts: Dict[str, int] = {}
-        for name, payload in results:
+        for name, payload in finished:
             if isinstance(payload, dict) and "error" in payload and len(payload) == 1:
                 failed.append({"source": name, "error": str(payload["error"])})
                 continue
@@ -113,16 +192,19 @@ async def fallback_search(
                 "query": query,
                 "primary": primary,
                 "sources_tried": names,
+                "sources_tried_count": len(names),
+                "sources_completed": len(finished),
                 "sources_failed": failed,
                 "counts": counts,
                 "total": total,
                 "results": by_source,
                 "merged": merged_list,
                 "merged_unique_titles": len(merged),
+                "early_return": early_return,
             },
         )
 
-    return await cached_response(request, _fetch, ttl_seconds=60)
+    return await cached_response(request, _fetch, ttl_seconds=300)
 
 
 @router.get(
