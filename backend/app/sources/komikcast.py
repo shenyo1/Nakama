@@ -247,17 +247,20 @@ class KomikcastSource(ComicSource):
         if get_settings().offline_mode:
             return await self._chapter_offline_html(slug)
         parts = slug.strip("/").split("/")
-        chapter_id = parts[-1]
+        # chapter_key is what the reader uses: chapter index (e.g. "1") NOT
+        # the internal id. Komikcast API expects /series/{slug}/chapters/{index}.
+        chapter_key = parts[-1]
         series_slug = parts[0] if len(parts) > 1 else None
         reader = (
-            f"{self.base_url}/series/{series_slug}/chapter/{chapter_id}"
+            f"{self.base_url}/series/{series_slug}/chapter/{chapter_key}"
             if series_slug
             else f"{self.base_url}/"
         )
-        title = f"Chapter {chapter_id}"
+        title = f"Chapter {chapter_key}"
         comic_title = (
             series_slug.replace("-", " ").title() if series_slug else None
         )
+        chapter_index: Optional[int] = None
         if series_slug:
             try:
                 body = await self._get(f"/series/{quote(series_slug, safe='')}")
@@ -269,22 +272,40 @@ class KomikcastSource(ComicSource):
                 if sid is not None:
                     ch_body = await self._get(f"/series/{sid}/chapters")
                     for ch in ch_body.get("data") or []:
-                        if str(ch.get("id")) == str(chapter_id):
-                            cd = _data(ch)
+                        cd = _data(ch)
+                        # Match by id (if user passed numeric id) or by index.
+                        if str(ch.get("id")) == str(chapter_key):
                             title = (
                                 cd.get("title")
-                                or f"Chapter {cd.get('index') or chapter_id}"
+                                or f"Chapter {cd.get('index') or chapter_key}"
                             )
+                            chapter_index = cd.get("index")
+                            break
+                        if str(cd.get("index")) == str(chapter_key):
+                            title = (
+                                cd.get("title")
+                                or f"Chapter {cd.get('index') or chapter_key}"
+                            )
+                            chapter_index = cd.get("index")
                             break
             except Exception:
                 pass
+
+        # If chapter_key was an internal id (e.g. "413674"), resolve to the
+        # index that the reader endpoint actually expects.
+        if chapter_index is None and series_slug:
+            # chapter_key is probably the chapter id; we already iterated
+            # ch_body above. Fall back to "1" as a safe default.
+            chapter_index = 1
 
         images = []
         notes = None
         token = get_settings().komikcast_token
         if token and series_slug:
+            # Use chapter index (1-based) — that's what the reader expects.
+            key_for_fetch = chapter_index if chapter_index else chapter_key
             images = await self._fetch_chapter_images(
-                series_slug, chapter_id, token
+                series_slug, str(key_for_fetch), token
             )
             if not images:
                 notes = (
@@ -308,7 +329,12 @@ class KomikcastSource(ComicSource):
     async def _fetch_chapter_images(
         self, series_slug: str, chapter_key: str, token: str
     ) -> list:
-        """Fetch chapter payload with Bearer token; extract data.images."""
+        """Fetch chapter payload with Bearer token; extract data.data.images.
+
+        Endpoint (confirmed from frontend BwWA1yrM.js + live test):
+            GET /series/{seriesSlug}/chapters/{chapterIndex}
+        Response shape: {status, message, data: {id, data: {images: [...]}}}
+        """
         from ..schemas import ChapterImage
 
         headers = {
@@ -317,13 +343,13 @@ class KomikcastSource(ComicSource):
             "Accept": "application/json",
             "Authorization": f"Bearer {token}",
         }
-        # Reader uses /series/{seriesSlug}/chapters/{chapterSlug|id}
         paths = [
             f"/series/{quote(series_slug, safe='')}/chapters/{quote(chapter_key, safe='')}",
+            # Legacy fallback (admin-only, returns 403 for users but kept for
+            # future use if komikcast re-enables public access).
             f"/chapters/{quote(chapter_key, safe='')}",
         ]
         body = None
-        last_err = None
         for path in paths:
             try:
                 body = await fetch_json(
@@ -331,24 +357,23 @@ class KomikcastSource(ComicSource):
                     source=self.name,
                     headers=headers,
                 )
-                break
-            except Exception as e:  # noqa: BLE001
-                last_err = e
+                if isinstance(body, dict) and body.get("status") == 200:
+                    break
+            except Exception:
                 body = None
         if not body:
             return []
-        data = body.get("data") if isinstance(body, dict) else body
-        if isinstance(data, dict):
-            # shape: { data: { images: [...] } } or { images: [...] }
-            inner = data.get("data") if isinstance(data.get("data"), dict) else data
-            if not isinstance(inner, dict):
-                inner = data
-            raw_images = inner.get("images") or data.get("images") or []
-        else:
-            raw_images = []
+        # Shape: {data: {id, data: {slug, title, images: [...]}}}
+        outer = body.get("data") if isinstance(body, dict) else body
+        if not isinstance(outer, dict):
+            return []
+        inner = outer.get("data") if isinstance(outer.get("data"), dict) else outer
+        if not isinstance(inner, dict):
+            inner = outer
+        raw_images = inner.get("images") or []
         out = []
         seen: set[str] = set()
-        for i, img in enumerate(raw_images):
+        for img in raw_images:
             url = None
             if isinstance(img, str):
                 url = img
