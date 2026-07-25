@@ -191,11 +191,14 @@ class KomikcastSource(ComicSource):
                     cd = _data(ch)
                     ch_slug = cd.get("slug") or str(ch.get("id"))
                     title = cd.get("title") or f"Chapter {cd.get('index') or ch_slug}"
+                    # Use chapter index (1-based) in the slug so the chapter
+                    # endpoint can fetch images directly without resolving id→index.
+                    ch_index = cd.get("index") or ch.get("id")
                     chapters.append(
                         {
                             "title": title,
-                            "slug": f"{slug}/{ch.get('id')}",
-                            "url": f"{self.base_url}/series/{slug}/chapter/{ch.get('id')}",
+                            "slug": f"{slug}/{ch_index}",
+                            "url": f"{self.base_url}/series/{slug}/chapter/{ch_index}",
                         }
                     )
             except SourceError:
