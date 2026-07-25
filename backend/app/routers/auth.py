@@ -98,25 +98,34 @@ class TokenResponse(BaseModel):
     user_id: int
     username: str
     plan: str = "free"
+    is_admin: bool = False
 
 
 def _plan_for_user(user: User) -> str:
-    # Future: store plan on user row. Default free for now.
+    # Read plan from DB row (added v2.7.3). Falls back to 'free' if the
+    # column is missing (old DB without migration) or value is NULL/empty.
     return getattr(user, "plan", None) or "free"
+
+
+def _is_admin(user: User) -> bool:
+    """True if user has admin privileges (added v2.7.3)."""
+    return bool(getattr(user, "is_admin", False) or False)
 
 
 def _build_token_pair(user: User) -> TokenResponse:
     plan = _plan_for_user(user)
+    is_admin = _is_admin(user)
     return TokenResponse(
         access_token=create_access_token(
-            user_id=user.id, username=user.username, plan=plan
+            user_id=user.id, username=user.username, plan=plan, is_admin=is_admin
         ),
         refresh_token=create_refresh_token(
-            user_id=user.id, username=user.username, plan=plan
+            user_id=user.id, username=user.username, plan=plan, is_admin=is_admin
         ),
         user_id=user.id,
         username=user.username,
         plan=plan,
+        is_admin=is_admin,
         expires_in=ACCESS_TTL_SECONDS,
     )
 

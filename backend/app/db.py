@@ -88,6 +88,13 @@ class User(Base):
     password_reset_token: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
     password_reset_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     quota_warned_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Plan controls quota + burst limits (free=1000/day, pro=10000/day,
+    # unlimited=0=no cap). Defaults to 'free'. Operators can UPDATE this
+    # column directly to grant unlimited access to specific accounts.
+    plan: Mapped[str] = mapped_column(String(32), default="free", nullable=False, server_default="free")
+    # Admin flag — grants access to /admin/* endpoints. JWT carries this
+    # as `admin: true` claim so middleware can short-circuit auth checks.
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

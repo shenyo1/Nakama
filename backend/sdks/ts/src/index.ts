@@ -1052,6 +1052,11 @@ export class Stats {
    * Always returns 200 to avoid user-enumeration. The reset link is sent
    * via SMTP when configured, or returned in the response payload when
    * SMTP is disabled (so local installs still work).
+   * 
+   * Uses ``scalars().first()`` instead of ``scalar_one_or_none()`` to be
+   * resilient to duplicate email rows (defensive — the DB has a partial
+   * UNIQUE index on non-empty emails, but legacy data or races could
+   * still produce dupes). If multiple rows match, picks the first.
    */
   async forgot(params?: { body: { "email": string; "base_url"?: string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
@@ -1454,6 +1459,10 @@ export class Stats {
    * 
    * Without ``probe=true`` this is pure counter reads (fast). With
    * ``probe=true`` the API hits each source home once and updates the board.
+   * 
+   * Response also includes ``token_health`` for sources that require bearer
+   * auth (currently komikcast). This lets dashboards flag expired tokens
+   * before users hit empty chapter image lists.
    */
   async sources(params?: { "probe"?: boolean }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};

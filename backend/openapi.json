@@ -3,7 +3,7 @@
   "info": {
     "title": "Nakama",
     "description": "REST API aggregating anime, comic, and novel data from 20 public sources behind one consistent JSON interface. Multi-source search with automatic deduplication, WebSocket live updates, auto-repair circuit breakers, offline fixtures, and a generated TypeScript SDK.",
-    "version": "2.7.2"
+    "version": "2.7.3"
   },
   "paths": {
     "/anime/search/{query}": {
@@ -2334,7 +2334,7 @@
           "auth"
         ],
         "summary": "Request a password-reset link",
-        "description": "Always returns 200 to avoid user-enumeration. The reset link is sent\nvia SMTP when configured, or returned in the response payload when\nSMTP is disabled (so local installs still work).",
+        "description": "Always returns 200 to avoid user-enumeration. The reset link is sent\nvia SMTP when configured, or returned in the response payload when\nSMTP is disabled (so local installs still work).\n\nUses ``scalars().first()`` instead of ``scalar_one_or_none()`` to be\nresilient to duplicate email rows (defensive \u2014 the DB has a partial\nUNIQUE index on non-empty emails, but legacy data or races could\nstill produce dupes). If multiple rows match, picks the first.",
         "operationId": "forgot_auth_forgot_post",
         "requestBody": {
           "content": {

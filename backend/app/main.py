@@ -80,7 +80,7 @@ app = FastAPI(
         "deduplication, WebSocket live updates, auto-repair circuit breakers, "
         "offline fixtures, and a generated TypeScript SDK."
     ),
-    version="2.7.2",
+    version="2.7.3",
     lifespan=lifespan,
 )
 
@@ -215,6 +215,9 @@ async def api_key_auth(request: Request, call_next):
                 data = decode_token(token, expected_type="access")
                 principal = f"user:{data.get('sub')}"
                 plan = data.get("plan") or "free"
+                # Admin users get unlimited plan regardless of DB plan column.
+                if data.get("admin"):
+                    plan = "unlimited"
                 auth_method = "jwt"
                 ok = True
             except Exception:

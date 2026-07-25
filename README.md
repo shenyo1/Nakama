@@ -51,7 +51,7 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## 📊 Current version
 
-- **Backend**: v2.7.2 (see [`backend/README.md`](backend/README.md) for changelog)
+- **Backend**: v2.7.3 (see [`backend/README.md`](backend/README.md) for changelog)
 - **Frontend**: v1.0.0 (see [`frontend/README.md`](frontend/README.md))
 - **Sources**: 21 live (7 anime, 9 comic, 5 novel)
 - **Tests**: 285 passing

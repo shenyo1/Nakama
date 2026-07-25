@@ -45,12 +45,15 @@ def _secret() -> str:
     return secret
 
 
-def create_access_token(*, user_id: int, username: str, plan: str = "free") -> str:
+def create_access_token(
+    *, user_id: int, username: str, plan: str = "free", is_admin: bool = False
+) -> str:
     now = int(time.time())
     payload = {
         "sub": str(user_id),
         "username": username,
         "plan": plan,
+        "admin": bool(is_admin),
         "type": "access",
         "iat": now,
         "exp": now + _ACCESS_TTL,
@@ -58,12 +61,15 @@ def create_access_token(*, user_id: int, username: str, plan: str = "free") -> s
     return jwt.encode(payload, _secret(), algorithm=_ALGO)
 
 
-def create_refresh_token(*, user_id: int, username: str, plan: str = "free") -> str:
+def create_refresh_token(
+    *, user_id: int, username: str, plan: str = "free", is_admin: bool = False
+) -> str:
     now = int(time.time())
     payload = {
         "sub": str(user_id),
         "username": username,
         "plan": plan,
+        "admin": bool(is_admin),
         "type": "refresh",
         "jti": secrets.token_urlsafe(16),
         "iat": now,
