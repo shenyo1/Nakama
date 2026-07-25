@@ -5,9 +5,9 @@ Mirrors the anime router shape (home/search/detail/chapter/genres/genre) plus a
 images, so the chapter endpoint returns a ``ChapterText`` body (paragraphs).
 """
 from __future__ import annotations
-
+import time
 from typing import Optional
-
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from ..config import get_settings
@@ -116,8 +116,20 @@ async def search(
     page_size: Optional[int] = Query(None, ge=1),
 ):
     src = _get(source)
+    _t0 = time.perf_counter()
     try:
         data = await src.search(query)
+        _dur_ms = (time.perf_counter() - _t0) * 1000
+        try:
+            from .analytics import note_source_latency
+            note_source_latency(source, _dur_ms)
+        except Exception:
+            pass
+        try:
+            from .analytics import note_search_latency
+            note_search_latency("novel", query, _dur_ms, 1, 1)
+        except Exception:
+            pass
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="novel", source=source))
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))

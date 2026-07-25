@@ -1,8 +1,8 @@
 """Anime endpoints: /anime/..."""
 from __future__ import annotations
-
 import asyncio
 import re
+import time
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -105,8 +105,22 @@ async def home(source: str, request: Request, cursor: Optional[str] = Query(None
 @limiter.limit(get_settings().rate_limit)
 async def search(source: str, query: str, request: Request, page: Optional[int] = Query(None, ge=1), page_size: Optional[int] = Query(None, ge=1)):
     src = _get(source)
+    _t0 = time.perf_counter()
     try:
         data = await src.search(query)
+        _dur_ms = (time.perf_counter() - _t0) * 1000
+        # Per-source latency for /analytics dashboard.
+        try:
+            from .analytics import note_source_latency
+            note_source_latency(source, _dur_ms)
+        except Exception:
+            pass
+        # Search latency by kind for /analytics/search breakdown.
+        try:
+            from .analytics import note_search_latency
+            note_search_latency("anime", query, _dur_ms, 1, 1)
+        except Exception:
+            pass
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="anime", source=source))
     except SourceError as e:
         raise HTTPException(status_code=502, detail=str(e))
