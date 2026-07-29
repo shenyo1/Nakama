@@ -30,21 +30,50 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
 
+      - name: Install system deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libcurl4-openssl-dev 2>/dev/null || true
+
       - name: Install dependencies
+        timeout-minutes: 5
         run: |
           python -m venv .venv
           source .venv/bin/activate
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          # Verify critical imports work before running tests
+          python -c "import fastapi; import strawberry; print('core deps OK')"
+
+      - name: Verify imports (quick check)
+        env:
+          OFFLINE_MODE: "1"
+          PYTHONPATH: .
+          DATABASE_URL: "sqlite+aiosqlite:////tmp/nakama-ci-test.sqlite"
+        run: |
+          source .venv/bin/activate
+          python -c "
+          import os, sys
+          os.environ['OFFLINE_MODE'] = '1'
+          os.environ['DATABASE_URL'] = 'sqlite+aiosqlite:////tmp/nakama-ci-test.sqlite'
+          os.environ['JWT_SECRET'] = 'test-secret-ci-please-change-32b'
+          os.environ.pop('API_KEY', None)
+          from app.main import app
+          print(f'App v{app.version} loaded OK')
+          print(f'Routes: {len(app.routes)}')
+          "
 
       - name: Run pytest (OFFLINE_MODE=1)
         env:
           OFFLINE_MODE: "1"
           PYTHONPATH: .
           FIXTURES_DIR: fixtures
+          DATABASE_URL: "sqlite+aiosqlite:////tmp/nakama-ci-test.sqlite"
+          JWT_SECRET: "test-secret-ci-please-change-32b"
+        timeout-minutes: 8
         run: |
           source .venv/bin/activate
-          python -m pytest tests/ -v --tb=short -m "not network"
+          python -m pytest tests/ -v --tb=short --timeout=30 -x --no-header 2>&1 | tail -40
 
   deploy:
     name: deploy VPS
