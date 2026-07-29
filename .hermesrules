@@ -1,0 +1,106 @@
+# ⚔️ Nakama .hermesrules — Auto-Check Sebelum Setiap Commit
+# Dibaca oleh Hermes Agent setiap session di project Nakama.
+# Aturan ini WAJIB diikuti. Tidak ada excuse.
+
+rules:
+
+  - id: pre-commit-verification
+    description: "Sebelum commit, WAJIB verifikasi backend import + frontend build"
+    trigger: "akan commit / git commit / mau push"
+    action: |
+      Sebelum commit, jalankan:
+      1. cd backend && OFFLINE_MODE=1 PYTHONPATH=. python3 -c "from app.main import app; print(f'OK: {len(app.routes)} routes')"
+      2. cd frontend && npm run build 2>&1 | tail -5
+      Jika salah satu gagal, JANGAN commit. Fix dulu.
+
+  - id: new-router-prefix
+    description: "Setiap router baru HARUS ditambahkan ke _PUBLIC_PREFIXES atau _METERED_PREFIXES"
+    trigger: "buat router baru / new APIRouter / include_router"
+    action: |
+      Cek app/main.py — pastikan prefix ada di salah satu list.
+      Jangan sampai ada di KEDUA list sekaligus.
+
+  - id: new-model-import
+    description: "Setiap model baru HARUS di-import di db.py:init_db()"
+    trigger: "buat model baru / class.*Base / mapped_column"
+    action: |
+      Tambahkan `from .module import ModelName` di db.py:init_db() sebelum create_all().
+
+  - id: rate-limit-request-param
+    description: "Setiap @limiter.limit endpoint HARUS punya request: Request"
+    trigger: "@limiter.limit"
+    action: |
+      Pastikan function punya parameter `request: Request`.
+      Import: from fastapi import Request
+
+  - id: version-bump
+    description: "Setiap kali tambah fitur, bump version"
+    trigger: "fitur baru / new endpoint / new page"
+    action: |
+      Update:
+      - backend/app/main.py: version="X.Y.Z"
+      - README.md: version section
+      - Regenerate: cd backend && python3 -c "from app.main import app; import json; json.dump(app.openapi(), open('openapi.json','w'), indent=2)"
+
+  - id: no-api-key-leak
+    description: "JANGAN pakai NEXT_PUBLIC_API_KEY di frontend"
+    trigger: "NEXT_PUBLIC_API_KEY"
+    action: |
+      Ganti dengan: const token = localStorage.getItem("nakama_token")
+      Header: Authorization: Bearer ${token}
+
+  - id: component-integration
+    description: "Setiap komponen baru HARUS di-import di halaman"
+    trigger: "buat komponen / new component"
+    action: |
+      Setelah buat komponen, cek: grep -rl 'ComponentName' frontend/app/
+      Jika kosong, komponen itu DEAD CODE. Import di halaman yang sesuai.
+
+  - id: duplicate-route-check
+    description: "Jangan buat dua page.tsx di path yang sama"
+    trigger: "buat page.tsx / new page"
+    action: |
+      Cek: find frontend/app -name 'page.tsx' | sed 's|/(protected)||g; s|/page.tsx||' | sort | uniq -d
+      Jika ada output, itu duplicate — hapus salah satu.
+
+  - id: post-push-ci-wait
+    description: "Setelah push, tunggu CI green sebelum klaim selesai"
+    trigger: "git push / pushed"
+    action: |
+      Cek GitHub Actions: curl API untuk workflow runs.
+      Tunggu sampai semua conclusion = "success".
+      Jangan klaim "done" sebelum CI green.
+
+  - id: deploy-after-verify
+    description: "JANGAN deploy sebelum audit/verifikasi selesai"
+    trigger: "deploy / docker compose up"
+    action: |
+      Pastikan:
+      - Backend import OK
+      - Frontend build OK
+      - CI green
+      - Health check existing container dulu
+      Baru deploy.
+
+  - id: use-shared-redis
+    description: "Jangan buat koneksi Redis baru per request"
+    trigger: "redis.from_url / redis.Redis("
+    action: |
+      Gunakan: from ..cache import get_redis
+      r = get_redis()
+      if r is None: return []
+
+  - id: create-all-safe
+    description: "create_all() harus di-wrap try/except"
+    trigger: "Base.metadata.create_all"
+    action: |
+      try:
+          await conn.run_sync(Base.metadata.create_all)
+      except Exception:
+          pass
+
+  - id: no-regex-param
+    description: "Jangan pakai regex= di FastAPI Query"
+    trigger: "regex="
+    action: |
+      Ganti dengan pattern=
