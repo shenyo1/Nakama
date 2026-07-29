@@ -117,7 +117,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Nakama",
     description=(
-        "REST API aggregating anime, comic, and novel data from 20 public sources "
+        "REST API aggregating anime, comic, and novel data from 21 public sources "
         "behind one consistent JSON interface. Multi-source search with automatic "
         "deduplication, WebSocket live updates, auto-repair circuit breakers, "
         "offline fixtures, and a generated TypeScript SDK."
