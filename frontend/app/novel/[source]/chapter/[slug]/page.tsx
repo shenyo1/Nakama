@@ -72,11 +72,11 @@ export default async function NovelChapterPage({
             ))}
           </div>
         </article>
-      {allParagraphs.length === 0 ? (
+      ) : (
         <div className="card text-sm text-ink-400">
           No text content found for this chapter.
         </div>
-      ) : null}
+      )}
 
       {/* Chapter Comments */}
       <ClientComments source={source} slug={slug} kind="novel" />
