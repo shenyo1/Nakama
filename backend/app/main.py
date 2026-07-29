@@ -257,6 +257,14 @@ async def api_key_auth(request: Request, call_next):
         or path.startswith("/redoc")
         or path.startswith("/mcp")  # MCP server for AI agents
         or path.startswith("/creator/browse")  # Public creator browsing
+        or (path.startswith("/anime/") and "/home" in path)  # Public anime browsing
+        or (path.startswith("/comic/") and "/home" in path)  # Public comic browsing
+        or (path.startswith("/novel/") and "/home" in path)  # Public novel browsing
+        or path.startswith("/originals")  # Public originals showcase
+        or path.startswith("/og")  # Public OG image generator
+        or path.startswith("/trending")  # Public trending
+        or path.startswith("/ai/gallery")  # Public AI comic gallery
+        or path.startswith("/graphql")  # Public GraphQL playground
     )
     is_metered = any(path.startswith(p) for p in _METERED_PREFIXES)
 
