@@ -1,4 +1,5 @@
 import { getJson } from "../../../../../lib/api";
+import { ClientComments } from "../../../../../components/ClientComments";
 import Link from "next/link";
 
 export const runtime = "edge";
@@ -71,11 +72,14 @@ export default async function NovelChapterPage({
             ))}
           </div>
         </article>
-      ) : (
+      {allParagraphs.length === 0 ? (
         <div className="card text-sm text-ink-400">
           No text content found for this chapter.
         </div>
-      )}
+      ) : null}
+
+      {/* Chapter Comments */}
+      <ClientComments source={source} slug={slug} kind="novel" />
     </div>
   );
 }

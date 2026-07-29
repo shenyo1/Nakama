@@ -1,4 +1,5 @@
 import { getJson } from "../../../../../lib/api";
+import { ClientComments } from "../../../../../components/ClientComments";
 import Link from "next/link";
 import NakamaReader from "../../../../../components/NakamaReader";
 
@@ -52,5 +53,13 @@ export default async function ComicChapterPage({
 
   if (!chapter) return null;
 
-  return <NakamaReader chapter={chapter} source={source} mangaSlug={mangaSlug} />;
+  return (
+    <>
+      <NakamaReader chapter={chapter} source={source} mangaSlug={mangaSlug} />
+      {/* Chapter Comments */}
+      <div className="mt-6">
+        <ClientComments source={source} slug={fullSlug} kind="comic" />
+      </div>
+    </>
+  );
 }

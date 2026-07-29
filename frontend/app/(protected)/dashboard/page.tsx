@@ -257,6 +257,12 @@ export default async function DashboardPage() {
           </a>
         </p>
       </section>
+
+      {/* Reading Lists */}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold sm:text-lg">Reading Lists</h2>
+        <ReadingListManager />
+      </section>
     </div>
   );
 }

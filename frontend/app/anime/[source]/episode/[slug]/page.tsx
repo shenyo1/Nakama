@@ -1,4 +1,5 @@
 import { getJson } from "../../../../../lib/api";
+import { ClientComments } from "../../../../../components/ClientComments";
 import Link from "next/link";
 
 export const runtime = "edge";
@@ -109,6 +110,9 @@ export default async function AnimeEpisodePage({
           No stream or download links found for this episode.
         </div>
       ) : null}
+
+      {/* Chapter Comments */}
+      <ClientComments source={source} slug={slug} kind="anime" />
     </div>
   );
 }

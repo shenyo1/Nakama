@@ -117,6 +117,9 @@ class User(Base):
     reading_lists: Mapped[list["ReadingList"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    original_series: Mapped[list["OriginalSeries"]] = relationship(
+        back_populates="creator", cascade="all, delete-orphan"
+    )
 
 
 class ReadingHistory(Base):
@@ -291,6 +294,18 @@ async def init_db() -> None:
     # Import community models so create_all picks them up.
     try:
         from . import community_models  # noqa: F401
+    except Exception:
+        pass
+
+    # Import creator models so create_all picks them up.
+    try:
+        from . import creator_models  # noqa: F401
+    except Exception:
+        pass
+
+    # Import original models so create_all picks them up.
+    try:
+        from . import original_models  # noqa: F401
     except Exception:
         pass
 

@@ -199,6 +199,7 @@ _PUBLIC_PREFIXES = (
     "/auth",
     "/metrics",
     "/graphql",
+    "/ai",
 )
 
 _METERED_PREFIXES = (
@@ -449,8 +450,12 @@ from .routers.trending import router as trending_router  # noqa: E402
 app.include_router(trending_router)
 from .routers.og import router as og_router  # noqa: E402
 app.include_router(og_router)
+from .routers.ai_comic import router as ai_comic_router  # noqa: E402
+app.include_router(ai_comic_router)
 from .routers.errors import router as errors_router  # noqa: E402
 app.include_router(errors_router)
+from .routers.originals import router as originals_router  # noqa: E402
+app.include_router(originals_router)
 
 # Global exception handler: capture every 500 into the error tracker.
 from .routers.errors import capture_server_error  # noqa: E402
@@ -467,6 +472,8 @@ async def _unhandled_exception_handler(request: Request, exc: Exception):
 
 from .routers.preferences import router as preferences_router
 app.include_router(preferences_router)
+from .routers.creator import router as creator_router  # noqa: E402
+app.include_router(creator_router)
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
