@@ -120,11 +120,11 @@ app = FastAPI(
     title="Nakama",
     description=(
         "REST API aggregating anime, comic, and novel data from 21 public sources "
-        "behind one consistent JSON interface. Multi-source search with automatic "
-        "deduplication, WebSocket live updates, auto-repair circuit breakers, "
-        "offline fixtures, and a generated TypeScript SDK."
+        "behind one consistent JSON interface. GraphQL, AI recommendations, "
+        "community features, creator dashboard, AI comic generator, CDN edge cache, "
+        "and auto-generated TypeScript & Python SDKs."
     ),
-    version="2.7.5",
+    version="2.8.0",
     lifespan=lifespan,
 )
 
@@ -158,7 +158,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 mcp = FastApiMCP(
     app,
     name="Nakama API",
-    description="Multi-source anime, comic, and novel REST API with 20 sources",
+    description="Nakama API v2.8.0 — 21 sources, 93+ endpoints, GraphQL, AI, Community",
 )
 mcp.mount(mount_path="/mcp")  # AI agents connect to /mcp (mount_http in 0.4.0+)
 
