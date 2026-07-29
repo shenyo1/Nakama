@@ -29,6 +29,26 @@ router = APIRouter(tags=["community"])
 ContentKind = Literal["anime", "comic", "novel"]
 
 
+# ── Helper functions (must be defined before endpoint handlers) ──────────────
+
+def _comment_to_out(row: Comment, username: str = "", replies: list[CommentOut] | None = None) -> CommentOut:
+    return CommentOut(
+        id=row.id,
+        user_id=row.user_id,
+        username=username,
+        source=row.source,
+        slug=row.slug,
+        kind=row.kind,
+        body=row.body,
+        parent_id=row.parent_id,
+        created_at=row.created_at,
+        replies=replies or [],
+    )
+
+
+# ── Endpoint handlers ────────────────────────────────────────────────────────
+
+
 # ---------------------------------------------------------------------------
 # Pydantic schemas
 # ---------------------------------------------------------------------------
@@ -330,21 +350,6 @@ async def create_comment(
 
     username = await _get_username(session, uid)
     return _comment_to_out(row, username)
-
-
-def _comment_to_out(row: Comment, username: str = "", replies: list[CommentOut] | None = None) -> CommentOut:
-    return CommentOut(
-        id=row.id,
-        user_id=row.user_id,
-        username=username,
-        source=row.source,
-        slug=row.slug,
-        kind=row.kind,
-        body=row.body,
-        parent_id=row.parent_id,
-        created_at=row.created_at,
-        replies=replies or [],
-    )
 
 
 @router.get(

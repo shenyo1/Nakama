@@ -38,7 +38,7 @@ const STYLES = [
 
 const PANEL_OPTIONS = [1, 2, 3, 4, 5, 6] as const;
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api/backend";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "/api/backend";
 
 // ---------------------------------------------------------------------------
 // Component

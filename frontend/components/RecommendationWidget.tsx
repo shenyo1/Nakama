@@ -24,15 +24,14 @@ export function RecommendationWidget({ title, kind, source, synopsis, genres }: 
       setLoading(true);
       setError(null);
       try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("nakama_token") : null;
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000"}/recommendations`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              ...(process.env.NEXT_PUBLIC_API_KEY
-                ? { "X-API-Key": process.env.NEXT_PUBLIC_API_KEY }
-                : {}),
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
             body: JSON.stringify({
               title,

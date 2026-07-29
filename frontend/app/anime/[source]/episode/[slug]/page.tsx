@@ -41,7 +41,7 @@ export default async function AnimeEpisodePage({
   if (error) {
     return (
       <div className="space-y-4">
-        <Link href={`/anime/${source}`} className="text-sm text-sakura-400 hover:underline">← Back</Link>
+        <Link href="/anime" className="text-sm text-sakura-400 hover:underline">← Back</Link>
         <div className="card text-sm text-sakura-200">{error}</div>
       </div>
     );

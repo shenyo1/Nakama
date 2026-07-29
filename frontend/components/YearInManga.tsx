@@ -138,7 +138,10 @@ export default function YearInManga() {
           {stats.top_series.slice(0, 5).map((s, i) => (
             <a
               key={s.title}
-              href={`/${s.kind}/${s.source}/detail/${s.title.toLowerCase().replace(/\s+/g, "-")}`}
+              href={s.kind === "comic"
+                ? `/manga/${s.source}/${s.title.toLowerCase().replace(/\s+/g, "-")}`
+                : `/${s.kind}/${s.source}/detail/${s.title.toLowerCase().replace(/\s+/g, "-")}`
+              }
               className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-ink-800/50"
             >
               <span className="text-lg font-bold tabular-nums text-ink-400">#{i + 1}</span>

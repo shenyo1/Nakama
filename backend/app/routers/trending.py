@@ -16,8 +16,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Query, Request
 
-from ..ratelimit import limiter
+from ..cache import get_redis
 from ..config import get_settings
+from ..ratelimit import limiter
 
 router = APIRouter(prefix="/trending", tags=["Trending"])
 
@@ -37,28 +38,26 @@ async def _get_top(
     window: str = "trending",
 ) -> list[dict]:
     """Get top items from Redis sorted by access count."""
-    import redis.asyncio as redis
+    r = get_redis()
+    if r is None:
+        return []
 
-    settings = get_settings()
-    redis_url = getattr(settings, "redis_url", None) or "redis://localhost:6379"
-    
     try:
-        r = redis.from_url(redis_url, decode_responses=True)
         pattern = f"nakama:{window}:{kind}:*"
         keys = []
         async for key in r.scan_iter(match=pattern, count=100):
             keys.append(key)
-        
+
         if not keys:
             return []
-        
+
         # Get all values
         pipe = r.pipeline()
         for key in keys:
             pipe.get(key)
             pipe.ttl(key)
         results = await pipe.execute()
-        
+
         items = []
         for i, key in enumerate(keys):
             count = int(results[i * 2] or 0)
@@ -70,7 +69,7 @@ async def _get_top(
                 "count": count,
                 "ttl_seconds": ttl,
             })
-        
+
         items.sort(key=lambda x: x["count"], reverse=True)
         return items[:limit]
     except Exception:
@@ -79,25 +78,22 @@ async def _get_top(
 
 async def _increment(kind: str, slug: str) -> None:
     """Increment access counter for a trending item."""
-    import redis.asyncio as redis
+    r = get_redis()
+    if r is None:
+        return
 
-    settings = get_settings()
-    redis_url = getattr(settings, "redis_url", None) or "redis://localhost:6379"
-    
     try:
-        r = redis.from_url(redis_url, decode_responses=True)
-        
         # Increment trending (24h window)
         trending_key = _redis_key(kind, slug, "trending")
         pipe = r.pipeline()
         pipe.incr(trending_key)
         pipe.expire(trending_key, TRENDING_WINDOW)
-        
+
         # Increment popular (30d window)
         popular_key = _redis_key(kind, slug, "popular")
         pipe.incr(popular_key)
         pipe.expire(popular_key, POPULAR_WINDOW)
-        
+
         await pipe.execute()
     except Exception:
         pass

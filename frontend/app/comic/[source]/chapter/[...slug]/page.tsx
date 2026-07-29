@@ -43,7 +43,7 @@ export default async function ComicChapterPage({
   if (error) {
     return (
       <div className="space-y-4">
-        <Link href={`/comic/${source}`} className="text-sm text-sakura-400 hover:underline">
+        <Link href="/comic" className="text-sm text-sakura-400 hover:underline">
           ← Back
         </Link>
         <div className="card text-sm text-sakura-200">{error}</div>

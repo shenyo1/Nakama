@@ -218,7 +218,7 @@ _METERED_PREFIXES = (
     "/comments",
     "/lists",
     "/community",
-    "/originals",
+    "/preferences",
 )
 
 # Cache-Control policy table. Cloudflare Free honours Cache-Control on the

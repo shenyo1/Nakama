@@ -31,7 +31,7 @@ from ..sources import (
 )
 from ..sources.base import SourceError
 
-router = APIRouter(prefix="/comic", tags=["comic-fallback"])
+router = APIRouter(prefix="/comic-fallback", tags=["comic-fallback"])
 
 
 @router.get("/search/{query}", summary="Search across comic sources with fallback")

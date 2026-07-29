@@ -278,10 +278,17 @@ async def init_db() -> None:
         from . import original_models  # noqa: F401
     except Exception:
         pass
+    try:
+        from .routers.ai_comic import AiComic  # noqa: F401
+    except Exception:
+        pass
 
     engine = get_engine()
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        try:
+            await conn.run_sync(Base.metadata.create_all)
+        except Exception:
+            pass  # Tables/sequences may already exist
 
     # Forward-compat column adds (Postgres IF NOT EXISTS keeps this idempotent).
     forward_columns = [
