@@ -18,4 +18,4 @@ camoufox[geoip]>=0.5
 scrapling>=0.4
 curl_cffi>=0.7
 msgspec>=0.18
-fastapi-mcp>=0.4
+fastapi-mcp>=0.4\nmcp>=1.0,<2.0  # Pin: MCP SDK v2.0 breaks Server(name, description) signature
