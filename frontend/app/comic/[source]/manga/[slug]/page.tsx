@@ -3,6 +3,7 @@ import { SourceGrid } from "../../../../../components/SourceGrid";
 import { BookmarkButton } from "../../../../../components/BookmarkButton";
 import { RecommendationWidget } from "../../../../../components/RecommendationWidget";
 import { ClientCommunity } from "../../../../../components/ClientCommunity";
+import ShareCard from "../../../../../components/ShareCard";
 import Link from "next/link";
 
 export const runtime = "edge";
@@ -112,6 +113,19 @@ export default async function ComicMangaPage({
           <p className="text-sm text-ink-300 leading-relaxed">{detail.synopsis}</p>
         </section>
       ) : null}
+
+      {/* Share */}
+      <ShareCard
+        title={detail.title || slug}
+        kind="comic"
+        source={source}
+        slug={slug}
+        thumbnail={detail.thumbnail}
+        description={detail.synopsis}
+        episodes={detail.total_chapters ? String(detail.total_chapters) : undefined}
+        genres={detail.genres}
+        url={`https://app.mynakama.web.id/comic/${source}/manga/${slug}`}
+      />
 
       {detail.chapters?.length ? (
         <section className="space-y-2">

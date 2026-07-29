@@ -1,6 +1,8 @@
 import { getJson } from "@/lib/api";
 import { LiveHealthTicker } from "@/components/LiveHealthTicker";
 import { ReadingListManager } from "@/components/ReadingListManager";
+import ReadingGoals from "@/components/ReadingGoals";
+import YearInManga from "@/components/YearInManga";
 
 export const runtime = "edge";
 
@@ -263,6 +265,12 @@ export default async function DashboardPage() {
         <h2 className="text-base font-semibold sm:text-lg">Reading Lists</h2>
         <ReadingListManager />
       </section>
+
+      {/* Reading Goals & Streaks */}
+      <ReadingGoals />
+
+      {/* Year in Manga */}
+      <YearInManga />
     </div>
   );
 }

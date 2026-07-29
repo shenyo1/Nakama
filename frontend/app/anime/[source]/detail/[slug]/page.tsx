@@ -1,6 +1,7 @@
 import { getJson } from "../../../../../lib/api";
 import { RecommendationWidget } from "../../../../../components/RecommendationWidget";
 import { ClientCommunity } from "../../../../../components/ClientCommunity";
+import ShareCard from "../../../../../components/ShareCard";
 import Link from "next/link";
 
 export const runtime = "edge";
@@ -92,6 +93,19 @@ export default async function AnimeDetailPage({
           <p className="text-sm text-ink-300 leading-relaxed">{detail.synopsis}</p>
         </section>
       ) : null}
+
+      {/* Share */}
+      <ShareCard
+        title={detail.title || slug}
+        kind="anime"
+        source={source}
+        slug={slug}
+        thumbnail={detail.thumbnail}
+        description={detail.synopsis}
+        episodes={detail.total_episodes ? String(detail.total_episodes) : undefined}
+        genres={detail.genres}
+        url={`https://app.mynakama.web.id/anime/${source}/detail/${slug}`}
+      />
 
       {detail.episodes?.length ? (
         <section className="space-y-2">
