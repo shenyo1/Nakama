@@ -51,6 +51,7 @@ from .sources import list_anime_sources, list_comic_sources, list_novel_sources
 # uptime for the /stats endpoint without relying on wall-clock (so it is
 # unaffected by NTP adjustments).
 _APP_STARTED_AT: float = time.monotonic()
+_background_tasks: list[asyncio.Task] = []  # tracked for graceful shutdown
 
 # The limiter is defined in app.ratelimit (its own module) to avoid a circular
 # import: main imports the routers, and the routers import the limiter.
@@ -88,7 +89,25 @@ async def lifespan(app: FastAPI):
             except Exception as e:
                 logger.warning(f"startup probe failed (non-fatal): {e}")
         asyncio.create_task(_initial_probe())
+
+        # Periodic Camoufox idle cleanup. Closes the singleton browser
+        # after 5 min of inactivity to free VPS memory (~150MB RSS).
+        async def _camoufox_idle_watcher():
+            try:
+                from .sources.camoufox_pool import maybe_cleanup_idle
+                while True:
+                    await asyncio.sleep(60)  # check every minute
+                    await maybe_cleanup_idle()
+            except asyncio.CancelledError:
+                pass
+            except Exception as e:
+                logger.warning(f"camoufox idle watcher crashed: {e}")
+        camoufox_task = asyncio.create_task(_camoufox_idle_watcher())
+        _background_tasks.append(camoufox_task)
     yield
+    # Cancel background tasks (e.g. camoufox idle watcher)
+    for t in _background_tasks:
+        t.cancel()
     await stop_scheduler()
     await stop_broadcaster()
     await close_client()
@@ -103,7 +122,7 @@ app = FastAPI(
         "deduplication, WebSocket live updates, auto-repair circuit breakers, "
         "offline fixtures, and a generated TypeScript SDK."
     ),
-    version="2.7.4",
+    version="2.7.5",
     lifespan=lifespan,
 )
 

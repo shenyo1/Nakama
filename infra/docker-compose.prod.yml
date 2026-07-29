@@ -71,7 +71,6 @@ services:
       flaresolverr:
         condition: service_healthy
     restart: unless-stopped
-    mem_limit: 768m
     healthcheck:
       test:
         [
@@ -84,6 +83,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    mem_limit: 1.5g
+    mem_reservation: 1g
 
   frontend:
     build:
@@ -144,7 +145,8 @@ services:
     # Internal only — no port mapping needed; API container reaches it via
     # http://flaresolverr:8191 on the compose network.
     restart: unless-stopped
-    mem_limit: 768m
+    mem_limit: 512m
+    mem_reservation: 384m
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8191', timeout=3)"]
       interval: 30s

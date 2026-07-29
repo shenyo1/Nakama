@@ -88,7 +88,7 @@ class WestmangaSource(ComicSource):
 
 
 async def _fetch_with_camoufox(url: str, timeout: int = 30) -> Optional[str]:
-    """Fetch a URL using Camoufox and return the rendered HTML.
+    """Fetch a URL using the shared Camoufox browser pool.
 
     Falls back to FlareSolverr when Camoufox is unavailable.
     Returns None if neither is available.
@@ -96,26 +96,13 @@ async def _fetch_with_camoufox(url: str, timeout: int = 30) -> Optional[str]:
     if os.environ.get("WESTMANGA_USE_CAMOUFOX") == "0":
         return None
 
-    # Try Camoufox first (handles JS-rendered content)
+    # Try shared Camoufox pool first (handles JS-rendered content)
+    from .camoufox_pool import fetch_via_camoufox
     try:
-        from camoufox import AsyncCamoufox
-        try:
-            async with AsyncCamoufox(
-                headless=True, humanize=True, geoip=True, locale="en-US"
-            ) as browser:
-                page = await browser.new_page()
-                try:
-                    await page.goto(url, timeout=timeout * 1000)
-                    await asyncio.sleep(3)
-                    return await page.content()
-                finally:
-                    try:
-                        await page.close()
-                    except Exception:
-                        pass
-        except Exception:
-            pass
-    except ImportError:
+        html = await fetch_via_camoufox(url, timeout=timeout)
+        if html:
+            return html
+    except Exception:
         pass
 
     # Fallback: FlareSolverr (bypasses CF but not JS-rendering)

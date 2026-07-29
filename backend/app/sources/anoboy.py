@@ -84,30 +84,19 @@ class AnoboySource(AnimeSource):
 
 
 async def _fetch_with_camoufox(url: str, timeout: int = 30) -> Optional[str]:
-    """Fetch a URL using Camoufox and return the rendered HTML.
+    """Fetch a URL using the shared Camoufox browser pool.
 
     Falls back to FlareSolverr if Camoufox fails (e.g. browser crashed in
     headless container). Returns None on total failure so the caller can
     return empty results instead of raising.
     """
+    from .camoufox_pool import fetch_via_camoufox
     try:
-        from camoufox import AsyncCamoufox
-        async with AsyncCamoufox(
-            headless=True, humanize=True, geoip=True, locale="en-US"
-        ) as browser:
-            page = await browser.new_page()
-            try:
-                await page.goto(
-                    url, timeout=timeout * 1000, wait_until="domcontentloaded"
-                )
-                await asyncio.sleep(4)
-                return await page.content()
-            finally:
-                try:
-                    await page.close()
-                except Exception:
-                    pass
+        html = await fetch_via_camoufox(url, timeout=timeout)
+        if html:
+            return html
     except Exception:
+        pass
         # Camoufox unavailable / crashed — try FlareSolverr
         try:
             return await _flaresolverr_get(url)
