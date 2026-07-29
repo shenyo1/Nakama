@@ -17,10 +17,7 @@ RUN apt-get update \
 
 COPY requirements.txt .
 # Install into /install prefix we will copy in the runtime stage.
-# fastapi-mcp 0.4.0 depends on mcp>=2.0 which breaks Server(name, description).
-# Install mcp v1.x first, then fastapi-mcp (pip won't upgrade already-satisfied deps).
-RUN pip install --prefix=/install --no-cache-dir 'mcp>=1.0,<2.0' \
-    && pip install --prefix=/install --no-cache-dir -r requirements.txt
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
 
 
 # ---- runtime stage ----

@@ -17,4 +17,4 @@ PyJWT>=2.8
 camoufox[geoip]>=0.5
 scrapling>=0.4
 curl_cffi>=0.7
-fastapi-mcp>=0.4
+fastapi-mcp>=0.3,<0.4  # Pin: 0.4.0 requires mcp>=2.0 which breaks Server(name, description)
