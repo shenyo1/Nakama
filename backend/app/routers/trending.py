@@ -14,7 +14,7 @@ from __future__ import annotations
 import time
 from typing import Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 
 from ..ratelimit import limiter
 from ..config import get_settings
@@ -106,6 +106,7 @@ async def _increment(kind: str, slug: str) -> None:
 @router.get("")
 @limiter.limit(get_settings().rate_limit)
 async def trending_all(
+    request: Request,
     limit: int = Query(20, ge=1, le=50),
 ):
     """Get trending items across all kinds."""
@@ -126,6 +127,7 @@ async def trending_all(
 @router.get("/{kind}")
 @limiter.limit(get_settings().rate_limit)
 async def trending_kind(
+    request: Request,
     kind: str,
     limit: int = Query(20, ge=1, le=50),
 ):
@@ -145,6 +147,7 @@ async def trending_kind(
 @router.get("/popular/{kind}")
 @limiter.limit(get_settings().rate_limit)
 async def popular_kind(
+    request: Request,
     kind: str,
     limit: int = Query(20, ge=1, le=50),
 ):

@@ -10,6 +10,8 @@ const publicLinks = [
   { href: "/anime", label: "Anime" },
   { href: "/comic", label: "Comic" },
   { href: "/novel", label: "Novel" },
+  { href: "/originals", label: "Originals" },
+  { href: "/ai-comic", label: "AI Comic" },
   { href: "/search", label: "Search" },
   { href: "/status", label: "Status" },
 ];
@@ -19,6 +21,7 @@ const authedLinks = [
   { href: "/history", label: "History" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/analytics", label: "Analytics" },
+  { href: "/creator", label: "Creator" },
   { href: "/preferences", label: "Preferences" },
   { href: "/ws-test", label: "Live WS" },
 ];

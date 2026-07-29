@@ -263,6 +263,22 @@ async def init_db() -> None:
     full Alembic setup. Each statement is wrapped in its own try block so
     a partial failure never blocks startup.
     """
+    # Import model modules BEFORE create_all so their tables are registered
+    # in Base.metadata. These imports are deferred to avoid circular imports
+    # at module level (models reference db.Base).
+    try:
+        from . import community_models  # noqa: F401
+    except Exception:
+        pass
+    try:
+        from . import creator_models  # noqa: F401
+    except Exception:
+        pass
+    try:
+        from . import original_models  # noqa: F401
+    except Exception:
+        pass
+
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -290,24 +306,6 @@ async def init_db() -> None:
             # The model is the source of truth there, and tests run on a
             # fresh DB each time, so silently skipping is acceptable.
             pass
-
-    # Import community models so create_all picks them up.
-    try:
-        from . import community_models  # noqa: F401
-    except Exception:
-        pass
-
-    # Import creator models so create_all picks them up.
-    try:
-        from . import creator_models  # noqa: F401
-    except Exception:
-        pass
-
-    # Import original models so create_all picks them up.
-    try:
-        from . import original_models  # noqa: F401
-    except Exception:
-        pass
 
 
 async def dispose_engine() -> None:

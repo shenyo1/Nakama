@@ -158,7 +158,7 @@ def _create_og_svg(title: str, kind: str, source: str) -> str:
 @router.get("/og")
 async def og_image(
     title: str = Query("", max_length=200),
-    kind: str = Query("anime", regex="^(anime|comic|novel)$"),
+    kind: str = Query("anime", pattern="^(anime|comic|novel)$"),
     source: str = Query(""),
     thumbnail: str = Query(""),
 ):

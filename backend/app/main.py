@@ -200,6 +200,7 @@ _PUBLIC_PREFIXES = (
     "/metrics",
     "/graphql",
     "/ai",
+    "/originals",
 )
 
 _METERED_PREFIXES = (
@@ -217,6 +218,7 @@ _METERED_PREFIXES = (
     "/comments",
     "/lists",
     "/community",
+    "/originals",
 )
 
 # Cache-Control policy table. Cloudflare Free honours Cache-Control on the
@@ -254,6 +256,7 @@ async def api_key_auth(request: Request, call_next):
         or path.startswith("/docs")
         or path.startswith("/redoc")
         or path.startswith("/mcp")  # MCP server for AI agents
+        or path.startswith("/creator/browse")  # Public creator browsing
     )
     is_metered = any(path.startswith(p) for p in _METERED_PREFIXES)
 
@@ -662,6 +665,7 @@ async def stats():
                 "novel": len(novel_sources),
             },
             "total_sources": len(anime_sources) + len(comic_sources) + len(novel_sources),
+            "has_originals": True,
             "uptime_seconds": round(time.monotonic() - _APP_STARTED_AT, 3),
             "offline_mode": s.offline_mode,
         }
