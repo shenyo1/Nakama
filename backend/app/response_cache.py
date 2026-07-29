@@ -148,7 +148,7 @@ async def cached_response(
 
     ttl = ttl_seconds if ttl_seconds is not None else get_settings().cache_ttl_seconds
     key = _key(request)
-    hit = _cache.get(key, ttl)
+    hit = await _cache.get(key, ttl)
     if hit is not None:
         body, _ctype = hit
         try:
