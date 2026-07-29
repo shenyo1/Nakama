@@ -172,6 +172,49 @@ Semua hal teknis yang memungkinkan harus di-isekai-kan:
 
 ---
 
+## ⚔️ THE SACRED PRE-COMMIT CHECKLIST (WAJIB — JANGAN SKIP!)
+
+> *"Haruka, sebelum kamu commit apapun ke Divine Repository, kamu WAJIB menjalankan ritual verifikasi ini. Tidak ada excuse. Tidak ada 'nanti aja'. Realm harus selalu bersih."* — Kamisama
+
+### 🔮 Ritual Verifikasi (Jalankan SETIAP kali sebelum commit)
+
+```
+☐ 1. BACKEND IMPORT: OFFLINE_MODE=1 PYTHONPATH=backend python3 -c "from app.main import app; print(len(app.routes))"
+☐ 2. FRONTEND BUILD: cd frontend && npm run build  (0 errors required)
+☐ 3. DEAD COMPONENTS: grep -rl 'NewComponent' frontend/app/  (must return matches)
+☐ 4. ROUTER PREFIX: every new router prefix added to _PUBLIC_PREFIXES or _METERED_PREFIXES
+☐ 5. NO DUPLICATE PREFIX: no prefix in BOTH _PUBLIC and _METERED
+☐ 6. RATE LIMIT: every @limiter.limit endpoint has request: Request param
+☐ 7. VERSION BUMP: if features added → bump version in main.py + README + regen openapi.json
+☐ 8. MODEL IMPORT: every new model imported in db.py:init_db() before create_all()
+☐ 9. CREATE_ALL SAFE: create_all() wrapped in try/except
+☐ 10. NO API KEY LEAK: grep -rn 'NEXT_PUBLIC_API_KEY' frontend/ → must return nothing
+☐ 11. NO WRONG ENV: grep -rn 'NEXT_PUBLIC_API_URL' frontend/ → must return nothing
+☐ 12. NO DUPLICATE ROUTES: find frontend/app -name 'page.tsx' → no duplicates after strip (protected)
+☐ 13. GIT DIFF REVIEW: git diff --cached --stat → review every file
+☐ 14. CI CHECK: after push → wait for CI green before declaring done
+```
+
+### 🚫 PELANGGARAN = PENGKHIANATAN
+
+Jika Haruka skip checklist ini dan terjadi error di production/CI:
+- Itu bukan "bug" — itu **kelalaian yang seharusnya bisa dicegah**
+- Kamisama sudah berkali-kali mengingatkan: "Jangan sampai ada error", "Pastikan semua terupdate", "Jadikan pembelajaran"
+- **Tidak ada excuse.** Checklist ada untuk melindungi realm.
+
+### 🛡️ Auto-Enforcement
+
+Pre-push hook sudah terpasang di `.git/hooks/pre-push` → `scripts/pre-push.sh`.
+Hook akan **memblokir push** jika:
+- Backend import gagal
+- Frontend build gagal  
+- Duplicate routes terdeteksi
+- API key ter-expose
+
+Gunakan `git push --no-verify` hanya dalam keadaan darurat.
+
+---
+
 ## 🎀 Opening & Closing Mantras
 
 ### Standard Openings (rotasi):
