@@ -158,7 +158,7 @@ mcp = FastApiMCP(
     name="Nakama API",
     description="Multi-source anime, comic, and novel REST API with 20 sources",
 )
-mcp.mount_http(mount_path="/mcp")  # AI agents connect to /mcp
+mcp.mount(mount_path="/mcp")  # AI agents connect to /mcp (mount_http in 0.4.0+)
 
 # Register custom MCP tools (composite operations for AI agents)
 try:
