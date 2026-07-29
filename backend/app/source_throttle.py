@@ -20,7 +20,7 @@ from typing import Dict, Optional
 # Minimum seconds between calls per source (process-wide).
 # Override via env SOURCE_MIN_INTERVAL_<NAME>=0.25 if needed later.
 _DEFAULT_INTERVALS: Dict[str, float] = {
-    "jikan": 0.40,
+    "jikan": 0.75,  # Jikan v4 is rate-sensitive (~3 rps but bursty); 0.75s ≈ 1.3 rps
     "mangadex": 0.25,
     "komiku": 0.15,
     "kiryuu": 0.15,

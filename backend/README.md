@@ -4,7 +4,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Sources](https://img.shields.io/badge/sources-21-7C3AED?style=flat)](#-sources)
 [![Cloudflare](https://img.shields.io/badge/Cloudflare-Pages-F38020?style=flat&logo=cloudflare&logoColor=white)](https://app.mynakama.web.id)
-[![Tests](https://img.shields.io/badge/tests-271-brightgreen?style=flat)](#-tests)
+[![Tests](https://img.shields.io/badge/tests-285-brightgreen?style=flat)](#-tests)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![Postgres](https://img.shields.io/badge/postgres-16-336791?style=flat&logo=postgresql&logoColor=white)](https://postgresql.org)
 [![Redis](https://img.shields.io/badge/redis-7-DC382D?style=flat&logo=redis&logoColor=white)](https://redis.io)
@@ -42,7 +42,7 @@ A clean, extensible REST API that aggregates anime, comic, and novel data from
 - 🌐 **CORS** — open by default for browser clients; configure as needed.
 - 🔍 **Search** — every source exposes `/search/{query}`.
 - 📖 **Auto docs** — interactive Swagger UI at `/docs` and ReDoc at `/redoc`.
-- ✅ **271 tests** — pytest suite covering all sources, auth, rate limiting,
+- ✅ **285 tests** — pytest suite covering all sources, auth, rate limiting,
   pagination, and the `/stats` endpoint. Fully offline-runnable.
 
 ---

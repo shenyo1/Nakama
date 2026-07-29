@@ -3,7 +3,7 @@
   "info": {
     "title": "Nakama",
     "description": "REST API aggregating anime, comic, and novel data from 20 public sources behind one consistent JSON interface. Multi-source search with automatic deduplication, WebSocket live updates, auto-repair circuit breakers, offline fixtures, and a generated TypeScript SDK.",
-    "version": "2.7.3"
+    "version": "2.7.5"
   },
   "paths": {
     "/anime/search/{query}": {
