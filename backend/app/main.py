@@ -258,8 +258,14 @@ async def api_key_auth(request: Request, call_next):
         or path.startswith("/mcp")  # MCP server for AI agents
         or path.startswith("/creator/browse")  # Public creator browsing
         or (path.startswith("/anime/") and "/home" in path)  # Public anime browsing
+        or (path.startswith("/anime/") and "/detail/" in path)  # Public anime detail pages
+        or (path.startswith("/anime/") and "/episode/" in path)  # Public anime episode viewers
         or (path.startswith("/comic/") and "/home" in path)  # Public comic browsing
+        or (path.startswith("/comic/") and "/manga/" in path)  # Public comic manga detail
+        or (path.startswith("/comic/") and "/chapter/" in path)  # Public comic chapter readers
         or (path.startswith("/novel/") and "/home" in path)  # Public novel browsing
+        or (path.startswith("/novel/") and "/detail/" in path)  # Public novel detail pages
+        or (path.startswith("/novel/") and "/chapter/" in path)  # Public novel chapter readers
         or path.startswith("/originals")  # Public originals showcase
         or path.startswith("/og")  # Public OG image generator
         or path.startswith("/trending")  # Public trending
