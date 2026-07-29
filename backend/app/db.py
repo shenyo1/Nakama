@@ -108,6 +108,15 @@ class User(Base):
     webhooks: Mapped[list["WebhookSubscription"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    reviews: Mapped[list["Review"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    comments: Mapped[list["Comment"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    reading_lists: Mapped[list["ReadingList"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class ReadingHistory(Base):
@@ -278,6 +287,12 @@ async def init_db() -> None:
             # The model is the source of truth there, and tests run on a
             # fresh DB each time, so silently skipping is acceptable.
             pass
+
+    # Import community models so create_all picks them up.
+    try:
+        from . import community_models  # noqa: F401
+    except Exception:
+        pass
 
 
 async def dispose_engine() -> None:

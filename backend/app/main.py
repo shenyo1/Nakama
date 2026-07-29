@@ -43,7 +43,9 @@ from .routers import auth as auth_router
 from .routers import tier5 as tier5_router
 from .routers import ws as ws_router
 from .routers import sources as sources_router
+from .routers import recommendations as recommendations_router
 from .audit import router as audit_router
+from .routers.community import router as community_router
 from .schemas import ApiResponse
 from .sources import list_anime_sources, list_comic_sources, list_novel_sources
 
@@ -169,6 +171,14 @@ except ImportError:
     pass
 
 
+# --- GraphQL endpoint (Strawberry) -----------------------------------------
+from strawberry.fastapi import GraphQLRouter
+from .graphql.schema import schema as graphql_schema
+
+graphql_app = GraphQLRouter(graphql_schema)
+app.include_router(graphql_app, prefix="/graphql")
+
+
 # --- API key / JWT authentication middleware -------------------------------
 # Protected routes: /anime, /comic, /novel, /search, /history
 # Accept either:
@@ -188,6 +198,7 @@ _PUBLIC_PREFIXES = (
     "/audit",
     "/auth",
     "/metrics",
+    "/graphql",
 )
 
 _METERED_PREFIXES = (
@@ -198,8 +209,13 @@ _METERED_PREFIXES = (
     "/history",
     "/bookmarks",
     "/webhooks",
+    "/recommendations",
     "/recommend",
     "/trending",
+    "/reviews",
+    "/comments",
+    "/lists",
+    "/community",
 )
 
 # Cache-Control policy table. Cloudflare Free honours Cache-Control on the
@@ -427,6 +443,12 @@ app.include_router(auth_router.router)
 app.include_router(tier5_router.router)
 app.include_router(audit_router)
 app.include_router(sources_router.router)
+app.include_router(community_router)
+app.include_router(recommendations_router.router)
+from .routers.trending import router as trending_router  # noqa: E402
+app.include_router(trending_router)
+from .routers.og import router as og_router  # noqa: E402
+app.include_router(og_router)
 from .routers.errors import router as errors_router  # noqa: E402
 app.include_router(errors_router)
 

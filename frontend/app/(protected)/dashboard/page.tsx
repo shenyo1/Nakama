@@ -1,5 +1,6 @@
 import { getJson } from "@/lib/api";
 import { LiveHealthTicker } from "@/components/LiveHealthTicker";
+import { ReadingListManager } from "@/components/ReadingListManager";
 
 export const runtime = "edge";
 

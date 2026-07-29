@@ -1,4 +1,6 @@
 import { getJson } from "../../../../../lib/api";
+import { RecommendationWidget } from "../../../../../components/RecommendationWidget";
+import { ClientCommunity } from "../../../../../components/ClientCommunity";
 import Link from "next/link";
 
 export const runtime = "edge";
@@ -109,6 +111,20 @@ export default async function NovelDetailPage({
           </div>
         </section>
       ) : null}
+
+      {/* AI-Powered Recommendations */}
+      <RecommendationWidget
+        title={detail.title || slug}
+        kind="novel"
+        source={source}
+        synopsis={detail.synopsis}
+        genres={detail.genres}
+      />
+
+      {/* Community: Reviews & Comments */}
+      <section className="space-y-6">
+        <ClientCommunity source={source} slug={slug} kind="novel" />
+      </section>
     </div>
   );
 }

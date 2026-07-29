@@ -1,6 +1,8 @@
 import { getJson } from "../../../../../lib/api";
 import { SourceGrid } from "../../../../../components/SourceGrid";
 import { BookmarkButton } from "../../../../../components/BookmarkButton";
+import { RecommendationWidget } from "../../../../../components/RecommendationWidget";
+import { ClientCommunity } from "../../../../../components/ClientCommunity";
 import Link from "next/link";
 
 export const runtime = "edge";
@@ -130,6 +132,22 @@ export default async function ComicMangaPage({
           </div>
         </section>
       ) : null}
+
+      {/* AI-Powered Recommendations */}
+      <RecommendationWidget
+        title={detail.title || slug}
+        kind="comic"
+        source={source}
+        synopsis={detail.synopsis}
+        genres={detail.genres}
+      />
+
+      {/* Community: Reviews & Comments */}
+      <section className="space-y-6">
+        <div>
+          <ClientCommunity source={source} slug={slug} kind="comic" />
+        </div>
+      </section>
     </div>
   );
 }
