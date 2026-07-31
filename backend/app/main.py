@@ -106,6 +106,38 @@ async def lifespan(app: FastAPI):
                 logger.warning(f"camoufox idle watcher crashed: {e}")
         camoufox_task = asyncio.create_task(_camoufox_idle_watcher())
         _background_tasks.append(camoufox_task)
+
+        # Reap zombie camoufox-bin subprocesses on startup. These accumulate
+        # if browser dies mid-use and the parent doesn't waitpid() them.
+        # Without reaping, /proc fills with defunct processes and the
+        # kernel's PID limit is eventually hit (see 2026-07-31 incident:
+        # 93 zombies after 38h uptime). Safe no-op if none exist.
+        try:
+            import os
+            import signal
+            reaped = 0
+            for entry in os.listdir("/proc"):
+                if not entry.isdigit():
+                    continue
+                pid = int(entry)
+                if pid == os.getpid():
+                    continue
+                try:
+                    with open(f"/proc/{pid}/comm") as f:
+                        comm = f.read().strip()
+                    with open(f"/proc/{pid}/status") as f:
+                        status = f.read()
+                    # Only target defunct camoufox/playwright subprocesses
+                    if "camoufox" in comm or "playwright" in comm:
+                        if "State:\tZ" in status:
+                            os.waitpid(pid, os.WNOHANG)
+                            reaped += 1
+                except (FileNotFoundError, ProcessLookupError, PermissionError):
+                    pass
+            if reaped:
+                logger.info(f"startup: reaped {reaped} zombie browser processes")
+        except Exception as e:
+            logger.warning(f"startup zombie reaper failed (non-fatal): {e}")
     yield
     # Cancel background tasks (e.g. camoufox idle watcher)
     for t in _background_tasks:

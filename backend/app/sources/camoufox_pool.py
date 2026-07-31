@@ -145,12 +145,23 @@ async def _close_browser() -> None:
 
 
 async def _mark_browser_dead() -> None:
-    """Force-close browser so next call gets a fresh one."""
-    global _browser_obj
-    # Just null the reference so next _ensure_browser() relaunches.
-    # Actual close happens in __aexit__, but we don't need to await it —
-    # the next acquire() will create a new one above the old.
-    _browser_obj = None
+    """Force-close browser so next call gets a fresh one.
+
+    IMPORTANT: must actually close the browser via __aexit__ to release
+    the subprocess + threads. Just nulling the reference leaves orphaned
+    camoufox-bin subprocesses that accumulate as zombies (see 2026-07-31
+    incident: 93 defunct camoufox processes after 38h uptime). Holding
+    _lock here is safe because we never await between acquire and close.
+    """
+    global _browser, _browser_obj
+    async with _lock:
+        if _browser is not None:
+            try:
+                await _browser.__aexit__(None, None, None)
+            except Exception:
+                pass
+        _browser = None
+        _browser_obj = None
 
 
 def _is_browser_alive(b: Any) -> bool:
