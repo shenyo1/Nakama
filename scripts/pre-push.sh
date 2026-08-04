@@ -58,7 +58,10 @@ if [ -d "frontend/components" ]; then
     DEAD=0
     for f in frontend/components/*.tsx; do
         name=$(basename "$f" .tsx)
-        count=$(grep -rl "$name" frontend/app/*.tsx frontend/app/**/*.tsx 2>/dev/null | wc -l)
+        # `|| true` is REQUIRED: grep exits 1 on no-match, and with
+        # `set -euo pipefail` the command substitution would otherwise
+        # kill the whole script (silently) at the first dead component.
+        count=$(grep -rl "$name" frontend/app/*.tsx frontend/app/**/*.tsx 2>/dev/null | wc -l || true)
         if [ "$count" -eq 0 ]; then
             echo -e "  ${YELLOW}⚠️  DEAD${NC}: components/$name.tsx — not imported in any page"
             DEAD=$((DEAD + 1))
