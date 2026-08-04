@@ -2,6 +2,7 @@ import { getJson } from "../../../../../lib/api";
 import { ClientComments } from "../../../../../components/ClientComments";
 import Link from "next/link";
 import NakamaReader from "../../../../../components/NakamaReader";
+import { BackLink } from "../../../../../components/BackLink";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -43,9 +44,7 @@ export default async function ComicChapterPage({
   if (error) {
     return (
       <div className="space-y-4">
-        <Link href="/comic" className="text-sm text-sakura-400 hover:underline">
-          ← Back
-        </Link>
+        <BackLink href="/comic" label="Back" />
         <div className="card text-sm text-sakura-200">{error}</div>
       </div>
     );

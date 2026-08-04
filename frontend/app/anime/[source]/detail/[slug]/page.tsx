@@ -3,6 +3,7 @@ import { RecommendationWidget } from "../../../../../components/RecommendationWi
 import { ClientCommunity } from "../../../../../components/ClientCommunity";
 import ShareCard from "../../../../../components/ShareCard";
 import Link from "next/link";
+import { BackLink } from "../../../../../components/BackLink";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -49,7 +50,7 @@ export default async function AnimeDetailPage({
   if (error) {
     return (
       <div className="space-y-4">
-        <Link href="/anime" className="text-sm text-sakura-400 hover:underline">← Back to Anime</Link>
+        <BackLink href="/anime" label="Back to Anime" />
         <div className="card text-sm text-sakura-200">{error}</div>
       </div>
     );
@@ -59,7 +60,7 @@ export default async function AnimeDetailPage({
 
   return (
     <div className="space-y-6">
-      <Link href="/anime" className="text-sm text-sakura-400 hover:underline">← Back to Anime</Link>
+      <BackLink href="/anime" label="Back to Anime" />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
         {detail.thumbnail ? (

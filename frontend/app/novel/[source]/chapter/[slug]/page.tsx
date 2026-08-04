@@ -1,6 +1,7 @@
 import { getJson } from "../../../../../lib/api";
 import { ClientComments } from "../../../../../components/ClientComments";
 import Link from "next/link";
+import { BackLink } from "../../../../../components/BackLink";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -34,7 +35,7 @@ export default async function NovelChapterPage({
   if (error) {
     return (
       <div className="space-y-4">
-        <Link href="/novel" className="text-sm text-sakura-400 hover:underline">← Back</Link>
+        <BackLink href="/novel" label="Back" />
         <div className="card text-sm text-sakura-200">{error}</div>
       </div>
     );
@@ -55,9 +56,13 @@ export default async function NovelChapterPage({
     <div className="space-y-4">
       <Link
         href={`/novel/${source}/detail/${slug.split("-").slice(0, -1).join("-") || slug}`}
-        className="text-sm text-sakura-400 hover:underline"
+        className="inline-flex items-center gap-1.5 text-sm text-sakura-400 hover:underline"
       >
-        ← Back to detail
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        Back to detail
       </Link>
 
       <h1 className="text-lg font-bold sm:text-xl">

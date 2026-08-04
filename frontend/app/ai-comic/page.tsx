@@ -30,10 +30,10 @@ interface GalleryItem {
 }
 
 const STYLES = [
-  { value: "manga", label: "Manga", emoji: "🇯🇵" },
-  { value: "manhwa", label: "Manhwa", emoji: "🇰🇷" },
-  { value: "western", label: "Western", emoji: "🇺🇸" },
-  { value: "webtoon", label: "Webtoon", emoji: "🌐" },
+  { value: "manga", label: "Manga", code: "JP" },
+  { value: "manhwa", label: "Manhwa", code: "KR" },
+  { value: "western", label: "Western", code: "US" },
+  { value: "webtoon", label: "Webtoon", code: "WW" },
 ] as const;
 
 const PANEL_OPTIONS = [1, 2, 3, 4, 5, 6] as const;
@@ -201,7 +201,7 @@ export default function AiComicPage() {
                         : "border-ink-700 bg-ink-900 text-ink-400 hover:border-ink-600 hover:text-ink-200"
                     } disabled:opacity-50`}
                   >
-                    {s.emoji} {s.label}
+                    <span className="text-[10px] font-mono opacity-60">{s.code}</span> {s.label}
                   </button>
                 ))}
               </div>
@@ -305,14 +305,14 @@ export default function AiComicPage() {
                     {/* Placeholder panel — real images come from image_generate */}
                     <div className="relative aspect-[4/3] bg-ink-900 flex items-center justify-center">
                       <div className="text-center">
-                        <div className="mb-2 text-4xl">
+                        <div className="mb-2 text-2xl font-mono font-bold text-ink-500">
                           {style === "manga"
-                            ? "🇯🇵"
+                            ? "JP"
                             : style === "manhwa"
-                              ? "🇰🇷"
+                              ? "KR"
                               : style === "western"
-                                ? "🇺🇸"
-                                : "🌐"}
+                                ? "US"
+                                : "WW"}
                         </div>
                         <p className="text-xs font-medium text-ink-400">
                           Panel {img.panel}
@@ -391,14 +391,14 @@ export default function AiComicPage() {
                         key={img.panel}
                         className="relative aspect-square overflow-hidden rounded bg-ink-900"
                       >
-                        <div className="flex h-full w-full items-center justify-center text-2xl">
+                        <div className="flex h-full w-full items-center justify-center text-sm font-mono font-bold text-ink-500">
                           {item.style === "manga"
-                            ? "🇯🇵"
+                            ? "JP"
                             : item.style === "manhwa"
-                              ? "🇰🇷"
+                              ? "KR"
                               : item.style === "western"
-                                ? "🇺🇸"
-                                : "🌐"}
+                                ? "US"
+                                : "WW"}
                         </div>
                       </div>
                     ))}

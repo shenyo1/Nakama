@@ -217,12 +217,14 @@ export default function HomePage() {
         <StatCard label="Novel sources" value={NOVEL_SOURCES.length} />
       </section>
 
-      {/* Feature highlights */}
-      <section className="grid gap-3 sm:gap-6 md:grid-cols-2">
+      {/* Feature highlights — asymmetric bento (1 hero + 3 compact) */}
+      <section className="grid gap-3 sm:gap-6 md:grid-cols-3 md:grid-rows-2">
         <FeatureCard
           title="Multi-source search"
           description={`Search across all ${COMIC_SOURCES.length} comic, ${ANIME_SOURCES.length} anime, or ${NOVEL_SOURCES.length} novel sources at once. Results are deduplicated and ranked by coverage.`}
           href="/search"
+          featured
+          className="md:col-span-2 md:row-span-2"
         />
         <FeatureCard
           title="Auto-repair and resilience"
@@ -231,18 +233,19 @@ export default function HomePage() {
         />
         <FeatureCard
           title="Personal reading history"
-          description="Create an account to sync bookmarks, track reading progress, and personalize your experience across devices."
+          description="Sync bookmarks, track progress, and personalize across devices."
           href="/register"
         />
         <FeatureCard
           title="TypeScript SDK"
-          description="Generated from OpenAPI schema. 58 endpoints, 22 schemas. Drop it into any frontend project."
+          description="Generated from OpenAPI schema. 58 endpoints, 22 schemas."
+          className="md:col-span-2"
         />
       </section>
 
       {/* Footer links */}
       <section className="border-t border-ink-800 pt-4 text-sm text-ink-400 space-y-1 sm:pt-6">
-        <p>
+        <p className="flex flex-wrap gap-x-4 gap-y-1">
           <a
             href="https://github.com/shenyo1/Nakama"
             className="text-sakura-400 hover:underline"
@@ -251,7 +254,6 @@ export default function HomePage() {
           >
             GitHub
           </a>
-          {" · "}
           <a
             href="https://app.mynakama.web.id/docs"
             className="text-sakura-400 hover:underline"
@@ -260,7 +262,6 @@ export default function HomePage() {
           >
             API Docs
           </a>
-          {" · "}
           <a
             href="https://app.mynakama.web.id/sources/health"
             className="text-sakura-400 hover:underline"
@@ -297,23 +298,35 @@ function FeatureCard({
   title,
   description,
   href,
+  featured,
+  className = "",
 }: {
   title: string;
   description: string;
   href?: string;
+  featured?: boolean;
+  className?: string;
 }) {
   const inner = (
-    <div className="card card-hover h-full">
-      <h3 className="font-semibold mb-2 text-sm sm:text-base">{title}</h3>
-      <p className="text-sm text-ink-400 leading-relaxed">{description}</p>
+    <div
+      className={`card card-hover h-full ${featured ? "md:p-8" : ""} ${className}`}
+    >
+      <h3 className={`font-semibold mb-2 ${featured ? "text-lg sm:text-xl" : "text-sm sm:text-base"}`}>
+        {title}
+      </h3>
+      <p
+        className={`text-ink-400 leading-relaxed ${featured ? "text-sm sm:text-base max-w-[55ch]" : "text-sm"}`}
+      >
+        {description}
+      </p>
     </div>
   );
   if (href) {
     return (
-      <Link href={href} className="block h-full">
+      <Link href={href} className={`block h-full ${className}`}>
         {inner}
       </Link>
     );
   }
-  return inner;
+  return <div className={className}>{inner}</div>;
 }

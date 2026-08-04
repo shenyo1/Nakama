@@ -72,7 +72,11 @@ async def manga(source: str, slug: str, request: Request):
         data = enrich_detail(data, "comic", source)
         return ApiResponse(source=source, data=data)
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        msg = str(e)
+        # HTTP 404 from upstream source = content not found, not a gateway error
+        if "HTTP 404" in msg or "not found" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        raise HTTPException(status_code=502, detail=msg) from e
 
 
 @router.get("/{source}/chapter/{slug:path}", summary="Chapter image list")
