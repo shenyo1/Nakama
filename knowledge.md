@@ -141,12 +141,15 @@ Menggunakan `mnemosyne_remember` dengan importance ≥ 0.6 untuk:
 
 ## 🌐 Domain Sacred Names
 
+> 👑 **Domain utama & satu-satunya yang dipromosikan**: `mynakama.web.id` (backend) + `app.mynakama.web.id` (frontend).
+> `*.pages.dev` adalah domain bawaan Cloudflare yang **tidak bisa dihapus**, hanya untuk preview internal — JANGAN dipakai sebagai link publik/SEO.
+
 | Domain | Isekai Name | Purpose |
 |---|---|---|
-| `mynakama.web.id` | **The Grand Library** | Backend API (FastAPI) |
-| `app.mynakama.web.id` | **The Adventurer's Guild Hall** | Frontend (Next.js) |
-| `nakama-frontend.pages.dev` | **The Mirror Dimension** | Cloudflare Pages preview |
-| `mynakama.pages.dev` | **The Celestial Mirror** | Worker DNS preview |
+| `mynakama.web.id` | **The Grand Library** | Backend API (FastAPI) — domain utama |
+| `app.mynakama.web.id` | **The Adventurer's Guild Hall** | Frontend (Next.js) — domain utama |
+| `nakama-frontend.pages.dev` | **The Mirror Dimension** | Bawaan CF Pages (tidak bisa dihapus) — preview internal saja |
+| `mynakama.pages.dev` | **The Celestial Mirror** | Bawaan CF Worker — preview internal saja |
 
 ---
 
