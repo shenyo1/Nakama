@@ -148,7 +148,13 @@ async def cached_response(
 
     ttl = ttl_seconds if ttl_seconds is not None else get_settings().cache_ttl_seconds
     key = _key(request)
-    hit = await _cache.get(key, ttl)
+    # NOTE: _ResponseCache.get/set are sync; _RedisResponseCache.get/set are async.
+    # Use asyncio.iscoroutinefunction to dispatch correctly.
+    import asyncio
+    if asyncio.iscoroutinefunction(_cache.get):
+        hit = await _cache.get(key, ttl)
+    else:
+        hit = _cache.get(key, ttl)
     if hit is not None:
         body, _ctype = hit
         try:
@@ -159,7 +165,10 @@ async def cached_response(
     if isinstance(result, dict) and result.get("ok"):
         try:
             body = json.dumps(result, default=str).encode("utf-8")
-            await _cache.set(key, body, b"application/json", ttl)
+            if asyncio.iscoroutinefunction(_cache.set):
+                await _cache.set(key, body, b"application/json", ttl)
+            else:
+                _cache.set(key, body, b"application/json", ttl)
         except Exception:
             pass
     return result

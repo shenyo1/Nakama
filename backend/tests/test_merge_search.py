@@ -63,8 +63,8 @@ def client():
 @pytest.mark.skipif(MISSING_COMIC, reason="too many sources missing offline fixtures")
 @pytest.mark.network
 def test_comic_fallback_returns_merged_key(client):
-    """/comic/search/{q} now also returns a 'merged' list of deduped titles."""
-    r = client.get("/comic/search/solo")
+    """/comic-fallback/search/{q} now also returns a 'merged' list of deduped titles."""
+    r = client.get("/comic-fallback/search/solo")
     assert r.status_code == 200
     body = r.json()
     assert body["ok"] is True
@@ -81,7 +81,7 @@ def test_comic_fallback_returns_merged_key(client):
 @pytest.mark.skipif(MISSING_COMIC, reason="too many sources missing offline fixtures")
 @pytest.mark.network
 def test_comic_fallback_merged_items_have_source_annotations(client):
-    r = client.get("/comic/search/solo")
+    r = client.get("/comic-fallback/search/solo")
     data = r.json()["data"]
     if data["merged"]:
         for it in data["merged"][:5]:
@@ -94,7 +94,7 @@ def test_comic_fallback_merged_items_have_source_annotations(client):
 @pytest.mark.skipif(MISSING_COMIC, reason="too many sources missing offline fixtures")
 @pytest.mark.network
 def test_comic_fallback_merged_sorted_by_coverage(client):
-    r = client.get("/comic/search/magic")
+    r = client.get("/comic-fallback/search/magic")
     data = r.json()["data"]
     counts = [it.get("_source_count", 0) for it in data["merged"]]
     assert counts == sorted(counts, reverse=True)
@@ -104,7 +104,7 @@ def test_comic_fallback_merged_sorted_by_coverage(client):
 @pytest.mark.network
 def test_comic_fallback_primary_param_still_works(client):
     """Backward compat: ?primary=kiryuu still works."""
-    r = client.get("/comic/search/solo?primary=kiryuu")
+    r = client.get("/comic-fallback/search/solo?primary=kiryuu")
     assert r.status_code == 200
     assert r.json()["data"]["primary"] == "kiryuu"
     assert r.json()["data"]["sources_tried"][0] == "kiryuu"

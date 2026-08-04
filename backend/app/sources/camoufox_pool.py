@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import time
 from typing import Optional, Any
 
@@ -45,6 +46,12 @@ _sem = asyncio.Semaphore(2)
 
 DISABLED = False  # Set True via env (e.g. for tests/offline mode)
 
+# Honour OFFLINE_MODE at import time so we never spawn a browser during
+# unit tests or fixtures-only runs (where every fetch would otherwise hang
+# waiting on a Camoufox launch that never produces real data).
+if os.getenv("OFFLINE_MODE", "").strip() in ("1", "true", "yes"):
+    DISABLED = True
+
 
 async def fetch_via_camoufox(url: str, timeout: int = 30) -> Optional[str]:
     """Fetch a URL using a shared Camoufox browser.
@@ -55,6 +62,12 @@ async def fetch_via_camoufox(url: str, timeout: int = 30) -> Optional[str]:
     global _concurrent_users, _last_used
 
     if DISABLED:
+        return None
+
+    # Defence in depth: re-check OFFLINE_MODE on every call. Some test
+    # harnesses mutate the env after import, so we cannot rely on the
+    # import-time check alone.
+    if os.getenv("OFFLINE_MODE", "").strip() in ("1", "true", "yes"):
         return None
 
     async with _sem:  # bound concurrent pages

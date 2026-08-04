@@ -1,5 +1,9 @@
 # Nakama Frontend — Next.js demo for Nakama
 
+**Version:** v1.0.0
+**Last updated:** 2026-08-01
+**Live:** https://app.mynakama.web.id
+
 Dark-themed demo UI for the [shenyo1/Nakama](https://github.com/shenyo1/Nakama)
 FastAPI backend (Nakama).
 

@@ -19,6 +19,7 @@ htmlcov/
 .env
 .env.local
 .env.production
+.env.backup-*
 *.sqlite
 *.sqlite-journal
 nakamadb.sqlite

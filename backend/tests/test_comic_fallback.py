@@ -1,4 +1,10 @@
-"""Tests for the cross-source comic fallback router."""
+"""Tests for the cross-source comic fallback router.
+
+NOTE on paths: the router is mounted at ``/comic-fallback`` (see
+``app/routers/comic_fallback.py:34``), so these tests target
+``/comic-fallback/{search|manga|chapter}/...`` — *not* ``/comic/...``
+(which is owned by the source-specific ``comic_router``).
+"""
 from __future__ import annotations
 
 import hashlib, json, os, pytest
@@ -45,7 +51,7 @@ async def client():
 @pytest.mark.network
 @pytest.mark.asyncio
 async def test_fallback_search_ok(client):
-    r = await client.get("/comic/search/solo")
+    r = await client.get("/comic-fallback/search/solo")
     assert r.status_code == 200
     body = r.json()
     assert body["ok"] is True
@@ -61,7 +67,7 @@ async def test_fallback_search_ok(client):
 @pytest.mark.asyncio
 @pytest.mark.network
 async def test_fallback_search_with_primary(client):
-    r = await client.get("/comic/search/solo?primary=komiku")
+    r = await client.get("/comic-fallback/search/solo?primary=komiku")
     assert r.status_code == 200
     body = r.json()
     assert body["data"]["primary"] == "komiku"
@@ -71,7 +77,7 @@ async def test_fallback_search_with_primary(client):
 @pytest.mark.asyncio
 @pytest.mark.network
 async def test_fallback_search_bad_primary(client):
-    r = await client.get("/comic/search/solo?primary=does-not-exist")
+    r = await client.get("/comic-fallback/search/solo?primary=does-not-exist")
     assert r.status_code == 404
 
 
@@ -80,7 +86,7 @@ async def test_fallback_search_bad_primary(client):
 @pytest.mark.network
 async def test_fallback_manga_offline(client):
     """In offline mode, manga with slug 'solo-leveling' is in komiku fixtures."""
-    r = await client.get("/comic/manga/solo-leveling")
+    r = await client.get("/comic-fallback/manga/solo-leveling")
     assert r.status_code == 200
     body = r.json()
     data = body["data"]
@@ -93,7 +99,7 @@ async def test_fallback_manga_offline(client):
 @pytest.mark.asyncio
 @pytest.mark.network
 async def test_fallback_manga_with_primary(client):
-    r = await client.get("/comic/manga/solo-leveling?primary=kiryuu")
+    r = await client.get("/comic-fallback/manga/solo-leveling?primary=kiryuu")
     assert r.status_code == 200
     data = r.json()["data"]
     assert data["primary"] == "kiryuu"
@@ -104,7 +110,7 @@ async def test_fallback_manga_with_primary(client):
 @pytest.mark.asyncio
 async def test_fallback_chapter_returns_metadata_or_502(client):
     """Chapter lookup should return metadata if found, or 502 if no source has it."""
-    r = await client.get("/comic/chapter/solo-leveling-chapter-1")
+    r = await client.get("/comic-fallback/chapter/solo-leveling-chapter-1")
     if r.status_code == 200:
         body = r.json()
         data = body["data"]

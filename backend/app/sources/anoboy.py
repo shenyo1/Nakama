@@ -90,6 +90,12 @@ async def _fetch_with_camoufox(url: str, timeout: int = 30) -> Optional[str]:
     headless container). Returns None on total failure so the caller can
     return empty results instead of raising.
     """
+    # Short-circuit when running offline (tests, fixtures). Without this
+    # gate, the test suite hangs every time /search fans out across comic
+    # sources — westmanga/anoboy's search() invokes this helper regardless
+    # of whether the caller wants a real page render.
+    if os.environ.get("OFFLINE_MODE", "").strip() in ("1", "true", "yes"):
+        return None
     from .camoufox_pool import fetch_via_camoufox
     try:
         html = await fetch_via_camoufox(url, timeout=timeout)

@@ -271,6 +271,85 @@ Redis health counter and probes 3 times to climb back to **healthy**:
 
 Current health scoreboard: **21/21 sources healthy** (live).
 
+## ✨ v2.8.0 — Auto-repair, Nakama Originals, AI Comic Gen
+
+This release ships the **Creator Tier 5.1** (Nakama Originals) end-to-end
+plus several reliability improvements. All changes are additive on the
+v2.7 contract.
+
+### 🆕 New: Nakama Originals (Tier 5.1)
+
+Public showcase + creator dashboard for community-uploaded comics and novels.
+
+- `GET /originals` — public catalog (browse, filter by type/status)
+- `GET /originals/{slug}` — public detail page
+- `POST /creator/application` — submit to become a creator
+- `POST /creator/work` — creator uploads a new work (cover + metadata)
+- `POST /creator/work/{id}/chapter` — creator adds a chapter
+- `GET /creator/dashboard` — creator's portfolio + stats
+- Admin moderation endpoints under `/admin/creator/*`
+
+Models live in `app/original_models.py` and `app/creator_models.py`.
+Uploads go to `app/uploads/creator/` (gitignored).
+
+### 🆕 New: AI Comic Generation (`/ai/comic`)
+
+- `POST /ai/comic/generate` — text-to-image storyboard
+- `GET /ai/comic/gallery` — public gallery
+- `GET /ai/comic/{id}` — view a generated comic
+- `GET /ai/styles` — list available art styles (manga, manhwa, western, webtoon)
+
+Backed by Flux via FAL (`FAL_KEY` env). See `app/routers/ai_comic.py`.
+
+### 🆕 New: Disk auto-prune
+
+`scheduler.py` now watches `app/uploads/` and prunes anything older than
+30 days (configurable via `NAKAMA_UPLOAD_RETENTION_DAYS`). Prevents the
+realm from running out of disk space — a real failure mode observed at
+~94 % disk-full on 2026-07-30.
+
+### 🆕 New: cache_stats_async
+
+`response_cache.py` now exposes an async `cache_stats_async()` for use
+from FastAPI endpoints (which run inside an event loop). The sync
+`cache_stats()` falls back to a placeholder when called from a running
+loop.
+
+### 🆕 New: Source auto-repair
+
+`app/sources/auto_repair.py` monitors source health and triggers
+circuits, retries, and FlareSolverr restarts when a source goes down.
+Wired into `/sources/health?probe=true`.
+
+### 🆕 New: Startup source probe
+
+On server boot, the scheduler pings every source once and seeds the
+health scoreboard. Dashboard opens with real data instead of "unknown".
+
+### 🐛 Fix: response_cache sync/await mismatch
+
+`_ResponseCache.get()` / `set()` are sync (in-memory dict), but earlier
+code called them with `await`. This caused `TypeError: object NoneType
+can't be used in 'await' expression` on every cached endpoint when
+`RESPONSE_CACHE_REDIS_URL` was unset. The dispatch now uses
+`asyncio.iscoroutinefunction` to call synchronously for the memory
+backend and `await` for the Redis backend.
+
+### 🐛 Fix: 3 failing auth tests
+
+The `api_key_enabled` fixture mutated the cached `Settings` instance,
+but the auth middleware re-read `get_settings().api_key` per request.
+The fixture now uses `monkeypatch` semantics; the sync-vs-async cache
+interaction is now explicit.
+
+### 📊 Stats
+
+- **21 sources** (7 anime, 9 comic, 5 novel) — all live
+- **125 endpoints**, **93 documented paths**
+- **304 tests collected**, **292 passing** (12 pre-existing test bugs
+  unrelated to this release — see `audit/2026-08-01-total-audit.md`)
+- **0 high-severity CVEs** in dependencies
+
 ## ✨ v2.7.0 — Observability, security, accessibility
 
 Major release that closes several production-readiness gaps. All changes

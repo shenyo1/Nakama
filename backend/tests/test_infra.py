@@ -44,7 +44,10 @@ async def test_auth_disabled_by_default(client):
 @pytest.mark.asyncio
 async def test_auth_missing_header_returns_401(client, api_key_enabled):
     """When API_KEY is set, a request without X-API-Key is rejected (401)."""
-    r = await client.get("/anime/otakudesu/home")
+    # /search is in _METERED_PREFIXES (auth-required) and works with API key
+    # (doesn't require a User). It's the canonical "is the caller authenticated"
+    # endpoint — not in the inline public exemptions (those are for SEO/caching).
+    r = await client.get("/search?q=test")
     assert r.status_code == 401
     body = r.json()
     assert body["ok"] is False
@@ -55,7 +58,7 @@ async def test_auth_missing_header_returns_401(client, api_key_enabled):
 async def test_auth_wrong_header_returns_401(client, api_key_enabled):
     """A wrong X-API-Key value is rejected with 401."""
     r = await client.get(
-        "/anime/otakudesu/home",
+        "/search?q=test",
         headers={"X-API-Key": "wrong-value"},
     )
     assert r.status_code == 401
@@ -65,10 +68,12 @@ async def test_auth_wrong_header_returns_401(client, api_key_enabled):
 async def test_auth_correct_header_succeeds(client, api_key_enabled):
     """The correct X-API-Key value lets the request through."""
     r = await client.get(
-        "/anime/otakudesu/home",
+        "/search?q=test",
         headers={"X-API-Key": api_key_enabled},
     )
-    assert r.status_code == 200
+    # /search with API key passes the middleware; the endpoint may then 200/422
+    # depending on params. Either is acceptable — we only care that auth passed.
+    assert r.status_code in (200, 422)
 
 
 @pytest.mark.asyncio
@@ -81,14 +86,16 @@ async def test_auth_public_paths_exempt(client, api_key_enabled):
 
 @pytest.mark.asyncio
 async def test_auth_comic_endpoints_also_protected(client, api_key_enabled):
-    """Auth applies to /comic endpoints too."""
-    r = await client.get("/comic/komiku/home")
+    """Auth applies to metered endpoints (e.g., /search)."""
+    # /search is METERED (auth-required), unlike /comic/<source>/home which is
+    # intentionally public for SEO/caching.
+    r = await client.get("/search?q=test")
     assert r.status_code == 401
     r = await client.get(
-        "/comic/komiku/home",
+        "/search?q=test",
         headers={"X-API-Key": api_key_enabled},
     )
-    assert r.status_code == 200
+    assert r.status_code in (200, 422)
 
 
 # ---------------------------------------------------------------------------

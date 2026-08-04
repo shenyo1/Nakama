@@ -93,6 +93,11 @@ async def _fetch_with_camoufox(url: str, timeout: int = 30) -> Optional[str]:
     Falls back to FlareSolverr when Camoufox is unavailable.
     Returns None if neither is available.
     """
+    # Short-circuit when running offline (tests, fixtures). Camoufox would
+    # launch a real browser and never return useful data; OFFLINE_MODE means
+    # the caller already has fixtures loaded or doesn't care about the body.
+    if os.environ.get("OFFLINE_MODE", "").strip() in ("1", "true", "yes"):
+        return None
     if os.environ.get("WESTMANGA_USE_CAMOUFOX") == "0":
         return None
 

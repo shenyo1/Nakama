@@ -57,12 +57,25 @@ export interface ApiResponse { "ok"?: boolean; "source"?: string; "data": unknow
 export interface ApiResponse_AnimeDetail { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "status"?: string; "score"?: string; "released"?: string; "japanese_title"?: string; "synopsis"?: string; "genres"?: Array<string>; "episodes_count"?: string; "studios"?: string; "episodes"?: Array<Record<string, unknown>> } }
 export interface ApiResponse_ComicDetail { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> } }
 export interface ApiResponse_NovelDetail { "ok"?: boolean; "source"?: string; "data": { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "status"?: string; "rating"?: string; "latest_chapter"?: string; "author"?: string; "synopsis"?: string; "genres"?: Array<string>; "chapters"?: Array<Record<string, unknown>> } }
+export interface Body_upload_avatar_creator_profile_avatar_post { "file": string }
+export interface Body_upload_cover_creator_upload_cover_post { "file": string }
 export interface BookmarkCreate { "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "title"?: string; "thumbnail"?: string; "note"?: string }
 export interface BroadcastBody { "event": Record<string, unknown> }
 export interface ChangePasswordBody { "current_password": string; "new_password": string }
+export interface ChapterCreate { "series_id": number; "title": string; "chapter_number": number; "content": string; "content_format"?: string; "published"?: boolean }
+export interface ChapterOut { "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }
+export interface ChapterUpdate { "title"?: string; "chapter_number"?: number; "content"?: string; "content_format"?: string; "published"?: boolean }
 export interface ClientError { "message": string; "stack"?: string; "source"?: string; "severity"?: string; "extra"?: Record<string, unknown> }
 export interface ComicDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> }
+export interface ComicGenerateRequest { "prompt": string; "style"?: string; "panels"?: number }
+export interface CommentCreate { "kind": "anime" | "comic" | "novel"; "body": string; "parent_id"?: number }
+export interface CommentOut { "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "body": string; "parent_id"?: number; "created_at": string; "replies"?: Array<{ "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "body": string; "parent_id"?: number; "created_at": string; "replies"?: Array<unknown> }> }
 export interface ConfirmBody { "token": string }
+export interface CreatorApplicationIn { "pen_name": string; "bio"?: string; "portfolio_url"?: string; "sample_work"?: string; "content_types": string }
+export interface CreatorBrowseItem { "id": number; "display_name": string; "avatar_url"?: string; "bio"?: string; "follower_count"?: number; "series_count"?: number; "verified"?: boolean }
+export interface DashboardOut { "profile": { "id": number; "user_id": number; "display_name": string; "bio"?: string; "avatar_url"?: string; "social_links"?: Record<string, unknown>; "follower_count"?: number; "total_views"?: number; "verified"?: boolean; "created_at": string }; "series_count": number; "total_chapters": number; "total_views": number; "total_followers": number; "revenue_estimate": number; "recent_series": Array<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }>; "top_chapters": Array<{ "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> }
+export interface FeedItem { "type": "review" | "comment" | "list"; "user_id": number; "username"?: string; "data": Record<string, unknown>; "created_at": string }
+export interface FollowStatus { "following": boolean; "follower_count": number }
 export interface ForgotBody { "email": string; "base_url"?: string }
 export interface HTTPValidationError { "detail"?: Array<{ "loc": Array<string | number>; "msg": string; "type": string; "input"?: unknown; "ctx"?: Record<string, unknown> }> }
 export interface HistoryCreate { "source": string; "content_id": string; "content_type": "anime" | "comic" | "novel"; "chapter_id": string; "user_id"?: number }
@@ -71,11 +84,28 @@ export interface LoginBody { "username": string; "password": string }
 export interface NovelDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "status"?: string; "rating"?: string; "latest_chapter"?: string; "author"?: string; "synopsis"?: string; "genres"?: Array<string>; "chapters"?: Array<Record<string, unknown>> }
 export interface PreferencesIn { "payload"?: Record<string, unknown> }
 export interface PreferencesOut { "payload": Record<string, unknown>; "updated_at"?: string }
+export interface ProfileOut { "id": number; "user_id": number; "display_name": string; "bio"?: string; "avatar_url"?: string; "social_links"?: Record<string, unknown>; "follower_count"?: number; "total_views"?: number; "verified"?: boolean; "created_at": string }
+export interface ProfileUpdate { "display_name"?: string; "bio"?: string; "social_links"?: Record<string, unknown> }
+export interface ReadingListCreate { "name": string; "is_public"?: boolean }
+export interface ReadingListItemCreate { "source": string; "slug": string; "kind": "anime" | "comic" | "novel" }
+export interface ReadingListItemOut { "id": number; "source": string; "slug": string; "kind": string; "added_at": string }
+export interface ReadingListOut { "id": number; "user_id": number; "username"?: string; "name": string; "is_public": boolean; "created_at": string; "items"?: Array<{ "id": number; "source": string; "slug": string; "kind": string; "added_at": string }> }
+export interface ReadingListUpdate { "name"?: string; "is_public"?: boolean }
+export interface RecommendationItem { "title": string; "slug"?: string; "source"?: string; "score": number; "thumbnail"?: string; "genres"?: Array<string> }
+export interface RecommendationRequest { "title": string; "kind": "anime" | "comic" | "novel"; "limit"?: number; "synopsis"?: string; "genres"?: Array<string> }
+export interface RecommendationResponse { "ok"?: boolean; "anchor": string; "kind": string; "recommendations": Array<{ "title": string; "slug"?: string; "source"?: string; "score": number; "thumbnail"?: string; "genres"?: Array<string> }>; "cached"?: boolean }
 export interface RefreshBody { "refresh_token": string }
-export interface RegisterBody { "username": string; "password": string; "email"?: string }
 export interface ResetBody { "token": string; "new_password": string }
+export interface ReviewAggregate { "count": number; "avg_rating": number; "distribution": Record<string, unknown> }
+export interface ReviewCreate { "kind": "anime" | "comic" | "novel"; "rating": number; "body": string }
+export interface ReviewOut { "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "rating": number; "body": string; "created_at": string }
+export interface SeriesCreate { "title": string; "description"?: string; "kind": string; "cover_image"?: string }
+export interface SeriesOut { "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }
+export interface SeriesUpdate { "title"?: string; "description"?: string; "kind"?: string; "cover_image"?: string; "status"?: string; "published"?: boolean }
 export interface ValidationError { "loc": Array<string | number>; "msg": string; "type": string; "input"?: unknown; "ctx"?: Record<string, unknown> }
 export interface WebhookCreate { "url": string; "source"?: string; "content_type"?: "anime" | "comic" | "novel"; "secret"?: string }
+export interface app__routers__auth__RegisterBody { "username": string; "password": string; "email"?: string }
+export interface app__routers__creator__RegisterBody { "display_name": string; "bio"?: string; "social_links"?: Record<string, unknown> }
 
 // -- Endpoint groups --------------------------------------------------
 
@@ -876,7 +906,7 @@ export class Stats {
    * @see GET /admin/errors
    * Return the most recent client/server errors. Requires X-API-Key.
    */
-  async list_get_x(params?: { "limit"?: number; "severity"?: string }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async list_get_x_x_x(params?: { "limit"?: number; "severity"?: string }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.limit !== undefined) search.set("limit", String(p.limit));
@@ -884,6 +914,109 @@ export class Stats {
     const qs = search.toString();
     const suffix = qs ? `?${qs}` : "";
     const url = `${this._client.baseUrl}/admin/errors${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * List Gallery
+   * @see GET /ai/gallery
+   * Browse community-generated AI comics.
+   */
+  async list_get_x_x(params?: { "style"?: string; "limit"?: number; "offset"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.style !== undefined) search.set("style", String(p.style));
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    if (p.offset !== undefined) search.set("offset", String(p.offset));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/ai/gallery${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Get Comic
+   * @see GET /ai/gallery/{public_id}
+   * Get a single generated comic by its public ID.
+   */
+  async get_get_x_x_x_x(public_id: string): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/ai/gallery/${public_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Generate Comic
+   * @see POST /ai/generate
+   * Generate an AI comic from a text prompt.
+   * 
+   * Accepts a story prompt, style selection, and panel count (1-6).
+   * Returns panel descriptions and generated image URLs.
+   */
+  async generate(params?: { body: { "prompt": string; "style"?: string; "panels"?: number } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/ai/generate${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * List Styles
+   * @see GET /ai/styles
+   * List the art styles accepted by ``POST /ai/generate``.
+   * 
+   * Single source of truth: the same ``STYLE_MODIFIERS`` dict that drives
+   * panel generation. Frontends use this to render a style picker without
+   * hardcoding the catalog, so adding a style here automatically extends
+   * both the picker and the validator.
+   * 
+   * Public (no auth) — matches ``/ai/gallery`` and lives under the ``/ai``
+   * prefix that ``_PUBLIC_PREFIXES`` whitelists in ``app/main.py``.
+   */
+  async list_get_x(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/ai/styles${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
     const init: RequestInit = {
       method: "GET",
@@ -1273,7 +1406,7 @@ export class Stats {
 
   /**
    * Chapter images across comic sources with fallback
-   * @see GET /comic/chapter/{slug}
+   * @see GET /comic-fallback/chapter/{slug}
    * First source returning a non-empty ``images`` list wins.
    * 
    * Komikcast (which needs a JWT) is intentionally last so other free sources
@@ -1285,7 +1418,7 @@ export class Stats {
     if (p.primary !== undefined) search.set("primary", String(p.primary));
     const qs = search.toString();
     const suffix = qs ? `?${qs}` : "";
-    const url = `${this._client.baseUrl}/comic/chapter/${slug}${suffix}`;
+    const url = `${this._client.baseUrl}/comic-fallback/chapter/${slug}${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
     const init: RequestInit = {
       method: "GET",
@@ -1301,7 +1434,7 @@ export class Stats {
 
   /**
    * Find manga detail across comic sources with fallback
-   * @see GET /comic/manga/{slug}
+   * @see GET /comic-fallback/manga/{slug}
    */
   async fallback_get(slug: string, params?: { "primary"?: string }): Promise<unknown> {
     const p: any = (params as any) ?? {};
@@ -1309,7 +1442,7 @@ export class Stats {
     if (p.primary !== undefined) search.set("primary", String(p.primary));
     const qs = search.toString();
     const suffix = qs ? `?${qs}` : "";
-    const url = `${this._client.baseUrl}/comic/manga/${slug}${suffix}`;
+    const url = `${this._client.baseUrl}/comic-fallback/manga/${slug}${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
     const init: RequestInit = {
       method: "GET",
@@ -1325,7 +1458,7 @@ export class Stats {
 
   /**
    * Search across comic sources with fallback
-   * @see GET /comic/search/{query}
+   * @see GET /comic-fallback/search/{query}
    */
   async fallback(query: string, params?: { "primary"?: string }): Promise<unknown> {
     const p: any = (params as any) ?? {};
@@ -1333,10 +1466,550 @@ export class Stats {
     if (p.primary !== undefined) search.set("primary", String(p.primary));
     const qs = search.toString();
     const suffix = qs ? `?${qs}` : "";
-    const url = `${this._client.baseUrl}/comic/search/${query}${suffix}`;
+    const url = `${this._client.baseUrl}/comic-fallback/search/${query}${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
     const init: RequestInit = {
       method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Get threaded comments for content
+   * @see GET /comments/{source}/{slug}
+   */
+  async get_get_x(source: string, slug: string, params?: { "kind"?: "anime" | "comic" | "novel"; "page"?: number; "page_size"?: number }): Promise<Array<{ "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "body": string; "parent_id"?: number; "created_at": string; "replies"?: Array<unknown> }>> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.kind !== undefined) search.set("kind", String(p.kind));
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/comments/${source}/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as Array<{ "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "body": string; "parent_id"?: number; "created_at": string; "replies"?: Array<unknown> }>;
+  }
+
+  /**
+   * Post a comment on content
+   * @see POST /comments/{source}/{slug}
+   */
+  async create_post_x_x(source: string, slug: string, params?: { body: { "kind": "anime" | "comic" | "novel"; "body": string; "parent_id"?: number } }): Promise<{ "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "body": string; "parent_id"?: number; "created_at": string; "replies"?: Array<unknown> }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/comments/${source}/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "body": string; "parent_id"?: number; "created_at": string; "replies"?: Array<unknown> };
+  }
+
+  /**
+   * Recent community activity feed
+   * @see GET /community/feed
+   * Returns the most recent reviews, comments, and public list creations.
+   * 
+   * Results are merged and sorted by creation time, newest first.
+   */
+  async community(params?: { "limit"?: number; "kind"?: "anime" | "comic" | "novel" }): Promise<Array<{ "type": "review" | "comment" | "list"; "user_id": number; "username"?: string; "data": Record<string, unknown>; "created_at": string }>> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    if (p.kind !== undefined) search.set("kind", String(p.kind));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/community/feed${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as Array<{ "type": "review" | "comment" | "list"; "user_id": number; "username"?: string; "data": Record<string, unknown>; "created_at": string }>;
+  }
+
+  /**
+   * Browse Creators
+   * @see GET /creator/browse
+   * Browse all registered creators (public).
+   */
+  async browse(params?: { "limit"?: number; "offset"?: number }): Promise<Array<{ "id": number; "display_name": string; "avatar_url"?: string; "bio"?: string; "follower_count"?: number; "series_count"?: number; "verified"?: boolean }>> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    if (p.offset !== undefined) search.set("offset", String(p.offset));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/creator/browse${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as Array<{ "id": number; "display_name": string; "avatar_url"?: string; "bio"?: string; "follower_count"?: number; "series_count"?: number; "verified"?: boolean }>;
+  }
+
+  /**
+   * Browse Creator Detail
+   * @see GET /creator/browse/{creator_id}
+   * View a creator's public profile and their published series.
+   */
+  async browse_get(creator_id: string): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/browse/${creator_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Browse Creator Series
+   * @see GET /creator/browse/{creator_id}/series/{series_id}
+   * View a public series and its published chapters.
+   */
+  async browse_get_x(creator_id: string, series_id: string): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/browse/${creator_id}/series/${series_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Create Chapter
+   * @see POST /creator/chapters
+   * Upload a new chapter to a series owned by the authenticated creator.
+   */
+  async create_post_x_x_x_x_x(params?: { body: { "series_id": number; "title": string; "chapter_number": number; "content": string; "content_format"?: string; "published"?: boolean } }): Promise<{ "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/chapters${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string };
+  }
+
+  /**
+   * Delete Chapter
+   * @see DELETE /creator/chapters/{chapter_id}
+   * Delete a chapter.
+   */
+  async delete_delete_x_x_x(chapter_id: string): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/chapters/${chapter_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "DELETE",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Get My Chapter
+   * @see GET /creator/chapters/{chapter_id}
+   * Get a single chapter (must own the parent series).
+   */
+  async get_get_x_x_x_x_x_x_x_x(chapter_id: string): Promise<{ "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/chapters/${chapter_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string };
+  }
+
+  /**
+   * Update Chapter
+   * @see PUT /creator/chapters/{chapter_id}
+   * Update chapter content or metadata.
+   */
+  async update_put_x_x(chapter_id: string, params?: { body: { "title"?: string; "chapter_number"?: number; "content"?: string; "content_format"?: string; "published"?: boolean } }): Promise<{ "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/chapters/${chapter_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "PUT",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string };
+  }
+
+  /**
+   * Creator Dashboard
+   * @see GET /creator/dashboard
+   * Get creator dashboard with stats.
+   */
+  async creator(): Promise<{ "profile": { "id": number; "user_id": number; "display_name": string; "bio"?: string; "avatar_url"?: string; "social_links"?: Record<string, unknown>; "follower_count"?: number; "total_views"?: number; "verified"?: boolean; "created_at": string }; "series_count": number; "total_chapters": number; "total_views": number; "total_followers": number; "revenue_estimate": number; "recent_series": Array<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }>; "top_chapters": Array<{ "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/dashboard${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "profile": { "id": number; "user_id": number; "display_name": string; "bio"?: string; "avatar_url"?: string; "social_links"?: Record<string, unknown>; "follower_count"?: number; "total_views"?: number; "verified"?: boolean; "created_at": string }; "series_count": number; "total_chapters": number; "total_views": number; "total_followers": number; "revenue_estimate": number; "recent_series": Array<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }>; "top_chapters": Array<{ "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> };
+  }
+
+  /**
+   * Unfollow Creator
+   * @see DELETE /creator/follow/{creator_id}
+   * Unfollow a creator.
+   */
+  async unfollow(creator_id: string): Promise<{ "following": boolean; "follower_count": number }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/follow/${creator_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "DELETE",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "following": boolean; "follower_count": number };
+  }
+
+  /**
+   * Follow Creator
+   * @see POST /creator/follow/{creator_id}
+   * Follow a creator.
+   */
+  async follow(creator_id: string): Promise<{ "following": boolean; "follower_count": number }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/follow/${creator_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "following": boolean; "follower_count": number };
+  }
+
+  /**
+   * My Following
+   * @see GET /creator/followers
+   * List creator IDs that the authenticated user follows.
+   */
+  async my(): Promise<Array<number>> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/followers${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as Array<number>;
+  }
+
+  /**
+   * Get My Profile
+   * @see GET /creator/profile
+   * Get the authenticated user's creator profile.
+   */
+  async get_get_x_x_x_x_x_x(): Promise<{ "id": number; "user_id": number; "display_name": string; "bio"?: string; "avatar_url"?: string; "social_links"?: Record<string, unknown>; "follower_count"?: number; "total_views"?: number; "verified"?: boolean; "created_at": string }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/profile${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "user_id": number; "display_name": string; "bio"?: string; "avatar_url"?: string; "social_links"?: Record<string, unknown>; "follower_count"?: number; "total_views"?: number; "verified"?: boolean; "created_at": string };
+  }
+
+  /**
+   * Update My Profile
+   * @see PUT /creator/profile
+   * Update the authenticated user's creator profile.
+   */
+  async update_put(params?: { body: { "display_name"?: string; "bio"?: string; "social_links"?: Record<string, unknown> } }): Promise<{ "id": number; "user_id": number; "display_name": string; "bio"?: string; "avatar_url"?: string; "social_links"?: Record<string, unknown>; "follower_count"?: number; "total_views"?: number; "verified"?: boolean; "created_at": string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/profile${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "PUT",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "user_id": number; "display_name": string; "bio"?: string; "avatar_url"?: string; "social_links"?: Record<string, unknown>; "follower_count"?: number; "total_views"?: number; "verified"?: boolean; "created_at": string };
+  }
+
+  /**
+   * Upload Avatar
+   * @see POST /creator/profile/avatar
+   * Upload a creator avatar image.
+   */
+  async upload(): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/profile/avatar${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Register Creator
+   * @see POST /creator/register
+   * Register the authenticated user as a creator.
+   */
+  async register_post(params?: { body: { "display_name": string; "bio"?: string; "social_links"?: Record<string, unknown> } }): Promise<{ "id": number; "user_id": number; "display_name": string; "bio"?: string; "avatar_url"?: string; "social_links"?: Record<string, unknown>; "follower_count"?: number; "total_views"?: number; "verified"?: boolean; "created_at": string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/register${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "user_id": number; "display_name": string; "bio"?: string; "avatar_url"?: string; "social_links"?: Record<string, unknown>; "follower_count"?: number; "total_views"?: number; "verified"?: boolean; "created_at": string };
+  }
+
+  /**
+   * List My Series
+   * @see GET /creator/series
+   * List the authenticated creator's series.
+   */
+  async list_get_x_x_x_x_x(params?: { "kind"?: string; "limit"?: number; "offset"?: number }): Promise<Array<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }>> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.kind !== undefined) search.set("kind", String(p.kind));
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    if (p.offset !== undefined) search.set("offset", String(p.offset));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/creator/series${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as Array<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }>;
+  }
+
+  /**
+   * Create Series
+   * @see POST /creator/series
+   * Create a new series under the authenticated creator.
+   */
+  async create_post_x_x_x_x(params?: { body: { "title": string; "description"?: string; "kind": string; "cover_image"?: string } }): Promise<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/series${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string };
+  }
+
+  /**
+   * Delete Series
+   * @see DELETE /creator/series/{series_id}
+   * Delete a series and all its chapters.
+   */
+  async delete_delete_x_x(series_id: string): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/series/${series_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "DELETE",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Get My Series
+   * @see GET /creator/series/{series_id}
+   * Get a single series with its chapters.
+   */
+  async get_get_x_x_x_x_x_x_x(series_id: string): Promise<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/series/${series_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string };
+  }
+
+  /**
+   * Update Series
+   * @see PUT /creator/series/{series_id}
+   * Update series metadata.
+   */
+  async update_put_x(series_id: string, params?: { body: { "title"?: string; "description"?: string; "kind"?: string; "cover_image"?: string; "status"?: string; "published"?: boolean } }): Promise<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/series/${series_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "PUT",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string };
+  }
+
+  /**
+   * Upload Cover
+   * @see POST /creator/upload/cover
+   * Upload a cover image for a series. Returns the URL to use in series create/update.
+   */
+  async upload_post(): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/creator/upload/cover${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
       headers: hdrs,
     };
     const res = await this._client._fetch(url, init);
@@ -1374,6 +2047,46 @@ export class Stats {
   }
 
   /**
+   * Handle Http Get
+   * @see GET /graphql
+   */
+  async handle(): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/graphql${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Handle Http Post
+   * @see POST /graphql
+   */
+  async handle_post(): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/graphql${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
    * Health
    * @see GET /health
    * Liveness probe.
@@ -1384,6 +2097,252 @@ export class Stats {
   async health(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const suffix = "";
     const url = `${this._client.baseUrl}/health${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * List reading lists for the current user
+   * @see GET /lists
+   */
+  async get_get_x_x(): Promise<Array<{ "id": number; "user_id": number; "username"?: string; "name": string; "is_public": boolean; "created_at": string; "items"?: Array<{ "id": number; "source": string; "slug": string; "kind": string; "added_at": string }> }>> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/lists${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as Array<{ "id": number; "user_id": number; "username"?: string; "name": string; "is_public": boolean; "created_at": string; "items"?: Array<{ "id": number; "source": string; "slug": string; "kind": string; "added_at": string }> }>;
+  }
+
+  /**
+   * Create a reading list
+   * @see POST /lists
+   */
+  async create_post_x_x_x(params?: { body: { "name": string; "is_public"?: boolean } }): Promise<{ "id": number; "user_id": number; "username"?: string; "name": string; "is_public": boolean; "created_at": string; "items"?: Array<{ "id": number; "source": string; "slug": string; "kind": string; "added_at": string }> }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/lists${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "user_id": number; "username"?: string; "name": string; "is_public": boolean; "created_at": string; "items"?: Array<{ "id": number; "source": string; "slug": string; "kind": string; "added_at": string }> };
+  }
+
+  /**
+   * Delete a reading list
+   * @see DELETE /lists/{list_id}
+   */
+  async delete_delete_x(list_id: string): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/lists/${list_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "DELETE",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Get a single reading list
+   * @see GET /lists/{list_id}
+   */
+  async get_get_x_x_x(list_id: string): Promise<{ "id": number; "user_id": number; "username"?: string; "name": string; "is_public": boolean; "created_at": string; "items"?: Array<{ "id": number; "source": string; "slug": string; "kind": string; "added_at": string }> }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/lists/${list_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "user_id": number; "username"?: string; "name": string; "is_public": boolean; "created_at": string; "items"?: Array<{ "id": number; "source": string; "slug": string; "kind": string; "added_at": string }> };
+  }
+
+  /**
+   * Update a reading list
+   * @see PUT /lists/{list_id}
+   */
+  async update(list_id: string, params?: { body: { "name"?: string; "is_public"?: boolean } }): Promise<{ "id": number; "user_id": number; "username"?: string; "name": string; "is_public": boolean; "created_at": string; "items"?: Array<{ "id": number; "source": string; "slug": string; "kind": string; "added_at": string }> }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/lists/${list_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "PUT",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "user_id": number; "username"?: string; "name": string; "is_public": boolean; "created_at": string; "items"?: Array<{ "id": number; "source": string; "slug": string; "kind": string; "added_at": string }> };
+  }
+
+  /**
+   * Add an item to a reading list
+   * @see POST /lists/{list_id}/items
+   */
+  async add(list_id: string, params?: { body: { "source": string; "slug": string; "kind": "anime" | "comic" | "novel" } }): Promise<{ "id": number; "source": string; "slug": string; "kind": string; "added_at": string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/lists/${list_id}/items${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "source": string; "slug": string; "kind": string; "added_at": string };
+  }
+
+  /**
+   * Remove an item from a reading list
+   * @see DELETE /lists/{list_id}/items/{item_id}
+   */
+  async remove(list_id: string, item_id: string): Promise<unknown> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/lists/${list_id}/items/${item_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "DELETE",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Og Image
+   * @see GET /og
+   * Generate a dynamic OG image for social sharing.
+   */
+  async og(params?: { "title"?: string; "kind"?: string; "source"?: string; "thumbnail"?: string }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.title !== undefined) search.set("title", String(p.title));
+    if (p.kind !== undefined) search.set("kind", String(p.kind));
+    if (p.source !== undefined) search.set("source", String(p.source));
+    if (p.thumbnail !== undefined) search.set("thumbnail", String(p.thumbnail));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/og${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * List original series
+   * @see GET /originals
+   * List published original series. Defaults to featured only.
+   */
+  async list_get_x_x_x_x(params?: { "featured"?: boolean; "content_type"?: string; "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.featured !== undefined) search.set("featured", String(p.featured));
+    if (p.content_type !== undefined) search.set("content_type", String(p.content_type));
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/originals${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Apply to become a Nakama Originals creator
+   * @see POST /originals/apply
+   * Submit a creator application. Requires JWT auth.
+   */
+  async apply(params?: { body: { "pen_name": string; "bio"?: string; "portfolio_url"?: string; "sample_work"?: string; "content_types": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/originals/apply${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Original series detail
+   * @see GET /originals/{slug}
+   * Get original series detail with chapter list.
+   */
+  async get_get_x_x_x_x_x(slug: string): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/originals/${slug}${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
     const init: RequestInit = {
       method: "GET",
@@ -1450,6 +2409,101 @@ export class Stats {
       throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Get AI-powered content recommendations
+   * @see POST /recommendations
+   * Returns similar titles based on TF-IDF vectorisation and cosine similarity over title, synopsis, and genres. Supply as much context (synopsis, genres) as possible for the best results. Results are cached in Redis for 1 hour.
+   */
+  async get_post(params?: { body: { "title": string; "kind": "anime" | "comic" | "novel"; "limit"?: number; "synopsis"?: string; "genres"?: Array<string> } }): Promise<{ "ok"?: boolean; "anchor": string; "kind": string; "recommendations": Array<{ "title": string; "slug"?: string; "source"?: string; "score": number; "thumbnail"?: string; "genres"?: Array<string> }>; "cached"?: boolean }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/recommendations${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "anchor": string; "kind": string; "recommendations": Array<{ "title": string; "slug"?: string; "source"?: string; "score": number; "thumbnail"?: string; "genres"?: Array<string> }>; "cached"?: boolean };
+  }
+
+  /**
+   * Get reviews for content
+   * @see GET /reviews/{source}/{slug}
+   */
+  async get(source: string, slug: string, params?: { "kind"?: "anime" | "comic" | "novel"; "page"?: number; "page_size"?: number }): Promise<Array<{ "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "rating": number; "body": string; "created_at": string }>> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.kind !== undefined) search.set("kind", String(p.kind));
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/reviews/${source}/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as Array<{ "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "rating": number; "body": string; "created_at": string }>;
+  }
+
+  /**
+   * Submit a review for content
+   * @see POST /reviews/{source}/{slug}
+   */
+  async create_post_x(source: string, slug: string, params?: { body: { "kind": "anime" | "comic" | "novel"; "rating": number; "body": string } }): Promise<{ "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "rating": number; "body": string; "created_at": string }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/reviews/${source}/${slug}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "rating": number; "body": string; "created_at": string };
+  }
+
+  /**
+   * Get review stats for content
+   * @see GET /reviews/{source}/{slug}/stats
+   */
+  async get_get(source: string, slug: string, params?: { "kind"?: "anime" | "comic" | "novel" }): Promise<{ "count": number; "avg_rating": number; "distribution": Record<string, unknown> }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.kind !== undefined) search.set("kind", String(p.kind));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/reviews/${source}/${slug}/stats${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "count": number; "avg_rating": number; "distribution": Record<string, unknown> };
   }
 
   /**
@@ -1533,6 +2587,56 @@ export class Stats {
   }
 
   /**
+   * Trending All
+   * @see GET /trending
+   * Get trending items across all kinds.
+   */
+  async trending_get(params?: { "limit"?: number }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/trending${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
+   * Popular Kind
+   * @see GET /trending/popular/{kind}
+   * Get all-time popular items for a specific kind.
+   */
+  async popular(kind: string, params?: { "limit"?: number }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/trending/popular/${kind}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
    * Trending titles
    * @see GET /trending/{content_type}
    */
@@ -1554,6 +2658,31 @@ export class Stats {
       throw new NakamaApiError(res.status, text || res.statusText);
     }
     return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Trending Kind
+   * @see GET /trending/{kind}
+   * Get trending items for a specific kind.
+   */
+  async trending_get_x(kind: string, params?: { "limit"?: number }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/trending/${kind}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
   }
 
   /**

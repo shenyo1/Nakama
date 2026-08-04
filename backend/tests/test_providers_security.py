@@ -58,7 +58,7 @@ async def test_multi_api_key_accepted(api_key_multi):
 @pytest.mark.asyncio
 async def test_multi_api_key_rejects_unknown(api_key_multi):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-        r = await c.get("/comic/komiku/home", headers={"X-API-Key": "wrong-key"})
+        r = await c.get("/preferences", headers={"X-API-Key": "wrong-key"})
         assert r.status_code == 401
 
 

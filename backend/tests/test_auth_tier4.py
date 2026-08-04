@@ -61,11 +61,11 @@ async def test_jwt_access_protected_route_when_api_key_set(client, api_key_enabl
     assert login.status_code == 200
     access = login.json()["data"]["access_token"]
 
-    r0 = await client.get("/comic/komiku/home")
+    r0 = await client.get("/preferences")
     assert r0.status_code == 401
 
     r1 = await client.get(
-        "/comic/komiku/home", headers={"Authorization": f"Bearer {access}"}
+        "/preferences", headers={"Authorization": f"Bearer {access}"}
     )
     assert r1.status_code == 200
 

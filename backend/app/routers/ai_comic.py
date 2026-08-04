@@ -201,6 +201,43 @@ async def _generate_panel_image(
 # ---------------------------------------------------------------------------
 
 
+class StyleInfo(BaseModel):
+    """One entry in the public style catalog.
+
+    Kept as a separate model so future additions (preview image, sample
+    panels, model strengths) can land without churning the wire format.
+    """
+
+    id: str = Field(..., description="Stable style identifier (matches ``ComicGenerateRequest.style``).")
+    description: str = Field(..., description="Prompt-modifier appended to each panel under this style.")
+
+
+@router.get("/styles", response_model=ApiResponse)
+async def list_styles(request: Request):
+    """List the art styles accepted by ``POST /ai/generate``.
+
+    Single source of truth: the same ``STYLE_MODIFIERS`` dict that drives
+    panel generation. Frontends use this to render a style picker without
+    hardcoding the catalog, so adding a style here automatically extends
+    both the picker and the validator.
+
+    Public (no auth) — matches ``/ai/gallery`` and lives under the ``/ai``
+    prefix that ``_PUBLIC_PREFIXES`` whitelists in ``app/main.py``.
+    """
+    items = [
+        StyleInfo(id=style_id, description=modifier).model_dump()
+        for style_id, modifier in STYLE_MODIFIERS.items()
+    ]
+    return ApiResponse(
+        source="ai",
+        data={
+            "items": items,
+            "total": len(items),
+            "ids": list(STYLE_MODIFIERS.keys()),
+        },
+    )
+
+
 @router.post("/generate", response_model=ApiResponse)
 async def generate_comic(
     body: ComicGenerateRequest,

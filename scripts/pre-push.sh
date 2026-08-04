@@ -104,6 +104,21 @@ if [ -d "frontend" ]; then
     fi
 fi
 
+# ── 6. OPENAPI SNAPSHOT CHECK ──────────────────────────────────
+echo ""
+echo "📦 Check 6: OpenAPI + TS SDK snapshot freshness..."
+if [ -d "backend" ]; then
+    if python3 scripts/sync_openapi.py --check > /tmp/nakama-openapi-check.log 2>&1; then
+        echo -e "${GREEN}  ✅ PASS${NC}: openapi.json + sdks/ts/src/index.ts are in sync"
+        PASS=$((PASS + 1))
+    else
+        echo -e "${RED}  ❌ FAIL${NC}: OpenAPI artifacts are stale — regenerate with:"
+        echo "       python scripts/sync_openapi.py"
+        tail -5 /tmp/nakama-openapi-check.log | sed 's/^/       /'
+        FAIL=$((FAIL + 1))
+    fi
+fi
+
 # ── SUMMARY ──────────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
