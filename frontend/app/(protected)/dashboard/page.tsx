@@ -250,7 +250,7 @@ export default async function DashboardPage() {
         <p>
           Live API:{" "}
           <a
-            href="https://mynakama.web.id/docs"
+            href="https://app.mynakama.web.id/docs"
             className="text-sakura-400 hover:underline"
             target="_blank"
             rel="noreferrer"

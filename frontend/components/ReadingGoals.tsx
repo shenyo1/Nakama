@@ -37,7 +37,7 @@ export default function ReadingGoals() {
       return;
     }
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE || "https://mynakama.web.id"}/user/streak`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE || "https://app.mynakama.web.id"}/user/streak`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())

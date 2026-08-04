@@ -28,7 +28,7 @@ export default function YearInManga() {
     }
 
     fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE || "https://mynakama.web.id"}/user/year-stats?year=${year}`,
+      `${process.env.NEXT_PUBLIC_API_BASE || "https://app.mynakama.web.id"}/user/year-stats?year=${year}`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
       .then((r) => r.json())

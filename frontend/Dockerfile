@@ -13,7 +13,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # Public origin only (safe to expose — no secrets)
-ARG NEXT_PUBLIC_API_BASE=https://mynakama.web.id
+ARG NEXT_PUBLIC_API_BASE=https://app.mynakama.web.id
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 RUN npm run build
 

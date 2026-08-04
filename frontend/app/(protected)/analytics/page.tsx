@@ -18,7 +18,7 @@ export default function AnalyticsPage() {
 
       <section className="grid gap-2 grid-cols-1 sm:gap-4 sm:grid-cols-2">
         <Link
-          href="https://mynakama.web.id/analytics"
+          href="https://app.mynakama.web.id/analytics"
           target="_blank"
           rel="noreferrer"
           className="card card-hover"
@@ -31,7 +31,7 @@ export default function AnalyticsPage() {
         </Link>
 
         <Link
-          href="https://mynakama.web.id/analytics/search"
+          href="https://app.mynakama.web.id/analytics/search"
           target="_blank"
           rel="noreferrer"
           className="card card-hover"
@@ -44,7 +44,7 @@ export default function AnalyticsPage() {
         </Link>
 
         <Link
-          href="https://mynakama.web.id/sources/health"
+          href="https://app.mynakama.web.id/sources/health"
           target="_blank"
           rel="noreferrer"
           className="card card-hover"
@@ -57,7 +57,7 @@ export default function AnalyticsPage() {
         </Link>
 
         <Link
-          href="https://mynakama.web.id/docs"
+          href="https://app.mynakama.web.id/docs"
           target="_blank"
           rel="noreferrer"
           className="card card-hover"

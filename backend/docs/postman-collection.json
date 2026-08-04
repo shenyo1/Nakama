@@ -2,13 +2,13 @@
   "info": {
     "_postman_id": "nakama-2025",
     "name": "Nakama API",
-    "description": "REST API for anime & comic data, aggregating multiple public sources behind one consistent JSON interface. Set OFFLINE_MODE=1 to serve local fixtures (no network required).\n\nProduction: https://mynakama.web.id\nSources: 3 endpoints",
+    "description": "REST API for anime & comic data, aggregating multiple public sources behind one consistent JSON interface. Set OFFLINE_MODE=1 to serve local fixtures (no network required).\n\nProduction: https://app.mynakama.web.id\nSources: 3 endpoints",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "https://mynakama.web.id"
+      "value": "https://app.mynakama.web.id"
     },
     {
       "key": "api_key",

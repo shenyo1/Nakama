@@ -46,7 +46,7 @@ class Settings:
             k.strip() for k in os.getenv("API_KEYS", "").split(",") if k.strip()
         ]
         # Allowed CORS origins. "*" = any (dev default). Production should set
-        # ALLOW_ORIGINS="https://app.mynakama.web.id".
+        # ALLOW_ORIGINS="https://mynakama.web.id,https://www.mynakama.web.id" (the frontend portal).
         self.allow_origins: list[str] = [
             o.strip() for o in os.getenv("ALLOW_ORIGINS", "*").split(",") if o.strip()
         ]

@@ -162,5 +162,5 @@ export default function ShareCard({
  */
 export function getShareImageUrl(title: string, kind: string): string {
   const encoded = encodeURIComponent(title.slice(0, 60));
-  return `https://mynakama.web.id/og?title=${encoded}&kind=${kind}`;
+  return `https://app.mynakama.web.id/og?title=${encoded}&kind=${kind}`;
 }

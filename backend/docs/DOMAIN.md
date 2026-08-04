@@ -9,7 +9,7 @@
 | Compose file | `docker-compose.prod.yml` |
 | Containers | `nakama-api` (127.0.0.1:8000), `nakama-redis` |
 | Nginx site | `/etc/nginx/sites-available/mynakama` (HTTP:80 + HTTPS:443) |
-| Public URL | `https://mynakama.web.id/health` → **200** |
+| Public URL | `https://app.mynakama.web.id/health` → **200** |
 | Cloudflare account | `afif210809@gmail.com` / Account `5e3b3e40c231fb24162a83f896bd1be3` |
 | Zone ID | `0b076074562ee224897377b539e11de8` |
 | CF nameservers | `jose.ns.cloudflare.com`, `nicole.ns.cloudflare.com` |
@@ -109,9 +109,9 @@ Saat ini nginx listen HTTP:80 untuk `mynakama.web.id`, jadi pakai
 
 ```bash
 # Dari HP / laptop (setelah NS active + A record)
-curl -fsS https://mynakama.web.id/health
-curl -fsS https://mynakama.web.id/stats
-curl -fsS https://mynakama.web.id/docs
+curl -fsS https://app.mynakama.web.id/health
+curl -fsS https://app.mynakama.web.id/stats
+curl -fsS https://app.mynakama.web.id/docs
 ```
 
 Kalau 522/521:

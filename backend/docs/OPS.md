@@ -1,14 +1,14 @@
 # Nakama production ops (VPS)
 
 ## URLs
-- API: https://mynakama.web.id
+- API: https://app.mynakama.web.id
 - API alias: https://api.mynakama.web.id
 - Frontend: https://app.mynakama.web.id
 - Status UI: https://app.mynakama.web.id/status
 - BFF proxy: https://app.mynakama.web.id/api/backend/<path>
-- Source health JSON: https://mynakama.web.id/sources/health
-- Docs: https://mynakama.web.id/docs
-- Liveness: https://mynakama.web.id/health (public)
+- Source health JSON: https://app.mynakama.web.id/sources/health
+- Docs: https://app.mynakama.web.id/docs
+- Liveness: https://app.mynakama.web.id/health (public)
 
 ## Secrets (this machine)
 - API key file: `/home/ubuntu/.config/nakama/api-key`
@@ -25,7 +25,7 @@
 
 ```bash
 KEY=$(cat /home/ubuntu/.config/nakama/api-key)
-curl -H "X-API-Key: $KEY" 'https://mynakama.web.id/anime/otakudesu/home'
+curl -H "X-API-Key: $KEY" 'https://app.mynakama.web.id/anime/otakudesu/home'
 # or via BFF (no key in browser):
 curl 'https://app.mynakama.web.id/api/backend/anime/otakudesu/home'
 ```

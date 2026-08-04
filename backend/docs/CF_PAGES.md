@@ -39,8 +39,8 @@ Cloudflare's `_worker.js` (edge) + static assets format.
 
 ```bash
 cd frontend
-NEXT_PUBLIC_API_BASE=https://mynakama.web.id npm run build
-NEXT_PUBLIC_API_BASE=https://mynakama.web.id npx @cloudflare/next-on-pages
+NEXT_PUBLIC_API_BASE=https://app.mynakama.web.id npm run build
+NEXT_PUBLIC_API_BASE=https://app.mynakama.web.id npx @cloudflare/next-on-pages
 # Output: .vercel/output/{static,functions}
 ```
 
@@ -61,7 +61,7 @@ NEXT_PUBLIC_API_BASE=https://mynakama.web.id npx @cloudflare/next-on-pages
    - **Root directory**: `frontend`  ← important!
    - **Environment variables**:
      - `NODE_VERSION=20`
-     - `NEXT_PUBLIC_API_BASE=https://mynakama.web.id`
+     - `NEXT_PUBLIC_API_BASE=https://app.mynakama.web.id`
 4. Custom domain: `app.mynakama.web.id` → set CNAME in DNS.
 
 ### Or use the auto-deploy workflow

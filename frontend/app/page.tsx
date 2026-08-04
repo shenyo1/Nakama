@@ -253,7 +253,7 @@ export default function HomePage() {
           </a>
           {" · "}
           <a
-            href="https://mynakama.web.id/docs"
+            href="https://app.mynakama.web.id/docs"
             className="text-sakura-400 hover:underline"
             target="_blank"
             rel="noreferrer"
@@ -262,7 +262,7 @@ export default function HomePage() {
           </a>
           {" · "}
           <a
-            href="https://mynakama.web.id/sources/health"
+            href="https://app.mynakama.web.id/sources/health"
             className="text-sakura-400 hover:underline"
             target="_blank"
             rel="noreferrer"
