@@ -44,8 +44,11 @@ export default async function ComicChapterPage({
   if (error) {
     return (
       <div className="space-y-4">
-        <BackLink href="/comic" label="Back" />
-        <div className="card text-sm text-sakura-200">{error}</div>
+        <BackLink href="/comic" label="Back to Comics" />
+        <div className="card text-sm text-sakura-200">
+          <p className="font-semibold mb-1">Chapter not found</p>
+          <p className="text-ink-400">{error}</p>
+        </div>
       </div>
     );
   }

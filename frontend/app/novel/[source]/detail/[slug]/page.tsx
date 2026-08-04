@@ -51,12 +51,45 @@ export default async function NovelDetailPage({
     return (
       <div className="space-y-4">
         <BackLink href="/novel" label="Back to Novels" />
-        <div className="card text-sm text-sakura-200">{error}</div>
+        <div className="card text-sm text-sakura-200">
+          <p className="font-semibold mb-1">Novel not found</p>
+          <p className="text-ink-400">{error}</p>
+          <p className="text-xs text-ink-500 mt-2">
+            Try{" "}
+            <Link href="/novel" className="text-sakura-400 hover:underline">
+              browsing novels
+            </Link>{" "}
+            or use{" "}
+            <Link href="/search" className="text-sakura-400 hover:underline">
+              search
+            </Link>.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!detail) return null;
+
+  // Detect empty detail (slug stale / source page missing)
+  const isEmpty =
+    !detail.title ||
+    (!detail.synopsis && !detail.chapters?.length && !detail.thumbnail);
+
+  if (isEmpty) {
+    return (
+      <div className="space-y-4">
+        <BackLink href="/novel" label="Back to Novels" />
+        <div className="card text-sm">
+          <p className="font-semibold mb-1 text-sakura-200">No content available</p>
+          <p className="text-ink-400">
+            We could not load details for this novel. The source may have
+            removed or moved this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

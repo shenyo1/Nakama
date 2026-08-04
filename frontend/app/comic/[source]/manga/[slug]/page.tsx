@@ -53,12 +53,45 @@ export default async function ComicMangaPage({
     return (
       <div className="space-y-4">
         <BackLink href="/comic" label="Back to Comics" />
-        <div className="card text-sm text-sakura-200">{error}</div>
+        <div className="card text-sm text-sakura-200">
+          <p className="font-semibold mb-1">Comic not found</p>
+          <p className="text-ink-400">{error}</p>
+          <p className="text-xs text-ink-500 mt-2">
+            Try{" "}
+            <Link href="/comic" className="text-sakura-400 hover:underline">
+              browsing comics
+            </Link>{" "}
+            or use{" "}
+            <Link href="/search" className="text-sakura-400 hover:underline">
+              search
+            </Link>.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!detail) return null;
+
+  // Detect empty detail (slug stale / source page missing)
+  const isEmpty =
+    !detail.title ||
+    (!detail.synopsis && !detail.chapters?.length && !detail.thumbnail);
+
+  if (isEmpty) {
+    return (
+      <div className="space-y-4">
+        <BackLink href="/comic" label="Back to Comics" />
+        <div className="card text-sm">
+          <p className="font-semibold mb-1 text-sakura-200">No content available</p>
+          <p className="text-ink-400">
+            We could not load details for this comic. The source may have
+            removed or moved this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

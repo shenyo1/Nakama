@@ -51,12 +51,56 @@ export default async function AnimeDetailPage({
     return (
       <div className="space-y-4">
         <BackLink href="/anime" label="Back to Anime" />
-        <div className="card text-sm text-sakura-200">{error}</div>
+        <div className="card text-sm text-sakura-200">
+          <p className="font-semibold mb-1">Anime not found</p>
+          <p className="text-ink-400">{error}</p>
+          <p className="text-xs text-ink-500 mt-2">
+            The slug may have changed on the source site. Try{" "}
+            <Link href="/anime" className="text-sakura-400 hover:underline">
+              browsing anime listings
+            </Link>{" "}
+            or use{" "}
+            <Link href="/search" className="text-sakura-400 hover:underline">
+              search
+            </Link>.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!detail) return null;
+
+  // Detect empty detail (slug stale / source page missing)
+  const isEmpty =
+    !detail.title ||
+    (!detail.synopsis && !detail.episodes?.length && !detail.thumbnail);
+
+  if (isEmpty) {
+    return (
+      <div className="space-y-4">
+        <BackLink href="/anime" label="Back to Anime" />
+        <div className="card text-sm">
+          <p className="font-semibold mb-1 text-sakura-200">No content available</p>
+          <p className="text-ink-400">
+            We could not load details for this anime. The source may have
+            removed or moved this page.
+          </p>
+          <p className="text-xs text-ink-500 mt-2">
+            Try{" "}
+            <Link href="/anime" className="text-sakura-400 hover:underline">
+              browsing anime listings
+            </Link>{" "}
+            or{" "}
+            <Link href="/search" className="text-sakura-400 hover:underline">
+              search
+            </Link>{" "}
+            for similar titles.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
