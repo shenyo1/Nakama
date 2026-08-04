@@ -28,16 +28,17 @@ API_KEY=""
 [[ -f "$API_KEY_FILE" ]] && API_KEY=$(tr -d '\n' <"$API_KEY_FILE")
 
 # name|url|expect|auth(0/1)|json_ok(0/1)
+# Backend API lives at app.mynakama.web.id (was mynakama.web.id pre-2026-08-04)
 TARGETS=(
-  "api_health|https://mynakama.web.id/health|200|0|1"
-  "api_stats|https://mynakama.web.id/stats|200|0|1"
-  "api_sources_health|https://mynakama.web.id/sources/health|200|0|1"
-  "app_home|https://app.mynakama.web.id/|200|0|0"
-  "app_status|https://app.mynakama.web.id/status|200|0|0"
-  "src_otakudesu|https://mynakama.web.id/anime/otakudesu/home|200|1|1"
-  "src_komiku|https://mynakama.web.id/comic/komiku/home|200|1|1"
-  "src_mangadex|https://mynakama.web.id/comic/mangadex/home|200|1|1"
-  "src_kiryuu|https://mynakama.web.id/comic/kiryuu/home|200|1|1"
+  "api_health|https://app.mynakama.web.id/health|200|0|1"
+  "api_stats|https://app.mynakama.web.id/stats|200|0|1"
+  "api_sources_health|https://app.mynakama.web.id/sources/health|200|0|1"
+  "app_home|https://mynakama.web.id/|200|0|0"
+  "app_status|https://mynakama.web.id/status|200|0|0"
+  "src_otakudesu|https://app.mynakama.web.id/anime/otakudesu/home|200|1|1"
+  "src_komiku|https://app.mynakama.web.id/comic/komiku/home|200|1|1"
+  "src_mangadex|https://app.mynakama.web.id/comic/mangadex/home|200|1|1"
+  "src_kiryuu|https://app.mynakama.web.id/comic/kiryuu/home|200|1|1"
 )
 
 ts() { date -u '+%Y-%m-%dT%H:%M:%SZ'; }

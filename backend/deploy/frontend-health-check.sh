@@ -34,7 +34,7 @@ should_alert() {
     return 0
 }
 
-for URL in "https://app.mynakama.web.id/" "https://mynakama.web.id/openapi.json" "https://mynakama.web.id/health"; do
+for URL in "https://app.mynakama.web.id/" "https://app.mynakama.web.id/openapi.json" "https://app.mynakama.web.id/health"; do
     T_START=$(date +%s%N)
     HTTP=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$URL" 2>&1) || HTTP=000
     T_END=$(date +%s%N)

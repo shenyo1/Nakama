@@ -22,7 +22,7 @@ code=000
 while [[ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]]; do
   code=$(curl -sS -o /tmp/nakama_src_health.json -w '%{http_code}' --max-time 180 \
     -H "User-Agent: $UA" \
-    'https://mynakama.web.id/sources/health?probe=true' || echo 000)
+    'https://app.mynakama.web.id/sources/health?probe=true' || echo 000)
   if [[ "$code" == "200" ]]; then
     break
   fi
