@@ -153,7 +153,6 @@ async def weekly_leaderboard(
             ReadingHistory.user_id,
             User.username,
             sa_func.count(ReadingHistory.id).label("reads"),
-            sa_func.date(ReadingHistory.read_at).label("day"),
         )
         .join(User, User.id == ReadingHistory.user_id)
         .where(ReadingHistory.read_at >= week_ago)
