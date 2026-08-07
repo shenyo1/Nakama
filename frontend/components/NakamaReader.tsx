@@ -1,6 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  downloadChapter,
+  isChapterOffline,
+  getOfflinePages,
+  removeOfflineChapter,
+} from "@/lib/offline";
+import { usePinchZoom } from "@/lib/usePinchZoom";
 
 interface ChapterImage {
   url?: string;
@@ -60,9 +67,65 @@ export default function NakamaReader({
   const [currentPage, setCurrentPage] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0, 1, 2]));
   const containerRef = useRef<HTMLDivElement>(null);
+  const zoom = usePinchZoom();
 
   const images = chapter.images || [];
   const totalPages = images.length;
+
+  // ── Offline state ─────────────────────────────────────
+  const chapterId = `${source}/${mangaSlug}/${chapter.slug || chapter.chapter || "chapter"}`;
+  const [isOffline, setIsOffline] = useState(false);
+  const [offlineProgress, setOfflineProgress] = useState<number | null>(null);
+  const [offlinePages, setOfflinePages] = useState<string[] | null>(null);
+  const [offlineError, setOfflineError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (await isChapterOffline(chapterId)) {
+          const pages = await getOfflinePages(chapterId);
+          if (!cancelled && pages.length > 0) {
+            setIsOffline(true);
+            setOfflinePages(pages);
+          }
+        }
+      } catch {}
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [chapterId]);
+
+  const handleDownloadOffline = useCallback(async () => {
+    const raws = images.map((img) => img.url || img.src || (typeof img === "string" ? img : "")).filter(Boolean);
+    if (raws.length === 0) return;
+    setOfflineError(null);
+    setOfflineProgress(0);
+    try {
+      await downloadChapter(chapterId, raws as string[], {
+        title: chapter.title || chapter.slug || "Chapter",
+        source,
+        mangaSlug,
+      }, (done, total) => setOfflineProgress(Math.round((done / total) * 100)));
+      setIsOffline(true);
+      const pages = await getOfflinePages(chapterId);
+      setOfflinePages(pages);
+      setOfflineProgress(null);
+    } catch (e) {
+      setOfflineProgress(null);
+      setOfflineError(`Gagal unduh: ${e instanceof Error ? e.message : "unknown"}`);
+    }
+  }, [images, chapterId, source, mangaSlug, chapter.title, chapter.slug]);
+
+  const handleRemoveOffline = useCallback(async () => {
+    await removeOfflineChapter(chapterId);
+    setIsOffline(false);
+    setOfflinePages(null);
+    if (offlinePages) for (const u of offlinePages) URL.revokeObjectURL(u);
+    setOfflinePages(null);
+  }, [chapterId, offlinePages]);
+
 
   // ── Persist prefs ──────────────────────────────────────
   useEffect(() => {
@@ -189,6 +252,30 @@ export default function NakamaReader({
             >
               🔊
             </button>
+
+            {/* Offline download */}
+            {offlineProgress !== null ? (
+              <span className="tabular-nums text-sakura-400" title="Mengunduh chapter…">
+                ⬇️ {offlineProgress}%
+              </span>
+            ) : isOffline ? (
+              <button
+                onClick={handleRemoveOffline}
+                className="rounded px-2 py-1 text-emerald-400 hover:bg-ink-800/50"
+                title="Hapus dari offline"
+              >
+                📥 Saved
+              </button>
+            ) : (
+              <button
+                onClick={handleDownloadOffline}
+                disabled={offlineProgress !== null}
+                className="rounded px-2 py-1 hover:bg-ink-800/50 disabled:opacity-40"
+                title="Simpan offline"
+              >
+                ⬇️ Offline
+              </button>
+            )}
           </div>
 
           {/* Page counter */}
@@ -213,10 +300,11 @@ export default function NakamaReader({
         >
           {prefs.mode === "single" ? (
             <img
-              src={getSrc(images[currentPage])}
+              src={offlinePages ? offlinePages[currentPage] : getSrc(images[currentPage])}
               alt={`Page ${currentPage + 1}`}
               className={`max-h-[calc(100vh-60px)] select-none ${prefs.fitToWidth ? "w-full max-w-4xl" : "h-full"}`}
               draggable={false}
+              style={zoom.bind.style}
             />
           ) : (
             <div className="flex gap-0">
@@ -275,12 +363,28 @@ export default function NakamaReader({
             <span className="text-ink-600">← Prev</span>
           )}
 
-          <a
-            href={`/comic/${source}/manga/${mangaSlug}`}
-            className="rounded px-2 py-1 text-ink-400 hover:bg-ink-800/50"
-          >
-            Chapter list
-          </a>
+          <div className="flex items-center gap-1">
+            {prefs.mode === "single" && (
+              <>
+                <button onClick={zoom.zoomOut} className="rounded px-2 py-1 hover:bg-ink-800/50" title="Perkecil (−)">
+                  −
+                </button>
+                <span className="tabular-nums text-ink-400">{Math.round(zoom.scale * 100)}%</span>
+                <button onClick={zoom.zoomIn} className="rounded px-2 py-1 hover:bg-ink-800/50" title="Perbesar (+)">
+                  +
+                </button>
+                <button onClick={zoom.reset} className="rounded px-2 py-1 text-ink-400 hover:bg-ink-800/50" title="Reset zoom">
+                  ↺
+                </button>
+              </>
+            )}
+            <a
+              href={`/comic/${source}/manga/${mangaSlug}`}
+              className="rounded px-2 py-1 text-ink-400 hover:bg-ink-800/50"
+            >
+              Chapter list
+            </a>
+          </div>
 
           {chapter.next_chapter ? (
             <a
@@ -293,6 +397,9 @@ export default function NakamaReader({
             <span className="text-ink-600">Next →</span>
           )}
         </div>
+        {offlineError && (
+          <div className="px-3 pb-1 text-center text-[10px] text-red-400">{offlineError}</div>
+        )}
       </div>
 
       {/* ── Keyboard shortcuts help ──────────────────── */}
