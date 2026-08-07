@@ -271,6 +271,14 @@ Redis health counter and probes 3 times to climb back to **healthy**:
 
 Current health scoreboard: **21/21 sources healthy** (live).
 
+## ✨ v2.8.3 — Fase 2: AI Insights (learnings from Sanka/Lovable)
+- OpenAI-compatible LLM client: `app/ai_client.py` (vision + text + strict-JSON + 429 backoff)
+- `POST /ai/summarize` — chapter-vision: multimodal plot summary, samples <=10 images
+- `POST /ai/retag` — auto genre + mood-tag classification (strict JSON)
+- `POST /ai/translate` — translate/summarize/mood_tags to Indonesian
+- `GET /ai/insights/status` — AI config diagnostic
+- Graceful 503 when AI not configured; results cached (bounded TTL)
+
 ## ✨ v2.8.2 — Fase 1: Adaptive Resilience (learnings from Sanka/Lovable)
 - **Cross-source dedup**: `merge_search.dedup_key` — strips diacritics, folds author when present, SOURCE_RANK picks best source's fields (`_best_source`)
 - **Adaptive rate limit**: `source_throttle` auto-tunes — 25% backoff on rate-limit (capped at 4× base), 15% recover after 200 successes

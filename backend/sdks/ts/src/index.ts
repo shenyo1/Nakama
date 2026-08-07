@@ -96,12 +96,15 @@ export interface RecommendationRequest { "title": string; "kind": "anime" | "com
 export interface RecommendationResponse { "ok"?: boolean; "anchor": string; "kind": string; "recommendations": Array<{ "title": string; "slug"?: string; "source"?: string; "score": number; "thumbnail"?: string; "genres"?: Array<string> }>; "cached"?: boolean }
 export interface RefreshBody { "refresh_token": string }
 export interface ResetBody { "token": string; "new_password": string }
+export interface RetagRequest { "title": string; "synopsis"?: string; "current_genres"?: Array<string> }
 export interface ReviewAggregate { "count": number; "avg_rating": number; "distribution": Record<string, unknown> }
 export interface ReviewCreate { "kind": "anime" | "comic" | "novel"; "rating": number; "body": string }
 export interface ReviewOut { "id": number; "user_id": number; "username"?: string; "source": string; "slug": string; "kind": string; "rating": number; "body": string; "created_at": string }
 export interface SeriesCreate { "title": string; "description"?: string; "kind": string; "cover_image"?: string }
 export interface SeriesOut { "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }
 export interface SeriesUpdate { "title"?: string; "description"?: string; "kind"?: string; "cover_image"?: string; "status"?: string; "published"?: boolean }
+export interface SummarizeRequest { "image_urls": Array<string>; "title"?: string; "language"?: string; "save"?: boolean }
+export interface TranslateRequest { "action"?: string; "title": string; "text": string; "target_lang"?: string }
 export interface ValidationError { "loc": Array<string | number>; "msg": string; "type": string; "input"?: unknown; "ctx"?: Record<string, unknown> }
 export interface WebhookCreate { "url": string; "source"?: string; "content_type"?: "anime" | "comic" | "novel"; "secret"?: string }
 export interface app__routers__auth__RegisterBody { "username": string; "password": string; "email"?: string }
@@ -1002,6 +1005,53 @@ export class Stats {
   }
 
   /**
+   * Ai Status
+   * @see GET /ai/insights/status
+   * Diagnostic: is AI configured? which models/cache? Quick health for admins.
+   */
+  async ai(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/ai/insights/status${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Retag Series
+   * @see POST /ai/retag
+   * Auto-classify genres + mood tags from title/synopsis (strict JSON).
+   * 
+   * Uses standard genre vocabulary so the result can populate a picker without
+   * extra cleanup. Returns ``{genres: [...], mood_tags: [...], confidence}``.
+   */
+  async retag(params?: { body: { "title": string; "synopsis"?: string; "current_genres"?: Array<string> } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/ai/retag${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
    * List Styles
    * @see GET /ai/styles
    * List the art styles accepted by ``POST /ai/generate``.
@@ -1021,6 +1071,60 @@ export class Stats {
     const init: RequestInit = {
       method: "GET",
       headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Summarize Chapter
+   * @see POST /ai/summarize
+   * Produce a plot summary for a chapter from its page images.
+   * 
+   * Evenly samples up to ``llm_vision_max_images`` (default 10) images so the
+   * cost of long chapters stays bounded. Uses the vision model. Cached by an
+   * input hash for ``llm_cache_ttl`` seconds.
+   */
+  async summarize(params?: { body: { "image_urls": Array<string>; "title"?: string; "language"?: string; "save"?: boolean } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/ai/summarize${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Translate Text
+   * @see POST /ai/translate
+   * Translate / summarize / mood-tag a text passage.
+   * 
+   * Falls back to GPT-4o-mini by default; the endpoint is stateless and cost-
+   * conscious. translate → Indonesian, summarize → short recap, mood_tags →
+   * list of short mood phrases.
+   */
+  async translate(params?: { body: { "action"?: string; "title": string; "text": string; "target_lang"?: string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/ai/translate${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
     };
     const res = await this._client._fetch(url, init);
     if (!res.ok) {

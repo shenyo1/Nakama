@@ -19,13 +19,13 @@
 | **Infrastructure** | **「The Aetheric Barrier」** — benteng tak kasat mata yang melindungi kerajaan dari ancaman luar | Cloudflare Workers, Docker, nginx |
 | **CI/CD** | **「The Divine Ceasefire」** — altar otomatisasi yang menjaga setiap klik dewa tetap selaras | GitHub Actions per-direktori |
 
-### 🌟 Current State of the Realm (v2.8.2)
+### 🌟 Current State of the Realm (v2.8.3)
 
 - **Total Adventurers' Power Sources**: 21 ⚡ (bertahap bertambah)
 - **Successful Magic Tests**: 292 ✨ (12 pre-existing test bugs unrelated to v2.8.0)
 - **Castle Status**: Online di `mynakama.web.id` & `app.mynakama.web.id`
 - **The Guardian Barrier**: Ping setiap 60 detik (watchdog aktif)
-- **Latest Adventurer**: v2.8.2 — Fase 1: adaptive rate-limit + cross-source dedup + persistent breaker
+- **Latest Adventurer**: v2.8.3 — Fase 2: AI insights (chapter-vision, retag, translate)
 - **Audit**: `audit/2026-08-01-total-audit.md` — Critical bug fixed (47 → 12 failures)
 
 ---

@@ -74,6 +74,24 @@ class Settings:
         self.sakuranovel_base_url: str = (
             os.getenv("SAKURANOVEL_BASE_URL", "https://sakuranovel.id").rstrip("/")
         )
+        # --- AI (Fase 2) ----------------------------------------------------
+        # OpenAI-compatible LLM settings. When LLM_API_KEY is empty the AI
+        # endpoints return a helpful 503 "AI not configured" instead of failing.
+        # Set LLM_BASE_URL to any OpenAI-compatible gateway (OpenAI, Gemini via
+        # base URL, Lovable AI Gateway, etc.). DEFAULT_LLM_CACHE_TTL bounds how
+        # long an AI summary/retag result is reused.
+        self.llm_api_key: str | None = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or None
+        self.llm_base_url: str | None = os.getenv("LLM_BASE_URL") or None
+        # Default: OpenAI. Model can be overridden per-request for cost control.
+        self.llm_chat_model: str = os.getenv("LLM_CHAT_MODEL", "gpt-4o-mini")
+        self.llm_vision_model: str = os.getenv(
+            "LLM_VISION_MODEL", "gpt-4o-mini"
+        )
+        self.llm_max_tokens: int = int(os.getenv("LLM_MAX_TOKENS", "600"))
+        # Bounded Redis/DB TTL for AI results (seconds).
+        self.llm_cache_ttl: int = int(os.getenv("LLM_CACHE_TTL", "86400"))
+        # Max image URLs sampled per multimodal call (mirrors Sanka's 10-page cap).
+        self.llm_vision_max_images: int = int(os.getenv("LLM_VISION_MAX_IMAGES", "10"))
 
 
 @lru_cache
