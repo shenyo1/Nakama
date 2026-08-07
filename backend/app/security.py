@@ -116,7 +116,7 @@ async def revoke_refresh_token(token: str) -> bool:
         r = get_redis()
         if r is None:
             return False
-        await r.setex(f"revoked_jti:{jti}", remaining, "1")
+        await r.set(f"revoked_jti:{jti}", "1", ex=remaining)
         return True
     except Exception:
         return False

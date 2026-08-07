@@ -197,7 +197,7 @@ class RecommendationEngine:
         if redis is None:
             return
         try:
-            await redis.setex(key, _REDIS_TTL, json.dumps(items, default=str))
+            await redis.set(key, json.dumps(items, default=str), ex=_REDIS_TTL)
         except Exception as e:
             logger.debug(f"Redis cache write failed: {e}")
 

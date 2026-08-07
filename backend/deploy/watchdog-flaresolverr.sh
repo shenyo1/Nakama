@@ -38,7 +38,9 @@ except Exception:
 STATE=$(state)
 
 # Healthy or starting → no action.
-if echo "$STATE" | grep -qiE "healthy|starting|Up"; then
+# NOTE: must match exact words — "unhealthy" contains "healthy" as a substring,
+# so a bare "healthy" match would treat UNHEALTHY as OK and never restart.
+if echo "$STATE" | grep -qiE "(^|[^a-z])healthy([^a-z]|$)|starting|(^|[^a-z])Up([^a-z]|$)"; then
   echo "[$(TS)] OK: state=$STATE"
   exit 0
 fi

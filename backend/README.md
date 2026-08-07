@@ -271,6 +271,12 @@ Redis health counter and probes 3 times to climb back to **healthy**:
 
 Current health scoreboard: **21/21 sources healthy** (live).
 
+## ✨ v2.8.1 — Security & watchdog hardening
+- Watchdog: fix silent failure (grep "healthy" matched "unhealthy" substring) — flaresolverr now actually restarts when unhealthy
+- .env files chmod 600 (were world-readable 664)
+- FlareSolverr restarted, healthy
+- Next.js upgraded to 14.2.35 (CVE fixes)
+
 ## ✨ v2.8.0 — Auto-repair, Nakama Originals, AI Comic Gen
 
 This release ships the **Creator Tier 5.1** (Nakama Originals) end-to-end

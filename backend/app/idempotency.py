@@ -69,7 +69,7 @@ async def _redis_set(key: str, data: dict, ttl: int = _IDEMPOTENCY_TTL):
         import redis.asyncio as aioredis
         client = aioredis.from_url(s.redis_url)
         try:
-            await client.setex(f"idem:{key}", ttl, json.dumps(data))
+            await client.set(f"idem:{key}", json.dumps(data), ex=ttl)
         finally:
             await client.aclose()
     except Exception:
