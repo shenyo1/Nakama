@@ -271,6 +271,12 @@ Redis health counter and probes 3 times to climb back to **healthy**:
 
 Current health scoreboard: **21/21 sources healthy** (live).
 
+## ✨ v2.8.2 — Fase 1: Adaptive Resilience (learnings from Sanka/Lovable)
+- **Cross-source dedup**: `merge_search.dedup_key` — strips diacritics, folds author when present, SOURCE_RANK picks best source's fields (`_best_source`)
+- **Adaptive rate limit**: `source_throttle` auto-tunes — 25% backoff on rate-limit (capped at 4× base), 15% recover after 200 successes
+- **Persistent circuit breaker**: `auto_repair` breaker state persisted to Redis (`nakama:cb:*`) so it survives multi-worker + restarts
+- Health endpoint exposes `source_throttle_adaptive` (live tuning state)
+
 ## ✨ v2.8.1 — Security & watchdog hardening
 - Watchdog: fix silent failure (grep "healthy" matched "unhealthy" substring) — flaresolverr now actually restarts when unhealthy
 - .env files chmod 600 (were world-readable 664)

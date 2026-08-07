@@ -156,7 +156,7 @@ app = FastAPI(
         "community features, creator dashboard, AI comic generator, CDN edge cache, "
         "and auto-generated TypeScript & Python SDKs."
     ),
-    version="2.8.1",
+    version="2.8.2",
     lifespan=lifespan,
 )
 

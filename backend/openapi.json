@@ -3,7 +3,7 @@
   "info": {
     "title": "Nakama",
     "description": "REST API aggregating anime, comic, and novel data from 21 public sources behind one consistent JSON interface. GraphQL, AI recommendations, community features, creator dashboard, AI comic generator, CDN edge cache, and auto-generated TypeScript & Python SDKs.",
-    "version": "2.8.1"
+    "version": "2.8.2"
   },
   "paths": {
     "/graphql": {

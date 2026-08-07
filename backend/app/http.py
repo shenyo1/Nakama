@@ -39,8 +39,28 @@ def _record(source: Optional[str], *, success: bool, started: float, error: Opti
             latency_ms=(time.perf_counter() - started) * 1000,
             error=error,
         )
+        # Feed the adaptive rate limiter: success shrinks the interval, a
+        # rate-limit/failure backoff grows it so the source stops hammering
+        # an upstream that is rejecting us.
+        from .source_throttle import record_source_rate_limit, record_source_success
+
+        if success:
+            record_source_success(source)
+        elif error and _looks_like_rate_limit(error):
+            record_source_rate_limit(source)
     except Exception:
         pass
+
+
+def _looks_like_rate_limit(error: Optional[str]) -> bool:
+    """Heuristic: does this failure signal an upstream rate-limit / burst gate?"""
+    if not error:
+        return False
+    err = error.lower()
+    return any(
+        token in err
+        for token in ("429", "rate limit", "rate-limit", "too many requests", "cooldown", "burst")
+    )
 
 
 class _MemoryCache:

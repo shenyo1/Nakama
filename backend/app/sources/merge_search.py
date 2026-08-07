@@ -2,22 +2,89 @@
 
 Shared helper for /anime/search, /comic/search, /novel/search.
 Fans out to every registered source concurrently, deduplicates by
-normalized title, returns a unified list sorted by source coverage.
+normalized title (falling back to title+author), returns a unified
+list sorted by source coverage then source quality.
 """
 from __future__ import annotations
 import asyncio
 import re
+import unicodedata
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
+# Which source "wins" when two normalized titles collide. Lower = preferred
+# (better metadata / more stable IDs / cleaner data). Used to pick the
+# representative item fields when merging duplicates across sources.
+SOURCE_RANK: Dict[str, int] = {
+    # Anime — metadata-first, stable
+    "anilist": 0,
+    "jikan": 1,
+    "kura": 2,
+    "otakudesu": 3,
+    "samehadaku": 4,
+    "anichin": 5,
+    "anoboy": 6,
+    # Comic — official API first, then stable ID scrapers
+    "mangadex": 0,
+    "kiryuu": 1,
+    "komiku": 2,
+    "komikindo": 3,
+    "shinigami": 4,
+    "komikcast": 5,
+    "bacakomik": 6,
+    "komikstation": 7,
+    "westmanga": 8,
+    # Novel
+    "novelbin": 1,
+    "novelfull": 2,
+    "sakuranovel": 3,
+    "meionovels": 4,
+    "novelhubapp": 5,
+}
+
+# Sources NOT ranked above default to a mid-tier rank so unranked sources
+# never accidentally win over a known-good primary.
+_DEFAULT_RANK = 50
+
+
+def _source_rank(name: str) -> int:
+    return SOURCE_RANK.get(name, _DEFAULT_RANK)
+
+
+def _strip_accents(s: str) -> str:
+    """Remove combining diacritics so 'Áo Kagura' and 'Ao Kagura' collide."""
+    return "".join(ch for ch in unicodedata.normalize("NFKD", s) if not unicodedata.combining(ch))
+
+
+def _norm_core(part: str) -> str:
+    part = _strip_accents(part)
+    part = re.sub(r"[\s\W_]+", " ", part.lower()).strip()
+    part = re.sub(r"\s+", " ", part)
+    return part
 
 
 def normalize_title(t: str) -> str:
-    """Normalize a title for dedup matching."""
+    """Normalize a title for dedup matching (single-source key)."""
     if not t:
         return ""
-    t = re.sub(r"[\s\W_]+", " ", t.lower()).strip()
+    t = _norm_core(t)
     t = re.sub(r"\b(episode|ep|chapter|ch)\s*\d+\b", "", t)
     t = re.sub(r"\s+", " ", t).strip()
     return t
+
+
+def dedup_key(item: dict) -> str:
+    """Best-effort dedup key: title, or title+author when a single title
+    would be too ambiguous. Mirrors Sanka's ``dedupKey = title + author``
+    fallback so two different series with the same name survive."""
+    title = normalize_title(item.get("title") or item.get("name") or "")
+    if not title:
+        return ""
+    author = normalize_title(item.get("author") or item.get("artist") or "")
+    # Only fold author in when both present (avoids splitting the same series
+    # just because one source reports an author and another doesn't).
+    if author and author not in title:
+        return f"{title}|{author}"
+    return title
 
 async def multi_source_search(
     *,
@@ -110,8 +177,7 @@ async def multi_source_search(
         for item in data.get("items", []):
             if not isinstance(item, dict):
                 continue
-            title = item.get("title") or item.get("name") or ""
-            key = normalize_title(title)
+            key = dedup_key(item)
             if not key:
                 continue
             if key not in merged:
@@ -119,13 +185,25 @@ async def multi_source_search(
                     **item,
                     "_sources": [],
                     "_source_count": 0,
+                    "_best_source": name,
                 }
+            else:
+                # Merge: prefer fields from the higher-ranked source.
+                existing = merged[key]
+                if _source_rank(name) < _source_rank(existing.get("_best_source", "")):
+                    merged[key] = {**existing, **item, "_sources": existing["_sources"]}
+                    merged[key]["_best_source"] = name
             merged[key]["_sources"].append(name)
             merged[key]["_source_count"] = len(merged[key]["_sources"])
 
-    items = sorted(
-        merged.values(),
-        key=lambda x: (-x.get("_source_count", 0), x.get("title", "")),
+    items = []
+    for m in merged.values():
+        items.append({
+            **m,
+            "_best_source": m.pop("_best_source", ""),
+        })
+    items.sort(
+        key=lambda x: (-x.get("_source_count", 0), x.get("_best_source", ""), x.get("title", "")),
     )
 
     paged, total = _paginate(items, page, page_size)

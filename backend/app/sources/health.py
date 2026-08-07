@@ -485,9 +485,10 @@ def _infra_status() -> dict:
             base = s.flaresolverr_url.rsplit("/v1", 1)[0] + "/"
             out["flaresolverr_ready"] = _probe_host(base, timeout=2.0)
         try:
-            from ..source_throttle import source_intervals
+            from ..source_throttle import source_intervals, source_throttle_detail
 
             out["source_min_intervals_seconds"] = source_intervals()
+            out["source_throttle_adaptive"] = source_throttle_detail()
         except Exception:
             pass
         return out
