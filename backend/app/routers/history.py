@@ -86,6 +86,22 @@ async def post_history(
     session.add(row)
     await session.commit()
     await session.refresh(row)
+    # Fase 4: reward XP + push a social activity event (best-effort, never fail the read).
+    try:
+        from .. import gamification
+
+        await gamification.apply_read_xp(session, uid)
+        await gamification.record_activity(
+            session,
+            uid,
+            "read",
+            content_type=payload.content_type,
+            source=payload.source,
+            content_id=payload.content_id,
+            title=payload.chapter_id,
+        )
+    except Exception:
+        pass
     return _to_entry(row)
 
 

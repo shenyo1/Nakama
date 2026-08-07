@@ -156,7 +156,7 @@ app = FastAPI(
         "community features, creator dashboard, AI comic generator, CDN edge cache, "
         "and auto-generated TypeScript & Python SDKs."
     ),
-    version="2.8.3",
+    version="2.8.4",
     lifespan=lifespan,
 )
 
@@ -233,6 +233,7 @@ _PUBLIC_PREFIXES = (
     "/graphql",
     "/ai",
     "/originals",
+    "/social",
 )
 
 _METERED_PREFIXES = (
@@ -503,6 +504,8 @@ from .routers.ai_comic import router as ai_comic_router  # noqa: E402
 app.include_router(ai_comic_router)
 from .routers.ai_insights import router as ai_insights_router  # noqa: E402
 app.include_router(ai_insights_router)
+from .routers.gamification_router import router as social_router  # noqa: E402
+app.include_router(social_router)
 from .routers.errors import router as errors_router  # noqa: E402
 app.include_router(errors_router)
 from .routers.originals import router as originals_router  # noqa: E402

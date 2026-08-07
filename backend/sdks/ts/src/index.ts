@@ -66,6 +66,8 @@ export interface ChapterCreate { "series_id": number; "title": string; "chapter_
 export interface ChapterOut { "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }
 export interface ChapterUpdate { "title"?: string; "chapter_number"?: number; "content"?: string; "content_format"?: string; "published"?: boolean }
 export interface ClientError { "message": string; "stack"?: string; "source"?: string; "severity"?: string; "extra"?: Record<string, unknown> }
+export interface ClubCreate { "name": string; "description"?: string; "content_type"?: string; "source"?: string; "content_id"?: string; "is_public"?: boolean }
+export interface ClubPostCreate { "content": string }
 export interface ComicDetail { "title": string; "slug"?: string; "url"?: string; "thumbnail"?: string; "type"?: string; "views"?: string; "latest_chapter"?: string; "author"?: string; "status"?: string; "genres"?: Array<string>; "synopsis"?: string; "chapters"?: Array<Record<string, unknown>> }
 export interface ComicGenerateRequest { "prompt": string; "style"?: string; "panels"?: number }
 export interface CommentCreate { "kind": "anime" | "comic" | "novel"; "body": string; "parent_id"?: number }
@@ -909,7 +911,7 @@ export class Stats {
    * @see GET /admin/errors
    * Return the most recent client/server errors. Requires X-API-Key.
    */
-  async list_get_x_x_x(params?: { "limit"?: number; "severity"?: string }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async list_get_x_x_x_x(params?: { "limit"?: number; "severity"?: string }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.limit !== undefined) search.set("limit", String(p.limit));
@@ -1733,7 +1735,7 @@ export class Stats {
    * @see POST /creator/chapters
    * Upload a new chapter to a series owned by the authenticated creator.
    */
-  async create_post_x_x_x_x_x(params?: { body: { "series_id": number; "title": string; "chapter_number": number; "content": string; "content_format"?: string; "published"?: boolean } }): Promise<{ "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> {
+  async create_post_x_x_x_x_x_x_x(params?: { body: { "series_id": number; "title": string; "chapter_number": number; "content": string; "content_format"?: string; "published"?: boolean } }): Promise<{ "id": number; "series_id": number; "title": string; "chapter_number": number; "content"?: string; "content_format"?: string; "word_count"?: number; "views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> {
     const p: any = (params as any) ?? {};
     const suffix = "";
     const url = `${this._client.baseUrl}/creator/chapters${suffix}`;
@@ -1993,7 +1995,7 @@ export class Stats {
    * @see GET /creator/series
    * List the authenticated creator's series.
    */
-  async list_get_x_x_x_x_x(params?: { "kind"?: string; "limit"?: number; "offset"?: number }): Promise<Array<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }>> {
+  async list_get_x_x_x_x_x_x(params?: { "kind"?: string; "limit"?: number; "offset"?: number }): Promise<Array<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }>> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.kind !== undefined) search.set("kind", String(p.kind));
@@ -2020,7 +2022,7 @@ export class Stats {
    * @see POST /creator/series
    * Create a new series under the authenticated creator.
    */
-  async create_post_x_x_x_x(params?: { body: { "title": string; "description"?: string; "kind": string; "cover_image"?: string } }): Promise<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> {
+  async create_post_x_x_x_x_x_x(params?: { body: { "title": string; "description"?: string; "kind": string; "cover_image"?: string } }): Promise<{ "id": number; "creator_id": number; "title": string; "description"?: string; "kind": string; "cover_image"?: string; "status"?: string; "chapter_count"?: number; "total_views"?: number; "published"?: boolean; "created_at": string; "updated_at": string }> {
     const p: any = (params as any) ?? {};
     const suffix = "";
     const url = `${this._client.baseUrl}/creator/series${suffix}`;
@@ -2393,7 +2395,7 @@ export class Stats {
    * @see GET /originals
    * List published original series. Defaults to featured only.
    */
-  async list_get_x_x_x_x(params?: { "featured"?: boolean; "content_type"?: string; "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async list_get_x_x_x_x_x(params?: { "featured"?: boolean; "content_type"?: string; "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.featured !== undefined) search.set("featured", String(p.featured));
@@ -2611,6 +2613,205 @@ export class Stats {
   }
 
   /**
+   * Activity
+   * @see GET /social/activity
+   */
+  async activity(params?: { "user_id"?: number; "limit"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.user_id !== undefined) search.set("user_id", String(p.user_id));
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/social/activity${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * List Clubs
+   * @see GET /social/clubs
+   */
+  async list_get_x_x_x(params?: { "q"?: string; "content_type"?: string; "limit"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.q !== undefined) search.set("q", String(p.q));
+    if (p.content_type !== undefined) search.set("content_type", String(p.content_type));
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/social/clubs${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Create Club
+   * @see POST /social/clubs
+   */
+  async create_post_x_x_x_x(params?: { body: { "name": string; "description"?: string; "content_type"?: string; "source"?: string; "content_id"?: string; "is_public"?: boolean } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/social/clubs${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Club Detail
+   * @see GET /social/clubs/{club_id}
+   */
+  async club(club_id: string): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/social/clubs/${club_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Join Club
+   * @see POST /social/clubs/{club_id}/join
+   */
+  async join(club_id: string): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/social/clubs/${club_id}/join${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Leave Club
+   * @see POST /social/clubs/{club_id}/leave
+   */
+  async leave(club_id: string): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/social/clubs/${club_id}/leave${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Create Club Post
+   * @see POST /social/clubs/{club_id}/posts
+   */
+  async create_post_x_x_x_x_x(club_id: string, params?: { body: { "content": string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/social/clubs/${club_id}/posts${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Leaderboard
+   * @see GET /social/leaderboard
+   */
+  async leaderboard(params?: { "limit"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.limit !== undefined) search.set("limit", String(p.limit));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/social/leaderboard${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Stats
+   * @see GET /social/stats/{user_id}
+   */
+  async stats(user_id: string): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const suffix = "";
+    const url = `${this._client.baseUrl}/social/stats/${user_id}${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
    * Source health scoreboard
    * @see GET /sources/health
    * Return per-source health from Redis/memory counters.
@@ -2674,7 +2875,7 @@ export class Stats {
    * Pure-process introspection — no network calls — so this endpoint is safe
    * to hit in offline mode and from liveness/readiness probes.
    */
-  async stats(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async stats_get(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const suffix = "";
     const url = `${this._client.baseUrl}/stats${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };

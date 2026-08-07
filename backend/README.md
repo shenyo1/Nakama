@@ -279,6 +279,13 @@ Current health scoreboard: **21/21 sources healthy** (live).
 - `GET /ai/insights/status` — AI config diagnostic
 - Graceful 503 when AI not configured; results cached (bounded TTL)
 
+## ✨ v2.8.4 — Fase 4: Gamification & Social (learnings from Sanka/Lovable)
+- XP + reading streak + level curve auto-accrued on every read (gamification.py)
+- Weekly leaderboard (XP/streak/level), activity feed, user stats
+- Reading clubs (create/join/leave/posts) via /social/*
+- Frontend Social Hub (leaderboard🏆 / activity📢 / clubs🤝)
+- 328 tests pass (5 new Fase-4)
+
 ## ✨ v2.8.2 — Fase 1: Adaptive Resilience (learnings from Sanka/Lovable)
 - **Cross-source dedup**: `merge_search.dedup_key` — strips diacritics, folds author when present, SOURCE_RANK picks best source's fields (`_best_source`)
 - **Adaptive rate limit**: `source_throttle` auto-tunes — 25% backoff on rate-limit (capped at 4× base), 15% recover after 200 successes

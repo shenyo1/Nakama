@@ -279,6 +279,10 @@ async def init_db() -> None:
     except Exception:
         pass
     try:
+        from . import gamification_models  # noqa: F401
+    except Exception:
+        pass
+    try:
         from .routers.ai_comic import AiComic  # noqa: F401
     except Exception:
         pass

@@ -165,6 +165,63 @@ export async function fetchSourceHealth(
   return body as SourceHealthBoard;
 }
 
+// ---------------------------------------------------------------------------
+// Fase 4 — social / gamification
+// ---------------------------------------------------------------------------
+
+export interface LeaderboardRow {
+  rank: number;
+  user_id: number;
+  username: string;
+  chapters_week: number;
+  xp: number;
+  level: number;
+  reading_streak: number;
+}
+
+export interface ActivityRow {
+  id: number;
+  user_id: number;
+  username: string;
+  action: string;
+  content_type: string | null;
+  title: string | null;
+  source: string | null;
+  content_id: string | null;
+  created_at: string | null;
+}
+
+export interface ClubRow {
+  id: number;
+  slug: string;
+  name: string;
+  description: string | null;
+  owner_id: number;
+  content_type: string | null;
+  source: string | null;
+  is_public: boolean;
+  member_count: number;
+  created_at: string | null;
+}
+
+export async function fetchLeaderboard(limit = 20): Promise<LeaderboardRow[]> {
+  const body = await getJson<ApiEnvelope<{ items: LeaderboardRow[] }>>(`/social/leaderboard?limit=${limit}`);
+  return body.data?.items ?? [];
+}
+
+export async function fetchActivity(userId?: number, limit = 50): Promise<ActivityRow[]> {
+  const q = userId ? `?user_id=${userId}` : `?limit=${limit}`;
+  const body = await getJson<ApiEnvelope<{ items: ActivityRow[] }>>(`/social/activity${q}`);
+  return body.data?.items ?? [];
+}
+
+export async function fetchClubs(q?: string): Promise<ClubRow[]> {
+  const qs = q ? `?q=${encodeURIComponent(q)}` : "";
+  const body = await getJson<ApiEnvelope<{ items: ClubRow[] }>>(`/social/clubs${qs}`);
+  return body.data?.items ?? [];
+}
+
+
 export const ANIME_SOURCES = ["otakudesu", "kura", "anilist", "jikan", "samehadaku", "anichin", "anoboy"] as const;
 export const COMIC_SOURCES = [
   "komiku",

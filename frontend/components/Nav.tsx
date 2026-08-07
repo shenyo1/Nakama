@@ -14,6 +14,7 @@ const publicLinks = [
   { href: "/ai-comic", label: "AI Comic" },
   { href: "/search", label: "Search" },
   { href: "/offline", label: "Offline" },
+  { href: "/social", label: "Social" },
   { href: "/status", label: "Status" },
 ];
 
