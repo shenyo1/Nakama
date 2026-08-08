@@ -8,6 +8,7 @@ import {
   removeOfflineChapter,
 } from "@/lib/offline";
 import { usePinchZoom } from "@/lib/usePinchZoom";
+import { imageProxyUrl } from "@/lib/api";
 
 interface ChapterImage {
   url?: string;
@@ -191,7 +192,7 @@ export default function NakamaReader({
   // ── Get image src ──────────────────────────────────────
   const getSrc = (img: ChapterImage): string => {
     const raw = img.url || img.src || (typeof img === "string" ? img : "");
-    return `/image?url=${encodeURIComponent(raw)}`;
+    return imageProxyUrl(raw);
   };
 
   // ── Double page pairs ──────────────────────────────────

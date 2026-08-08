@@ -1,4 +1,4 @@
-import { getJson } from "../../../../../lib/api";
+import { getJson, imageProxyUrl } from "../../../../../lib/api";
 import { SourceGrid } from "../../../../../components/SourceGrid";
 import { BookmarkButton } from "../../../../../components/BookmarkButton";
 import { RecommendationWidget } from "../../../../../components/RecommendationWidget";
@@ -101,7 +101,7 @@ export default async function ComicMangaPage({
         {detail.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={`/image?url=${encodeURIComponent(detail.thumbnail)}`}
+            src={imageProxyUrl(detail.thumbnail)}
             alt={detail.title || "cover"}
             className="w-32 shrink-0 rounded-lg object-cover sm:w-40"
             loading="lazy"

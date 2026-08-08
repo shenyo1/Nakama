@@ -238,3 +238,15 @@ export const NOVEL_SOURCES = ["sakuranovel", "novelbin", "novelfull", "meionovel
 
 // Back-compat alias used by older imports / docs.
 export const API_BASE = PUBLIC_API_BASE;
+
+/**
+ * Build the proxied image URL. Always points at the API origin
+ * (PUBLIC_API_BASE = app.mynakama.web.id) rather than a same-origin path —
+ * on Cloudflare Pages the frontend has no `/image` route, so images must be
+ * fetched from the API domain directly (its `/image` proxy sends the right
+ * hotlink-CDN Referer + browser UA and is reachable cross-origin).
+ */
+export function imageProxyUrl(raw?: string | null): string {
+  if (!raw) return "";
+  return `${PUBLIC_API_BASE}/image?url=${encodeURIComponent(raw)}`;
+}

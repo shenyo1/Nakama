@@ -1,3 +1,5 @@
+import { imageProxyUrl } from "@/lib/api";
+
 type Props = {
   title: string;
   subtitle?: string;
@@ -24,7 +26,7 @@ export function ItemCard({ title, subtitle, thumbnail, href, badge, source, kind
         {thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={`/image?url=${encodeURIComponent(thumbnail)}`}
+            src={imageProxyUrl(thumbnail)}
             alt={title}
             className="h-full w-full object-cover"
             loading="lazy"

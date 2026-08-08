@@ -1,4 +1,4 @@
-import { getJson } from "../../../../../lib/api";
+import { getJson, imageProxyUrl } from "../../../../../lib/api";
 import { RecommendationWidget } from "../../../../../components/RecommendationWidget";
 import { ClientCommunity } from "../../../../../components/ClientCommunity";
 import ShareCard from "../../../../../components/ShareCard";
@@ -99,7 +99,7 @@ export default async function NovelDetailPage({
         {(detail.thumbnail || detail.cover) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={`/image?url=${encodeURIComponent(detail.thumbnail || detail.cover || "")}`}
+            src={imageProxyUrl(detail.thumbnail || detail.cover || "")}
             alt={detail.title || "cover"}
             className="w-28 shrink-0 rounded-lg object-cover sm:w-36"
             loading="lazy"

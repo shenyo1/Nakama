@@ -13,6 +13,8 @@
  * offline reads are visually identical. `URL.createObjectURL` rehydrates them.
  */
 
+import { imageProxyUrl } from "./api";
+
 export interface OfflineChapterMeta {
   chapterId: string;
   title?: string;
@@ -73,7 +75,7 @@ function _tx<T>(
 
 /** Resolve a ChapterImage to a proxy-backed URL (mirrors reader getSrc). */
 export function proxyImageUrl(raw: string): string {
-  return `/image?url=${encodeURIComponent(raw)}`;
+  return imageProxyUrl(raw);
 }
 
 /** True if a given chapter has any locally cached pages. */
