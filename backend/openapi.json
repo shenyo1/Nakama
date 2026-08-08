@@ -1710,7 +1710,7 @@
           "proxy"
         ],
         "summary": "Proxy a remote image with SSRF protection",
-        "description": "Fetch *url* server-side and stream the raw bytes back.\n\nThis endpoint exists so a browser frontend can render chapter page images\nthat would otherwise be blocked by hotlink protection or CORS. The server\nvalidates that *url* is a public http(s) resource before fetching — any\nscheme other than http/https, and any host that resolves into a private\nIP range, is rejected with HTTP 400.",
+        "description": "Fetch *url* server-side and stream the raw bytes back.\n\nThis endpoint exists so a browser frontend can render chapter page images\nthat would otherwise be blocked by hotlink protection or CORS. The server\nvalidates that *url* is a public http(s) resource before fetching — any\nscheme other than http/https, and any host that resolves into a private\nIP range, is rejected with HTTP 400.\n\nA ``referer`` query parameter may be supplied to override the auto-detected\nReferer (used by sources with strict hotlink protection, e.g. komikcast).\nWhen omitted the proxy picks a sensible Referer from the CDN host mapping\nor falls back to the image's own origin.",
         "operationId": "image_proxy_image_get",
         "parameters": [
           {
@@ -1723,6 +1723,24 @@
               "title": "Url"
             },
             "description": "Absolute http(s) URL of the image to fetch."
+          },
+          {
+            "name": "referer",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional Referer header to send upstream (hotlink bypass).",
+              "title": "Referer"
+            },
+            "description": "Optional Referer header to send upstream (hotlink bypass)."
           }
         ],
         "responses": {

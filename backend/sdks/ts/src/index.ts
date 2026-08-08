@@ -787,11 +787,17 @@ export class Image {
    * validates that *url* is a public http(s) resource before fetching — any
    * scheme other than http/https, and any host that resolves into a private
    * IP range, is rejected with HTTP 400.
+   * 
+   * A ``referer`` query parameter may be supplied to override the auto-detected
+   * Referer (used by sources with strict hotlink protection, e.g. komikcast).
+   * When omitted the proxy picks a sensible Referer from the CDN host mapping
+   * or falls back to the image's own origin.
    */
-  async image(params?: { "url": string }): Promise<unknown> {
+  async image(params?: { "url": string; "referer"?: string }): Promise<unknown> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.url !== undefined) search.set("url", String(p.url));
+    if (p.referer !== undefined) search.set("referer", String(p.referer));
     const qs = search.toString();
     const suffix = qs ? `?${qs}` : "";
     const url = `${this._client.baseUrl}/image${suffix}`;
