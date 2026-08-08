@@ -2,7 +2,7 @@
  * Offline chapter store — IndexedDB-backed reading cache.
  *
  * Pattern ported from Sanka's `offline.ts` (Lovable) and adapted for Nakama's
- * Next.js frontend + `/api/backend/image?url=` proxy.
+ * Next.js frontend + `/image?url=` proxy.
  *
  * Two stores:
  *   - `chapters` : chapter metadata (keyPath `chapterId`) -> { chapterId, title,
@@ -73,7 +73,7 @@ function _tx<T>(
 
 /** Resolve a ChapterImage to a proxy-backed URL (mirrors reader getSrc). */
 export function proxyImageUrl(raw: string): string {
-  return `/api/backend/image?url=${encodeURIComponent(raw)}`;
+  return `/image?url=${encodeURIComponent(raw)}`;
 }
 
 /** True if a given chapter has any locally cached pages. */

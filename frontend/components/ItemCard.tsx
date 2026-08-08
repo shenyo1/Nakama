@@ -24,7 +24,7 @@ export function ItemCard({ title, subtitle, thumbnail, href, badge, source, kind
         {thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={`/api/backend/image?url=${encodeURIComponent(thumbnail)}`}
+            src={`/image?url=${encodeURIComponent(thumbnail)}`}
             alt={title}
             className="h-full w-full object-cover"
             loading="lazy"

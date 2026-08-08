@@ -75,7 +75,7 @@ export function SearchBox({
               >
                 {typeof r.thumbnail === "string" ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={`/api/backend/image?url=${encodeURIComponent(r.thumbnail)}`} alt="" className="h-10 w-8 rounded object-cover shrink-0" />
+                  <img src={`/image?url=${encodeURIComponent(r.thumbnail)}`} alt="" className="h-10 w-8 rounded object-cover shrink-0" />
                 ) : null}
                 <span className="truncate text-ink-200">{String(r.title || r.slug || "")}</span>
               </a>

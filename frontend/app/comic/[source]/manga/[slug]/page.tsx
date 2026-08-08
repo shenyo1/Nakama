@@ -101,7 +101,7 @@ export default async function ComicMangaPage({
         {detail.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={`/api/backend/image?url=${encodeURIComponent(detail.thumbnail)}`}
+            src={`/image?url=${encodeURIComponent(detail.thumbnail)}`}
             alt={detail.title || "cover"}
             className="w-32 shrink-0 rounded-lg object-cover sm:w-40"
             loading="lazy"

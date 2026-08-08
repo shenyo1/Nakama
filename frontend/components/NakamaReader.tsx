@@ -191,7 +191,7 @@ export default function NakamaReader({
   // ── Get image src ──────────────────────────────────────
   const getSrc = (img: ChapterImage): string => {
     const raw = img.url || img.src || (typeof img === "string" ? img : "");
-    return `/api/backend/image?url=${encodeURIComponent(raw)}`;
+    return `/image?url=${encodeURIComponent(raw)}`;
   };
 
   // ── Double page pairs ──────────────────────────────────
