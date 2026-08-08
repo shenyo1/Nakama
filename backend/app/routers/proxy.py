@@ -63,6 +63,37 @@ _BLOCKED_NETWORKS = [
     ipaddress.ip_network("::ffff:0:0/96"),   # IPv4-mapped IPv6 (re-check)
 ]
 
+# Host -> referer mapping for hotlink-protected image CDNs. Many comic/manga
+# sources serve chapter images from a dedicated CDN host that refuses requests
+# without a browser-like Referer pointing at the owning site. When we see one
+# of these hosts we send the matching Referer so the image actually loads.
+# Falls back to the image's own origin when the host isn't listed here.
+_REFERER_BY_HOST = {
+    # komikcast / komikcast.fit CDN (v3.komikcast.fit, minio.imgkc1.my.id, sv*.imgkc1.my.id)
+    "imgkc1.my.id": "https://komikcast.fit/",
+    "minio.imgkc1.my.id": "https://komikcast.fit/",
+    # komiku
+    "komiku": "https://komiku.co.id/",
+    # komikindo
+    "komikindo": "https://komikindo.id/",
+    # bacakomik
+    "bacakomik": "https://bacakomik.bio/",
+    # kiryuu
+    "kiryuu": "https://kiryuu.id/",
+    # shinigami
+    "shinigami": "https://shinigami.id/",
+    # westmanga
+    "westmanga": "https://westmanga.fun/",
+    # komikstation
+    "komikstation": "https://komikstation.co/",
+}
+
+# Exact host -> referer overrides (verified live during audit on 2026-08-08).
+_EXACT_REFERER_BY_HOST = {
+    "sv1.imgkc1.my.id": "https://komikcast.fit/",
+    "sv2.imgkc1.my.id": "https://komikcast.fit/",
+}
+
 
 def _ip_is_blocked(ip: str) -> bool:
     """Return True if *ip* falls in any blocked range."""
@@ -111,8 +142,44 @@ async def _validate_url(url: str) -> Optional[str]:
     return None
 
 
+def _pick_referer(url: str, explicit: Optional[str] = None) -> Optional[str]:
+    """Choose the Referer header to send to the upstream image host.
+
+    Priority:
+      1. an explicit ``referer=`` query param from the caller,
+      2. an exact host match in ``_EXACT_REFERER_BY_HOST``,
+      3. a suffix match in ``_REFERER_BY_HOST`` (CDN host contains owner site name),
+      4. the image's own origin (most hotlink filters accept a same-domain
+         referer even when the site itself isn't whitelisted).
+
+    Returns None only when the URL has no host (shouldn't happen — validation
+    runs first), in which case we send the image's origin anyway.
+    """
+    if explicit:
+        return explicit
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return None
+    host = (parsed.hostname or "").lower()
+    if not host:
+        return None
+    if host in _EXACT_REFERER_BY_HOST:
+        return _EXACT_REFERER_BY_HOST[host]
+    for needle, ref in _REFERER_BY_HOST.items():
+        # substring match so sv1.imgkc1.my.id, minio.imgkc1.my.id,
+        # cdn.komikindo.id, etc. all hit their owning source.
+        if needle in host:
+            return ref
+    # fallback: same-origin referer
+    return f"{parsed.scheme}://{parsed.netloc}/"
+
+
 @router.get("/image", summary="Proxy a remote image with SSRF protection")
-async def image_proxy(url: str = Query(..., description="Absolute http(s) URL of the image to fetch.")):
+async def image_proxy(
+    url: str = Query(..., description="Absolute http(s) URL of the image to fetch."),
+    referer: Optional[str] = Query(None, description="Optional Referer header to send upstream (hotlink bypass)."),
+):
     """Fetch *url* server-side and stream the raw bytes back.
 
     This endpoint exists so a browser frontend can render chapter page images
@@ -120,17 +187,32 @@ async def image_proxy(url: str = Query(..., description="Absolute http(s) URL of
     validates that *url* is a public http(s) resource before fetching — any
     scheme other than http/https, and any host that resolves into a private
     IP range, is rejected with HTTP 400.
+
+    A ``referer`` query parameter may be supplied to override the auto-detected
+    Referer (used by sources with strict hotlink protection, e.g. komikcast).
+    When omitted the proxy picks a sensible Referer from the CDN host mapping
+    or falls back to the image's own origin.
     """
     error = await _validate_url(url)
     if error:
         return JSONResponse(status_code=400, content={"ok": False, "error": error})
+
+    headers = {}
+    picked = _pick_referer(url, referer)
+    if picked:
+        headers["Referer"] = picked
+    # A browser-like User-Agent also helps a few hotlink filters that check it.
+    headers.setdefault(
+        "User-Agent",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    )
 
     try:
         client = await get_client()
         # We turn off redirect-following so a malicious redirect cannot bounce
         # us onto an internal host after the initial validation passes. The
         # upstream image hosts we care about do not redirect.
-        resp = await client.get(url, follow_redirects=False)
+        resp = await client.get(url, headers=headers, follow_redirects=False)
     except httpx.RequestError as e:
         return JSONResponse(
             status_code=502, content={"ok": False, "error": f"Upstream fetch failed: {e}"}
@@ -150,7 +232,7 @@ async def image_proxy(url: str = Query(..., description="Absolute http(s) URL of
         if error:
             return JSONResponse(status_code=400, content={"ok": False, "error": error})
         try:
-            resp = await client.get(new_url, follow_redirects=False)
+            resp = await client.get(new_url, headers=headers, follow_redirects=False)
         except httpx.RequestError as e:
             return JSONResponse(
                 status_code=502, content={"ok": False, "error": f"Upstream fetch failed: {e}"}

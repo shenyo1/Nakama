@@ -2,6 +2,7 @@ import { getJson } from "../../../../../lib/api";
 import { ClientComments } from "../../../../../components/ClientComments";
 import Link from "next/link";
 import { BackLink } from "../../../../../components/BackLink";
+import VideoPlayer from "../../../../../components/VideoPlayer";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -113,18 +114,15 @@ export default async function AnimeEpisodePage({
       {streams.length > 0 ? (
         <section className="space-y-2">
           <h2 className="text-sm font-semibold">Stream Links</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-3">
             {streams.map((s, i) => (
-              <a
+              <VideoPlayer
                 key={i}
-                href={s.url || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="card card-hover text-sm"
-              >
-                <span className="font-medium text-ink-100">{s.host || s.quality || `Stream ${i + 1}`}</span>
-                {s.quality ? <span className="ml-2 text-xs text-ink-400">{s.quality}</span> : null}
-              </a>
+                url={s.url}
+                quality={s.quality}
+                host={s.host}
+                poster={undefined}
+              />
             ))}
           </div>
         </section>
