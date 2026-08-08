@@ -19,6 +19,7 @@ interface EpisodeDetail {
   title?: string;
   slug?: string;
   streams?: EpisodeStream[];
+  downloads?: EpisodeStream[];
   download_links?: EpisodeStream[];
   episode?: number | string;
   [k: string]: unknown;
@@ -58,7 +59,7 @@ export default async function AnimeEpisodePage({
   if (!episode) return null;
 
   const streams = episode.streams || [];
-  const downloads = episode.download_links || [];
+  const downloads = episode.downloads || episode.download_links || [];
 
   // Use anime_title from API (e.g. "Liar Game") + episode number (e.g. 1)
   const epNum = String(episode.episode_number || episode.episode || "");

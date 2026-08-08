@@ -297,6 +297,31 @@ def _parse_mirrorstream(soup: BeautifulSoup) -> List[dict]:
                 "url": href if href and href != "#" else None,
                 "data_content": data_content or None,
             })
+
+    # The page may also expose a direct embedded player (e.g. a
+    # <div class="responsive-embed-stream"><iframe src="https://www.blogger.com/video.g?token=...">
+    # ). The data-content mirrors above carry url=null (they need a client-side
+    # AJAX resolve), so surfacing this embeddable iframe lets the frontend render
+    # an instant player instead of an empty "Stream Links" list. The embed block
+    # sits OUTSIDE div.mirrorstream, so search the whole document.
+    embed_players: List[dict] = []
+    for ifr in soup.select("div.responsive-embed-stream iframe, iframe[src*='blogger.com/video.g'], iframe[src*='video.g'], iframe[src*='googleusercontent']"):
+        src = ifr.get("src") or ""
+        if src:
+            # Blogger stream URLs frequently embed a resolution — the token is
+            # what matters; keep the raw src so the iframe plays instantly.
+            embed_players.append({
+                "resolution": None,
+                "provider": "embedded",
+                "url": src,
+                "data_content": None,
+            })
+    # Prefer the embeddable player when the AJAX mirrors have no usable URL.
+    # We append it so the standard data-content mirrors (which carry a
+    # resolution) stay first; the embedded player still renders because
+    # VideoPlayer collapses url-less mirrors and plays the iframe.
+    if not any(s.get("url") for s in streams):
+        streams = streams + embed_players
     return streams
 
 
