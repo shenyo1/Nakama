@@ -12,12 +12,17 @@ type Props = {
 };
 
 export function ItemCard({ title, subtitle, thumbnail, href, badge, source, kind, slug }: Props) {
-  // Build internal detail link if source + kind + slug available
-  let internalHref = href;
-  if (!internalHref && source && kind && slug) {
+  // Build INTERNAL detail link whenever source + kind + slug are present.
+  // Prefer it over the raw external href (it.url points at the origin site),
+  // so cards navigate within Nakama instead of redirecting to the source.
+  let internalHref = "";
+  if (source && kind && slug) {
     if (kind === "comic") internalHref = `/comic/${source}/manga/${slug}`;
     else if (kind === "anime") internalHref = `/anime/${source}/detail/${slug}`;
     else if (kind === "novel") internalHref = `/novel/${source}/detail/${slug}`;
+    else internalHref = href || "";
+  } else {
+    internalHref = href || "";
   }
 
   const inner = (

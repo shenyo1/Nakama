@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { imageProxyUrl } from "@/lib/api";
+import { imageProxyUrl, PUBLIC_API_BASE } from "@/lib/api";
 
 export function SearchBox({
   kind,
@@ -27,7 +27,7 @@ export function SearchBox({
       setLoading(true);
       try {
         const res = await fetch(
-          `/api/backend/${kind}/${source}/search/${encodeURIComponent(query)}`
+          `${PUBLIC_API_BASE}/${kind}/${source}/search/${encodeURIComponent(query)}`
         );
         if (res.ok) {
           const body = await res.json();
