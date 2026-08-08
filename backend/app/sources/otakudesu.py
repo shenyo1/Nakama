@@ -8,6 +8,7 @@ data as possible.
 """
 from __future__ import annotations
 
+import os
 import re
 from typing import List, Optional
 from urllib.parse import urljoin
@@ -28,6 +29,31 @@ def _abs(url: str) -> str:
 
 def _clean(text: str) -> str:
     return " ".join(text.split()).strip()
+
+
+async def _fetch_render(url: str) -> str:
+    """Fetch a page, rendering JS when the site is a client-side shell.
+
+    Otakudesu's current mirrors (bio/cc/cloud) serve a JS-rendered SPA that
+    returns an empty shell to plain requests. We try the shared Camoufox
+    browser pool first so the DOM actually renders, then fall back to the
+    regular ``fetch_text`` (which itself can use FlareSolverr on 403/503).
+    In OFFLINE_MODE we skip the browser entirely and go straight to
+    ``fetch_text`` so offline tests keep reading their local fixtures.
+    Returns an empty string only if every path fails — callers treat that as
+    "no data" rather than raising.
+    """
+    offline = os.environ.get("OFFLINE_MODE", "").strip() in ("1", "true", "yes")
+    if not offline:
+        try:
+            from .camoufox_pool import fetch_via_camoufox
+
+            html = await fetch_via_camoufox(url)
+            if html and len(html) > 500:
+                return html
+        except Exception:
+            pass
+    return await fetch_text(url, source=OtakudesuSource.name)
 
 
 def _slug_from(url: str) -> str:
@@ -341,12 +367,12 @@ class OtakudesuSource(AnimeSource):
     name = "otakudesu"
     base_url = BASE
     meta = SourceMeta(
-        version="2026-07-22",
-        verified_on="2026-07-22",
+        version="2026-08-08",
+        verified_on="2026-08-08",
         base_url_pattern="https://otakudesu.blog/",
         selectors=[".venz", ".detpost", ".eps", "#venkonten .episodelist"],
-        alt_domains=["otakudesu.cc", "otakudesu.wiki"],
-        notes="Switched to .venz container in 2026-07; .detpost deprecated.",
+        alt_domains=["otakudesu.cc", "otakudesu.cloud", "otakudesu.io", "otakudesu.bio"],
+        notes="Mirrors are JS-rendered SPAs since 2026-08 — fetched via Camoufox.",
     )
 
     async def home(self, page: int = 1) -> List[dict]:
@@ -355,7 +381,7 @@ class OtakudesuSource(AnimeSource):
             url = f"{BASE}/ongoing-anime/page/{page}/"
         else:
             url = f"{BASE}/ongoing-anime/"
-        soup = await fetch_soup(url, source=self.name)
+        soup = BeautifulSoup(await _fetch_render(url), "lxml")
         out: List[dict] = []
         for li in soup.select("div.venutama li"):
             out.append(_parse_detpost(li).model_dump())
@@ -393,7 +419,7 @@ class OtakudesuSource(AnimeSource):
 
     async def detail(self, slug: str) -> dict:
         url = f"{BASE}/anime/{slug}/"
-        text = await fetch_text(url, source=self.name)
+        text = await _fetch_render(url)
         soup = BeautifulSoup(text, "lxml")
 
         # Title — prefer h1, fall back to info-box "Judul".
@@ -456,7 +482,7 @@ class OtakudesuSource(AnimeSource):
 
     async def episode(self, slug: str) -> dict:
         url = f"{BASE}/episode/{slug}/"
-        text = await fetch_text(url, source=self.name)
+        text = await _fetch_render(url)
         soup = BeautifulSoup(text, "lxml")
 
         # Episode title / anime title.
