@@ -1,0 +1,12 @@
+[Unit]
+Description=Nakama firewall: block wibuku-test ADB :5555 from internet (Docker bypasses UFW)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/nakama-fw-5555.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

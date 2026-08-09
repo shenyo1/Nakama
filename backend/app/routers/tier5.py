@@ -18,6 +18,7 @@ from ..http import fetch_json
 from ..schemas import ApiResponse
 from ..sources.registry import anime_source, comic_source, novel_source
 from ..sources.anilist import _media_to_summary
+from .proxy import _validate_url  # SSRF guard: DNS-resolves + blocks private/link-local/metadata ranges
 
 router = APIRouter(tags=["tier5"])
 
@@ -314,6 +315,10 @@ async def create_webhook(
     uid = _require_user(request)
     if not (body.url.startswith("https://") or body.url.startswith("http://")):
         raise HTTPException(status_code=400, detail="url must be http(s)")
+    # SSRF guard: resolve the host and refuse private/loopback/link-local/metadata targets.
+    ssrf_err = await _validate_url(body.url)
+    if ssrf_err:
+        raise HTTPException(status_code=400, detail=f"webhook url rejected: {ssrf_err}")
     secret = body.secret or secrets.token_urlsafe(16)
     row = WebhookSubscription(
         user_id=uid,
@@ -414,6 +419,12 @@ async def test_webhook(
     if not row:
         raise HTTPException(status_code=404, detail="webhook not found")
 
+    # SSRF guard at delivery time too: the DNS record may have changed since
+    # creation (rebinding), and older rows predate create-time validation.
+    ssrf_err = await _validate_url(row.url)
+    if ssrf_err:
+        raise HTTPException(status_code=400, detail=f"webhook url rejected: {ssrf_err}")
+
     payload = {
         "event": "chapter.updated",
         "test": True,
@@ -432,7 +443,7 @@ async def test_webhook(
     try:
         import httpx
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=False) as client:
             resp = await client.post(row.url, content=body, headers=headers)
         return ApiResponse(
             data={

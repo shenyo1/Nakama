@@ -40,7 +40,20 @@ def _secret() -> str:
     s = get_settings()
     secret = getattr(s, "jwt_secret", None) or s.api_key
     if not secret:
-        # Dev/test fallback — never use in production without JWT_SECRET/API_KEY.
+        # Fail closed in production: signing tokens with a public constant would
+        # let anyone forge admin JWTs. Only allow the insecure fallback in
+        # offline/dev/test mode (OFFLINE_MODE=1), and warn loudly.
+        if not getattr(s, "offline_mode", False):
+            raise RuntimeError(
+                "Refusing to start auth: neither JWT_SECRET nor API_KEY is set. "
+                "Set one in the environment (production must not use the dev fallback)."
+            )
+        import logging
+
+        logging.getLogger("nakama.security").warning(
+            "No JWT_SECRET/API_KEY set — using INSECURE dev fallback secret. "
+            "This is only acceptable in OFFLINE_MODE/dev/test."
+        )
         secret = "nakama-dev-insecure-secret"
     return secret
 

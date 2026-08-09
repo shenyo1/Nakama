@@ -82,6 +82,22 @@ async def test_webhooks_crud(client):
 
 
 @pytest.mark.asyncio
+async def test_webhooks_reject_ssrf(client):
+    """SSRF guard: webhook create must refuse private/loopback/metadata URLs."""
+    token = await _login(client, "ssrf_user")
+    h = {"Authorization": f"Bearer {token}"}
+    for bad in (
+        "http://169.254.169.254/latest/meta-data/",  # cloud metadata
+        "http://127.0.0.1:6379/",                     # local redis
+        "http://localhost/admin",                     # loopback by name
+        "http://10.0.0.5/internal",                   # RFC1918
+    ):
+        r = await client.post("/webhooks", headers=h, json={"url": bad})
+        assert r.status_code == 400, f"expected 400 for {bad}, got {r.status_code}"
+        assert "rejected" in r.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
 async def test_recommend_and_trending_offline(client):
     # open access in tests (API_KEY unset) — still metered as anon free
     r = await client.get("/recommend/anime")
