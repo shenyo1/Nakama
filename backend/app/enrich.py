@@ -43,6 +43,13 @@ def enrich_home_item(item: dict, kind: str, source_name: str) -> dict:
 
 def enrich_detail(detail: dict, kind: str, source_name: str) -> dict:
     """Add missing fields to a detail response."""
+    # Defensive guard: a scraper may return None/non-dict when the upstream page
+    # can't be parsed (layout change, empty payload). Enriching that would raise
+    # "TypeError: argument of type 'NoneType' is not iterable" and 500 the route.
+    # Return an empty, well-formed detail so the caller gets a clean empty result.
+    if not isinstance(detail, dict):
+        return {"type": kind, "chapters": [], "genres": [], "source": source_name}
+
     # type
     if "type" not in detail or not detail.get("type"):
         detail["type"] = kind

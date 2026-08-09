@@ -198,11 +198,33 @@ def _parse_search(payload: Optional[list]) -> List[dict]:
 def _parse_detail(payload: Optional[list], slug: str) -> Optional[dict]:
     if not payload:
         return None
-    # Walk payload looking for the novel detail
+    # detailPath in the raw payload is an integer ref to a string, so a direct
+    # `item.get("detailPath") == slug` compare never matches. Resolve each
+    # candidate novel object and compare the resolved detailPath.
+    fallback: Optional[dict] = None
     for item in (payload or []):
-        if isinstance(item, dict) and item.get("detailPath") == slug:
-            return _novel_from_ref(payload, item)
-    return None
+        if not (isinstance(item, dict) and "novelId" in item):
+            continue
+        novel = _novel_from_ref(payload, item)
+        if not novel:
+            continue
+        fallback = fallback or novel  # first parseable novel as a fallback
+        if novel.get("slug") == slug:
+            _attach_synopsis(novel)
+            return novel
+    # No exact slug match — return the first novel we could parse (the detail
+    # page's own novel object) rather than None, so the route stays 200.
+    if fallback:
+        _attach_synopsis(fallback)
+    return fallback
+
+
+def _attach_synopsis(novel: dict) -> None:
+    """NovelDetail expects `synopsis` + `chapters`; map from summary/defaults."""
+    if not novel.get("synopsis"):
+        novel["synopsis"] = novel.get("summary", "") or ""
+    if "chapters" not in novel:
+        novel["chapters"] = []
 
 
 def _parse_chapter(payload: Optional[list]) -> Optional[dict]:

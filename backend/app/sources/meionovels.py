@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import List
 from bs4 import BeautifulSoup
-from ..http import fetch_soup
+from ..http import fetch_soup, get_client
 from .base import NovelSource
 from .source_meta import SourceMeta
 
@@ -34,7 +34,13 @@ class MeioNovelSource(NovelSource):
     async def detail(self, slug: str) -> dict:
         url = f"{self.base_url}/novel/{slug}/"
         soup = await fetch_soup(url, source=self.name)
-        return _parse_detail(soup, slug)
+        detail = _parse_detail(soup, slug)
+        # meionovels runs the Madara/wp-manga WordPress theme: the chapter list
+        # is NOT in the initial HTML, it's loaded via an AJAX POST. If the static
+        # parse found no chapters, fetch them from the theme's ajax endpoint.
+        if not detail.get("chapters"):
+            detail["chapters"] = await _fetch_chapters_ajax(slug)
+        return detail
 
     async def chapter(self, slug: str) -> dict:
         url = slug if slug.startswith("http") else f"{self.base_url}/{slug}/"
@@ -76,6 +82,44 @@ def _parse_listing(soup):
             "url": href, "source": "meionovels",
         })
     return out
+
+
+async def _fetch_chapters_ajax(slug: str) -> list:
+    """Fetch the chapter list from the Madara theme's AJAX endpoint.
+
+    meionovels uses the wp-manga (Madara) theme where the chapter list is
+    lazy-loaded via POST to /novel/<slug>/ajax/chapters/. The response is an
+    HTML fragment. Upstream lists newest-first; we reverse to oldest-first so
+    chapters[0] is chapter 1.
+    """
+    url = f"{BASE}/novel/{slug}/ajax/chapters/"
+    try:
+        client = await get_client(source="meionovels")
+        resp = await client.post(url, headers={"X-Requested-With": "XMLHttpRequest"})
+        if resp.status_code != 200 or len(resp.text) < 50:
+            return []
+        frag = BeautifulSoup(resp.text, "html.parser")
+    except Exception:
+        return []
+    chapters = []
+    seen = set()
+    for a in frag.select("li.wp-manga-chapter a, .wp-manga-chapter a, a[href*='chapter']"):
+        href = str(a.get("href", "") or "")
+        if not href or "chapter" not in href.lower():
+            continue
+        if not href.startswith("http"):
+            href = f"{BASE}/{href.lstrip('/')}"
+        slug_ch = href.replace(BASE, "").strip("/")
+        if slug_ch in seen:
+            continue
+        seen.add(slug_ch)
+        chapters.append({
+            "slug": slug_ch,
+            "title": a.get_text(strip=True) or slug_ch,
+            "url": href,
+        })
+    chapters.reverse()
+    return chapters
 
 
 def _parse_detail(soup, slug):
