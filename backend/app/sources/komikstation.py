@@ -63,8 +63,11 @@ class KomikstationSource(ComicSource):
         soup = await fetch_soup(url, source=self.name)
         return _parse_detail(soup, slug, self.base_url)
 
-    async def chapter(self, manga_slug: str, chapter_slug: str) -> Optional[dict]:
-        url = f"{self.base_url}/{chapter_slug}/"
+    async def chapter(self, slug: str) -> dict:
+        # `slug` is the full chapter slug, e.g. "my-manga-chapter-42".
+        # Signature matches the router contract src.chapter(slug) used by all
+        # other comic sources (was chapter(manga_slug, chapter_slug) -> 500).
+        url = f"{self.base_url}/{slug}/"
         soup = await fetch_soup(url, source=self.name)
         return _parse_chapter(soup)
 
@@ -168,10 +171,12 @@ def _parse_detail(soup: BeautifulSoup, slug: str, base_url: str) -> Optional[dic
     }
 
 
-def _parse_chapter(soup: BeautifulSoup) -> Optional[dict]:
+def _parse_chapter(soup: BeautifulSoup) -> dict:
     container = soup.select_one("#readerarea")
     if not container:
-        return None
+        # Return an empty (but well-formed) payload rather than None so the
+        # response shape matches the ComicSource contract and other sources.
+        return {"images": [], "source": "komikstation"}
 
     images: List[str] = []
     for img in container.find_all("img"):
