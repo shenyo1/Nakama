@@ -5,6 +5,7 @@ which auto-detects 403/cf-challenge and routes through FLARESOLVERR_URL.
 """
 from __future__ import annotations
 
+import re
 from typing import List
 from urllib.parse import quote_plus, urljoin
 
@@ -31,6 +32,23 @@ def _slug(url: str) -> str:
     if u.endswith(".html"):
         u = u[:-5]
     return u.rsplit("/", 1)[-1]
+
+
+def _rel_slug(url: str) -> str:
+    """Full site-relative slug (keeps the novel path), used for chapter URLs.
+
+    novelfull chapter pages live at /{novel-slug}/{chapter-slug}.html — so the
+    chapter identifier must keep BOTH segments. _slug() (last segment only) is
+    fine for novel detail slugs but drops the novel path for chapters, which
+    made every chapter URL resolve to /{chapter-slug}.html -> 404.
+    """
+    u = (url or "").split("?", 1)[0].strip()
+    # Make it site-relative: strip scheme+host if absolute.
+    u = re.sub(r"^https?://[^/]+/", "", u)
+    u = u.strip("/")
+    if u.endswith(".html"):
+        u = u[:-5]
+    return u
 
 
 def _parse_row(row: BeautifulSoup) -> dict | None:
@@ -124,7 +142,7 @@ class NovelFullSource(NovelSource):
             chapters.append(
                 {
                     "title": _clean(a.get_text()) or _slug(href),
-                    "slug": _slug(href),
+                    "slug": _rel_slug(href),
                     "url": _abs(href),
                 }
             )
@@ -139,18 +157,23 @@ class NovelFullSource(NovelSource):
         ).model_dump()
 
     async def chapter(self, slug: str) -> dict:
-        if "/" not in slug and slug.endswith(".html"):
-            url = f"{BASE}/{slug}"
+        # slug is a site-relative path (e.g. "novel-name/chapter-1..." from
+        # _rel_slug) or, for backward compatibility, may already be absolute or
+        # end in .html. Build the final URL without dropping the novel segment.
+        if slug.startswith("http"):
+            url = slug
         else:
-            url = (
-                f"{BASE}/{slug}.html" if not slug.endswith(".html") else f"{BASE}/{slug}"
-            )
+            s = slug.strip("/")
+            url = f"{BASE}/{s}" if s.endswith(".html") else f"{BASE}/{s}.html"
         soup = await fetch_soup(url, source=self.name)
         title_el = soup.select_one("h1, .chr-title, .chapter-title")
         title = _clean(title_el.get_text()) if title_el else slug
         paragraphs = [
             _clean(p.get_text())
-            for p in soup.select("#chr-content p, .chapter-content p, .chr-c p, .content p")
+            for p in soup.select(
+                "#chapter-content p, #chr-content p, .chapter-content p, "
+                ".chapter-c p, .chr-c p, .content p"
+            )
             if _clean(p.get_text())
         ]
         return ChapterText(
