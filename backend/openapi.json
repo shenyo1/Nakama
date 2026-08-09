@@ -114,6 +114,72 @@
         }
       }
     },
+    "/anime/all/home": {
+      "get": {
+        "tags": [
+          "anime"
+        ],
+        "summary": "Unified home listing across all anime sources (deduplicated)",
+        "description": "Aggregate every source's home() into one deduplicated list.\n\nPowers the \"one unified list, providers hidden\" home page. Each item is\nannotated with _sources (which providers carry it), _source_count, and\n_best_source (the highest-ranked provider to open by default). Cached 5m.",
+        "operationId": "home_all_anime_all_home_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/anime/": {
       "get": {
         "tags": [
@@ -1710,7 +1776,7 @@
           "proxy"
         ],
         "summary": "Proxy a remote image with SSRF protection",
-        "description": "Fetch *url* server-side and stream the raw bytes back.\n\nThis endpoint exists so a browser frontend can render chapter page images\nthat would otherwise be blocked by hotlink protection or CORS. The server\nvalidates that *url* is a public http(s) resource before fetching — any\nscheme other than http/https, and any host that resolves into a private\nIP range, is rejected with HTTP 400.\n\nA ``referer`` query parameter may be supplied to override the auto-detected\nReferer (used by sources with strict hotlink protection, e.g. komikcast).\nWhen omitted the proxy picks a sensible Referer from the CDN host mapping\nor falls back to the image's own origin.",
+        "description": "Fetch *url* server-side and stream the raw bytes back.\n\nThis endpoint exists so a browser frontend can render chapter page images\nthat would otherwise be blocked by hotlink protection or CORS. The server\nvalidates that *url* is a public http(s) resource before fetching \u2014 any\nscheme other than http/https, and any host that resolves into a private\nIP range, is rejected with HTTP 400.\n\nA ``referer`` query parameter may be supplied to override the auto-detected\nReferer (used by sources with strict hotlink protection, e.g. komikcast).\nWhen omitted the proxy picks a sensible Referer from the CDN host mapping\nor falls back to the image's own origin.",
         "operationId": "image_proxy_image_get",
         "parameters": [
           {
@@ -2385,7 +2451,7 @@
           "auth"
         ],
         "summary": "Request a password-reset link",
-        "description": "Always returns 200 to avoid user-enumeration. The reset link is sent\nvia SMTP when configured, or returned in the response payload when\nSMTP is disabled (so local installs still work).\n\nUses ``scalars().first()`` instead of ``scalar_one_or_none()`` to be\nresilient to duplicate email rows (defensive — the DB has a partial\nUNIQUE index on non-empty emails, but legacy data or races could\nstill produce dupes). If multiple rows match, picks the first.",
+        "description": "Always returns 200 to avoid user-enumeration. The reset link is sent\nvia SMTP when configured, or returned in the response payload when\nSMTP is disabled (so local installs still work).\n\nUses ``scalars().first()`` instead of ``scalar_one_or_none()`` to be\nresilient to duplicate email rows (defensive \u2014 the DB has a partial\nUNIQUE index on non-empty emails, but legacy data or races could\nstill produce dupes). If multiple rows match, picks the first.",
         "operationId": "forgot_auth_forgot_post",
         "requestBody": {
           "content": {
@@ -2468,7 +2534,7 @@
           "auth"
         ],
         "summary": "Confirm an email address via token (email link)",
-        "description": "Accept token via query string (GET — email link).",
+        "description": "Accept token via query string (GET \u2014 email link).",
         "operationId": "auth_confirm_get",
         "parameters": [
           {
@@ -2516,7 +2582,7 @@
           "auth"
         ],
         "summary": "Confirm an email address via token (JSON body)",
-        "description": "Accept token via JSON body (POST — API).",
+        "description": "Accept token via JSON body (POST \u2014 API).",
         "operationId": "auth_confirm",
         "requestBody": {
           "required": true,
@@ -4226,7 +4292,7 @@
           "ai-comic"
         ],
         "summary": "List Styles",
-        "description": "List the art styles accepted by ``POST /ai/generate``.\n\nSingle source of truth: the same ``STYLE_MODIFIERS`` dict that drives\npanel generation. Frontends use this to render a style picker without\nhardcoding the catalog, so adding a style here automatically extends\nboth the picker and the validator.\n\nPublic (no auth) — matches ``/ai/gallery`` and lives under the ``/ai``\nprefix that ``_PUBLIC_PREFIXES`` whitelists in ``app/main.py``.",
+        "description": "List the art styles accepted by ``POST /ai/generate``.\n\nSingle source of truth: the same ``STYLE_MODIFIERS`` dict that drives\npanel generation. Frontends use this to render a style picker without\nhardcoding the catalog, so adding a style here automatically extends\nboth the picker and the validator.\n\nPublic (no auth) \u2014 matches ``/ai/gallery`` and lives under the ``/ai``\nprefix that ``_PUBLIC_PREFIXES`` whitelists in ``app/main.py``.",
         "operationId": "list_styles_ai_styles_get",
         "responses": {
           "200": {
@@ -4492,7 +4558,7 @@
           "ai-insights"
         ],
         "summary": "Translate Text",
-        "description": "Translate / summarize / mood-tag a text passage.\n\nFalls back to GPT-4o-mini by default; the endpoint is stateless and cost-\nconscious. translate → Indonesian, summarize → short recap, mood_tags →\nlist of short mood phrases.",
+        "description": "Translate / summarize / mood-tag a text passage.\n\nFalls back to GPT-4o-mini by default; the endpoint is stateless and cost-\nconscious. translate \u2192 Indonesian, summarize \u2192 short recap, mood_tags \u2192\nlist of short mood phrases.",
         "operationId": "translate_text_ai_translate_post",
         "requestBody": {
           "content": {
@@ -5003,7 +5069,7 @@
           "ops"
         ],
         "summary": "Report a client-side error",
-        "description": "Called by the browser/Next.js error boundary when something blows up.\n\nCheap to call, rate-limited globally, and never raises — a downstream\nerror tracker that itself errors is worse than no tracker.",
+        "description": "Called by the browser/Next.js error boundary when something blows up.\n\nCheap to call, rate-limited globally, and never raises \u2014 a downstream\nerror tracker that itself errors is worse than no tracker.",
         "operationId": "report_error_errors_post",
         "parameters": [
           {
@@ -6320,7 +6386,7 @@
     "/health": {
       "get": {
         "summary": "Health",
-        "description": "Liveness probe.\n\nReturns the active source list and the current OFFLINE_MODE setting.\nPerforms no network I/O — safe to call in air-gapped / CI environments.",
+        "description": "Liveness probe.\n\nReturns the active source list and the current OFFLINE_MODE setting.\nPerforms no network I/O \u2014 safe to call in air-gapped / CI environments.",
         "operationId": "health_health_get",
         "responses": {
           "200": {
@@ -6339,7 +6405,7 @@
     "/stats": {
       "get": {
         "summary": "Stats",
-        "description": "Operational stats: source counts, total, uptime, and mode flag.\n\nPure-process introspection — no network calls — so this endpoint is safe\nto hit in offline mode and from liveness/readiness probes.",
+        "description": "Operational stats: source counts, total, uptime, and mode flag.\n\nPure-process introspection \u2014 no network calls \u2014 so this endpoint is safe\nto hit in offline mode and from liveness/readiness probes.",
         "operationId": "stats_stats_get",
         "responses": {
           "200": {
@@ -6728,7 +6794,7 @@
           "event"
         ],
         "title": "BroadcastBody",
-        "description": "Body schema for ``POST /admin/broadcast``.\n\n``event`` is forwarded verbatim to every connected WebSocket. We don't\nenforce a schema on ``event`` because the broadcaster's own payloads\n(chapter_update, hello, ping, …) may evolve. A ``type`` field is\nrecommended but not required."
+        "description": "Body schema for ``POST /admin/broadcast``.\n\n``event`` is forwarded verbatim to every connected WebSocket. We don't\nenforce a schema on ``event`` because the broadcaster's own payloads\n(chapter_update, hello, ping, \u2026) may evolve. A ``type`` field is\nrecommended but not required."
       },
       "ChangePasswordBody": {
         "properties": {
@@ -8211,7 +8277,7 @@
           "score": {
             "type": "number",
             "title": "Score",
-            "description": "Cosine similarity score (0–1). Higher = more similar."
+            "description": "Cosine similarity score (0\u20131). Higher = more similar."
           },
           "thumbnail": {
             "anyOf": [
@@ -8307,7 +8373,7 @@
           "kind"
         ],
         "title": "RecommendationRequest",
-        "description": "Request to get similar content recommendations.\n\n``title`` is required — it's the anchor item to find similars for.\n``kind`` narrows the candidate pool (anime, comic, or novel).\n``limit`` caps how many recommendations to return (default 5, max 20).\n``synopsis`` and ``genres`` enrich the similarity signal; they are\noptional but highly recommended for quality results."
+        "description": "Request to get similar content recommendations.\n\n``title`` is required \u2014 it's the anchor item to find similars for.\n``kind`` narrows the candidate pool (anime, comic, or novel).\n``limit`` caps how many recommendations to return (default 5, max 20).\n``synopsis`` and ``genres`` enrich the similarity signal; they are\noptional but highly recommended for quality results."
       },
       "RecommendationResponse": {
         "properties": {

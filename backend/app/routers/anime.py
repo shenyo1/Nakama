@@ -12,7 +12,7 @@ from ..ratelimit import limiter
 from ..schemas import ApiResponse, AnimeDetail, AnimeSummary, Episode, Genre, Paginated
 from ..sources import anime_source, list_anime_sources
 from ..sources.base import SourceError
-from ..sources.merge_search import multi_source_search, normalize_title
+from ..sources.merge_search import multi_source_search, multi_source_home, normalize_title
 from ._pagination import paginate, pagination_params
 
 router = APIRouter(prefix="/anime", tags=["anime"])
@@ -63,6 +63,36 @@ async def search_all(
         page_size=page_size,
     )
     return ApiResponse(source="multi", data=result)
+
+
+@router.get(
+    "/all/home",
+    summary="Unified home listing across all anime sources (deduplicated)",
+)
+@limiter.limit(get_settings().rate_limit)
+async def home_all(
+    request: Request,
+    page: Optional[int] = Query(None, ge=1),
+    page_size: Optional[int] = Query(None, ge=1),
+):
+    """Aggregate every source's home() into one deduplicated list.
+
+    Powers the "one unified list, providers hidden" home page. Each item is
+    annotated with _sources (which providers carry it), _source_count, and
+    _best_source (the highest-ranked provider to open by default). Cached 5m.
+    """
+    async def _fetch():
+        result = await multi_source_home(
+            kind="anime",
+            get_factory=anime_source,
+            list_fn=list_anime_sources,
+            page=page,
+            page_size=page_size,
+        )
+        return ApiResponse(source="multi", data=result).model_dump()
+
+    from ..response_cache import cached_response
+    return await cached_response(request, _fetch, ttl_seconds=300)
 
 
 def _get(source: str):

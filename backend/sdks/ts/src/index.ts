@@ -141,6 +141,36 @@ export class Anime {
   }
 
   /**
+   * Unified home listing across all anime sources (deduplicated)
+   * @see GET /anime/all/home
+   * Aggregate every source's home() into one deduplicated list.
+   * 
+   * Powers the "one unified list, providers hidden" home page. Each item is
+   * annotated with _sources (which providers carry it), _source_count, and
+   * _best_source (the highest-ranked provider to open by default). Cached 5m.
+   */
+  async home(params?: { "page"?: number; "page_size"?: number }): Promise<unknown> {
+    const p: any = (params as any) ?? {};
+    const search = new URLSearchParams();
+    if (p.page !== undefined) search.set("page", String(p.page));
+    if (p.page_size !== undefined) search.set("page_size", String(p.page_size));
+    const qs = search.toString();
+    const suffix = qs ? `?${qs}` : "";
+    const url = `${this._client.baseUrl}/anime/all/home${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
+    const init: RequestInit = {
+      method: "GET",
+      headers: hdrs,
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as unknown;
+  }
+
+  /**
    * Search across all anime sources (deduplicated, scored)
    * @see GET /anime/search/{query}
    * Search every anime source concurrently, deduplicate by normalized title.
@@ -264,7 +294,7 @@ export class Anime {
    * Latest ongoing anime
    * @see GET /anime/{source}/home
    */
-  async home(source: string, params?: { "cursor"?: string; "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async home_get(source: string, params?: { "cursor"?: string; "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.cursor !== undefined) search.set("cursor", String(p.cursor));

@@ -223,6 +223,126 @@ async def multi_source_search(
     return result
 
 
+async def multi_source_home(
+    *,
+    kind: str,
+    get_factory: Callable[[str], Any],
+    list_fn: Callable[[], List[str]],
+    timeout: float = 15.0,
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Aggregate the ``home()`` listing of every registered source.
+
+    Mirrors multi_source_search but calls each source's home() instead of
+    search(query). Fans out concurrently, deduplicates by normalized title,
+    merges duplicate titles across sources (annotating _sources), and returns
+    a single unified list sorted by source coverage then source quality. This
+    is what powers the "one unified list, providers hidden" home page.
+    """
+    sources = list_fn()
+    if not sources:
+        return {
+            "items": [],
+            "sources_queried": [],
+            "sources_failed": [{"source": "*", "error": f"no {kind} sources configured"}],
+            "merged_unique_titles": 0,
+            "page": page or 1,
+            "page_size": page_size,
+            "total": 0,
+        }
+
+    async def _one(name: str):
+        src = get_factory(name)
+        if src is None:
+            return name, {"error": "not registered"}
+        try:
+            results = await src.home()
+            return name, {"ok": True, "items": results if isinstance(results, list) else []}
+        except Exception as e:
+            return name, {"ok": False, "error": str(e)[:200]}
+
+    SLOW_SOURCES = {"sakuranovel", "westmanga", "samehadaku", "anoboy"}
+    fast = [s for s in sources if s not in SLOW_SOURCES]
+    slow = [s for s in sources if s in SLOW_SOURCES]
+
+    async def _staggered(name: str, delay: float = 0.0):
+        if delay > 0:
+            await asyncio.sleep(delay)
+        return await asyncio.wait_for(_one(name), timeout=timeout)
+
+    tasks = [_staggered(s) for s in fast] + [_staggered(s, 0.5) for s in slow]
+    finished = await asyncio.gather(*tasks, return_exceptions=True)
+
+    by_source: Dict[str, dict] = {}
+    sources_failed: List[dict] = []
+    for result in finished:
+        if isinstance(result, BaseException):
+            sources_failed.append({"source": "?", "error": str(result)[:200]})
+            continue
+        if not isinstance(result, tuple) or len(result) != 2:
+            continue
+        name, data = result
+        by_source[name] = data
+        if not data.get("ok"):
+            sources_failed.append({"source": name, "error": data.get("error", "unknown")})
+
+    merged = _merge_by_title(by_source)
+
+    items = []
+    for m in merged.values():
+        items.append({**m, "_best_source": m.pop("_best_source", "")})
+    items.sort(
+        key=lambda x: (-x.get("_source_count", 0), x.get("_best_source", ""), x.get("title", "")),
+    )
+
+    paged, total = _paginate(items, page, page_size)
+    if isinstance(paged, dict) and paged.get("page_size") is None and page is None:
+        result_out: Dict[str, Any] = {
+            "items": paged["items"],
+            "page": 1,
+            "page_size": None,
+            "total": total,
+        }
+    else:
+        result_out = paged
+    result_out["sources_queried"] = sources
+    result_out["sources_failed"] = sources_failed
+    result_out["merged_unique_titles"] = len(merged)
+    return result_out
+
+
+def _merge_by_title(by_source: Dict[str, dict]) -> Dict[str, dict]:
+    """Deduplicate items across sources by normalized title.
+
+    Prefers fields from the higher-ranked source and annotates each merged
+    item with _sources / _source_count / _best_source.
+    """
+    merged: Dict[str, dict] = {}
+    for name, data in by_source.items():
+        for item in data.get("items", []):
+            if not isinstance(item, dict):
+                continue
+            key = dedup_key(item)
+            if not key:
+                continue
+            if key not in merged:
+                merged[key] = {
+                    **item,
+                    "_sources": [],
+                    "_source_count": 0,
+                    "_best_source": name,
+                }
+            else:
+                existing = merged[key]
+                if _source_rank(name) < _source_rank(existing.get("_best_source", "")):
+                    merged[key] = {**existing, **item, "_sources": existing["_sources"]}
+                    merged[key]["_best_source"] = name
+            merged[key]["_sources"].append(name)
+            merged[key]["_source_count"] = len(merged[key]["_sources"])
+    return merged
+
+
 def _paginate(items: list, page: Optional[int], page_size: Optional[int]) -> Tuple[dict, int]:
     """Return (paged_dict, total). paged_dict has items + page meta.
 
