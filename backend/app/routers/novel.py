@@ -153,7 +153,7 @@ async def detail(source: str, slug: str, request: Request):
 
 
 @router.get(
-    "/{source}/chapter/{slug}",
+    "/{source}/chapter/{slug:path}",
     response_model=ApiResponse,
     summary="Chapter text (novel prose)",
 )
