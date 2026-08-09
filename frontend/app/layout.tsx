@@ -19,6 +19,14 @@ export const metadata: Metadata = {
   description:
     "Nakama: multi-source anime, comic, and novel REST API with live WebSocket updates.",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/icon-192.png", sizes: "192x192" }],
+  },
   appleWebApp: {
     capable: true,
     title: "Nakama",
