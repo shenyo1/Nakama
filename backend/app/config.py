@@ -45,6 +45,11 @@ class Settings:
         self.api_keys: list[str] = [
             k.strip() for k in os.getenv("API_KEYS", "").split(",") if k.strip()
         ]
+        # /mcp exposes EVERY endpoint as an AI-agent tool. By default it is
+        # gated behind the same auth as metered routes when API_KEY is set
+        # (production). Set MCP_ALLOW_PUBLIC=1 to keep it open (e.g. for a
+        # trusted-network MCP client that can't send the key header).
+        self.mcp_allow_public: bool = _env_bool("MCP_ALLOW_PUBLIC", False)
         # Allowed CORS origins. "*" = any (dev default). Production should set
         # ALLOW_ORIGINS="https://mynakama.web.id,https://www.mynakama.web.id" (the frontend portal).
         self.allow_origins: list[str] = [

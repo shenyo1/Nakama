@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import hmac
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -252,6 +253,7 @@ _METERED_PREFIXES = (
     "/lists",
     "/community",
     "/preferences",
+    "/mcp",  # AI-agent tool surface — gate behind auth unless MCP_ALLOW_PUBLIC=1
 )
 
 # Cache-Control policy table. Cloudflare Free honours Cache-Control on the
@@ -288,7 +290,7 @@ async def api_key_auth(request: Request, call_next):
         or path.startswith("/auth")
         or path.startswith("/docs")
         or path.startswith("/redoc")
-        or path.startswith("/mcp")  # MCP server for AI agents
+        or (path.startswith("/mcp") and s.mcp_allow_public)  # MCP public only if explicitly allowed
         or path.startswith("/creator/browse")  # Public creator browsing
         or (path.startswith("/anime/") and "/home" in path)  # Public anime browsing
         or (path.startswith("/anime/") and "/detail/" in path)  # Public anime detail pages
@@ -331,12 +333,12 @@ async def api_key_auth(request: Request, call_next):
                 ok = True
             except Exception:
                 ok = False
-        if not ok and s.api_key and api_key_hdr == s.api_key:
+        if not ok and s.api_key and hmac.compare_digest(api_key_hdr, s.api_key):
             principal = "apikey"
             plan = "unlimited"
             auth_method = "api_key"
             ok = True
-        if not ok and s.api_keys and api_key_hdr in s.api_keys:
+        if not ok and s.api_keys and any(hmac.compare_digest(api_key_hdr, k) for k in s.api_keys):
             principal = "apikey"
             plan = "unlimited"
             auth_method = "api_key"
@@ -519,9 +521,14 @@ async def _unhandled_exception_handler(request: Request, exc: Exception):
     """Capture and re-raise as 500 so FastAPI still sends a clean response."""
     capture_server_error(request, exc, status_code=500)
     from fastapi.responses import JSONResponse
+
+    # Never leak internal exception strings to clients in production — they can
+    # reveal stack internals, file paths, or secrets. Only expose detail in
+    # offline/dev mode. The full error is always captured server-side above.
+    detail = str(exc)[:200] if get_settings().offline_mode else "An internal error occurred."
     return JSONResponse(
         status_code=500,
-        content={"ok": False, "error": "internal_error", "detail": str(exc)[:200]},
+        content={"ok": False, "error": "internal_error", "detail": detail},
     )
 
 from .routers.preferences import router as preferences_router
