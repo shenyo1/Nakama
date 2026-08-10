@@ -198,7 +198,7 @@ export default function HomePage() {
 
           <p className="max-w-2xl text-sm text-ink-300 leading-relaxed sm:text-base lg:text-lg">
             Nakama aggregates {totalSources} public sources into one beautiful interface.
-            Watch anime, read manga, devour novels — all in one place, powered by a blazing-fast REST API.
+            Watch anime, read manga, devour novels. All in one place, powered by a blazing-fast REST API.
           </p>
 
           <div className="flex flex-wrap gap-2 sm:gap-3">
@@ -220,7 +220,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats — glassmorphism cards */}
+      {/* Stats */}
       <section className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-4">
         <StatCard label="Total sources" value={totalSources} icon="🌐" />
         <StatCard label="Anime" value={ANIME_SOURCES.length} icon="📺" />
@@ -228,11 +228,11 @@ export default function HomePage() {
         <StatCard label="Novels" value={NOVEL_SOURCES.length} icon="📖" />
       </section>
 
-      {/* Feature highlights — bento grid */}
+      {/* Feature highlights */}
       <section className="grid gap-3 sm:gap-6 md:grid-cols-3 md:grid-rows-2">
         <FeatureCard
           title="Unified Search"
-          description={`Search across all ${totalSources} sources simultaneously. Results are automatically deduplicated and ranked by coverage — no more switching between sites.`}
+          description={`Search across all ${totalSources} sources simultaneously. Results are automatically deduplicated and ranked by coverage. No more switching between sites.`}
           href="/search"
           featured
           className="md:col-span-2 md:row-span-2"
@@ -260,7 +260,7 @@ export default function HomePage() {
         />
       </section>
 
-      {/* Source showcase — animated pills */}
+      {/* Source showcase */}
       <section className="space-y-3">
         <h2 className="font-display text-lg font-bold sm:text-xl">All Sources</h2>
         <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -320,7 +320,7 @@ function StatCard({ label, value, icon }: { label: string; value: string | numbe
   return (
     <div className="card card-hover group">
       <div className="flex items-center justify-between">
-        <p className="text-xs uppercase tracking-wide text-ink-400">{label}</p>
+        <p className="text-xs text-ink-400">{label}</p>
         <span className="text-lg opacity-50 transition group-hover:opacity-100 group-hover:scale-110">{icon}</span>
       </div>
       <p className="mt-1 text-2xl font-bold text-ink-50 tabular-nums sm:text-3xl">{value}</p>

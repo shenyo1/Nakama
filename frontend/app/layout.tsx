@@ -18,9 +18,9 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
 `;
 
 export const metadata: Metadata = {
-  title: "Nakama — Anime, Manga & Novel Hub",
+  title: "Nakama. Anime, Manga & Novel Hub",
   description:
-    "Browse anime, read manga, and devour novels from 21+ sources — all in one place. Powered by a blazing-fast REST API.",
+    "Browse anime, read manga, and devour novels from 21+ sources. All in one place, powered by a blazing-fast REST API.",
   manifest: "/manifest.json",
   icons: {
     icon: [
