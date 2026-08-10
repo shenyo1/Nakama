@@ -17,10 +17,10 @@ check() {
   curl -sS -o /tmp/nakama_digest_body.json -w '%{http_code}' --max-time 15 -H "User-Agent: $UA" -L "$url" || echo 000
 }
 
-api_health=$(check https://app.mynakama.web.id/health)
-api_stats=$(check https://app.mynakama.web.id/stats)
-app_home=$(check https://app.mynakama.web.id/)
-prot=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 -H "User-Agent: $UA" https://app.mynakama.web.id/anime/otakudesu/home || echo 000)
+api_health=$(check https://api.mynakama.web.id/health)
+api_stats=$(check https://api.mynakama.web.id/stats)
+app_home=$(check https://mynakama.web.id/)
+prot=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 -H "User-Agent: $UA" https://api.mynakama.web.id/anime/otakudesu/home || echo 000)
 
 # parse stats if ok
 stats_line="n/a"
@@ -42,7 +42,7 @@ fi
 
 # source health summary (passive + optional probe of degraded)
 health_line="n/a"
-health_code=$(check https://app.mynakama.web.id/sources/health)
+health_code=$(check https://api.mynakama.web.id/sources/health)
 if [[ "$health_code" == "200" ]]; then
   health_line=$(python3 - <<'PY'
 import json
@@ -96,9 +96,9 @@ MSG="📊 Nakama daily digest
 • mem: ${mem}
 • containers: ${docker_line}
 • urls:
-  - https://app.mynakama.web.id/health
-  - https://app.mynakama.web.id/sources/health
-  - https://app.mynakama.web.id"
+  - https://api.mynakama.web.id/health
+  - https://api.mynakama.web.id/sources/health
+  - https://mynakama.web.id"
 
 curl -sS --max-time 15 -X POST \
   "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \

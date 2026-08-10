@@ -16,7 +16,7 @@ CONF="${NAKAMA_MONITOR_CONF:-/home/ubuntu/.config/nakama/monitor.env}"
 STATE_DIR="${NAKAMA_MONITOR_STATE:-/home/ubuntu/.config/nakama/monitor-state}"
 STATE_FILE="$STATE_DIR/komikcast-token.json"
 COOLDOWN_SECONDS="${KOMIKCAST_TOKEN_COOLDOWN:-21600}"  # 6h default
-HEALTH_URL="${NAKAMA_HEALTH_URL:-https://app.mynakama.web.id/sources/health}"
+HEALTH_URL="${NAKAMA_HEALTH_URL:-https://api.mynakama.web.id/sources/health}"
 ALERT_SEVERITY="warning"
 
 mkdir -p "$STATE_DIR"

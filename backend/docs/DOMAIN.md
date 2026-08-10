@@ -9,7 +9,7 @@
 | Compose file | `docker-compose.prod.yml` |
 | Containers | `nakama-api` (127.0.0.1:8000), `nakama-redis` |
 | Nginx site | `/etc/nginx/sites-available/mynakama` (HTTP:80 + HTTPS:443) |
-| Public URL | `https://app.mynakama.web.id/health` → **200** |
+| Public URL | `https://api.mynakama.web.id/health` → **200** |
 | Cloudflare account | `afif210809@gmail.com` / Account `5e3b3e40c231fb24162a83f896bd1be3` |
 | Zone ID | `0b076074562ee224897377b539e11de8` |
 | CF nameservers | `jose.ns.cloudflare.com`, `nicole.ns.cloudflare.com` |
@@ -109,9 +109,9 @@ Saat ini nginx listen HTTP:80 untuk `mynakama.web.id`, jadi pakai
 
 ```bash
 # Dari HP / laptop (setelah NS active + A record)
-curl -fsS https://app.mynakama.web.id/health
-curl -fsS https://app.mynakama.web.id/stats
-curl -fsS https://app.mynakama.web.id/docs
+curl -fsS https://api.mynakama.web.id/health
+curl -fsS https://api.mynakama.web.id/stats
+curl -fsS https://api.mynakama.web.id/docs
 ```
 
 Kalau 522/521:
@@ -140,5 +140,5 @@ Opsi nanti:
 
 1. Set `API_KEY` di `docker-compose.prod.yml` + recreate
 2. Deploy frontend Next.js ke Cloudflare Pages → `www` atau subdomain
-3. Custom domain Pages: `app.mynakama.web.id`
+3. Custom domain Pages: `mynakama.web.id`
 4. Optional: Origin Certificate + nginx 443 Full SSL

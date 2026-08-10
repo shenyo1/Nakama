@@ -16,7 +16,7 @@ The 2026-08-09 audit flagged two *interrelated* frontend auth issues:
 - **FE-H1 — BFF proxy is effectively dead code.** `app/api/backend/[...path]/route.ts`
   is a well-built same-origin proxy that attaches the server-only `X-API-Key`,
   but almost nothing routes through it: `NEXT_PUBLIC_API_BASE` is always set in
-  prod, so client calls hit `app.mynakama.web.id` cross-origin directly. The
+  prod, so client calls hit `api.mynakama.web.id` cross-origin directly. The
   "browser never sees the API key" guarantee is therefore not delivered.
 
 ## Why this is NOT a quick fix

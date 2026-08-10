@@ -86,7 +86,7 @@ echo "TELEGRAM_BOT_TOKEN: message @BotFather → /revoke → /token"
 
 1. Update `.env.production` on VPS
 2. Update GitHub Secrets (if applicable)
-3. Test login on https://app.mynakama.web.id
+3. Test login on https://mynakama.web.id
 4. Test API: `curl -H "X-API-Key: NEW_KEY" https://mynakama.web.id/anime/otakudesu/home`
 5. Test email: try password reset
 6. Test Telegram: trigger a notification

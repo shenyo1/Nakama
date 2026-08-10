@@ -29,7 +29,7 @@ Browser  ──HTTPS──▶  Cloudflare Pages  (static + edge functions)
 ### Domain
 
 Frontend on Pages gets its own subdomain:
-- `app.mynakama.web.id` → Pages (new)
+- `mynakama.web.id` → Pages (new)
 - `mynakama.web.id` → VPS (API, current)
 
 ### Build
@@ -39,8 +39,8 @@ Cloudflare's `_worker.js` (edge) + static assets format.
 
 ```bash
 cd frontend
-NEXT_PUBLIC_API_BASE=https://app.mynakama.web.id npm run build
-NEXT_PUBLIC_API_BASE=https://app.mynakama.web.id npx @cloudflare/next-on-pages
+NEXT_PUBLIC_API_BASE=https://api.mynakama.web.id npm run build
+NEXT_PUBLIC_API_BASE=https://api.mynakama.web.id npx @cloudflare/next-on-pages
 # Output: .vercel/output/{static,functions}
 ```
 
@@ -61,8 +61,8 @@ NEXT_PUBLIC_API_BASE=https://app.mynakama.web.id npx @cloudflare/next-on-pages
    - **Root directory**: `frontend`  ← important!
    - **Environment variables**:
      - `NODE_VERSION=20`
-     - `NEXT_PUBLIC_API_BASE=https://app.mynakama.web.id`
-4. Custom domain: `app.mynakama.web.id` → set CNAME in DNS.
+     - `NEXT_PUBLIC_API_BASE=https://api.mynakama.web.id`
+4. Custom domain: `mynakama.web.id` → set CNAME in DNS.
 
 ### Or use the auto-deploy workflow
 
@@ -89,16 +89,16 @@ NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run dev
 - [x] `.github/workflows/frontend-deploy.yml` for auto-deploy
 - [x] CF Pages project created via dashboard OR manual deploy
 - [ ] `CF_PAGES_DEPLOY_TOKEN` + `CF_ACCOUNT_ID` secrets on GitHub
-- [ ] Custom domain `app.mynakama.web.id` set in Pages dashboard
+- [ ] Custom domain `mynakama.web.id` set in Pages dashboard
 - [ ] Update DNS: `app` → Pages project (CNAME) — currently proxied to VPS
 - [ ] Once verified, stop the `nakama-frontend` container on VPS
 
 ## Rollback
 
-If Pages breaks, just change DNS `app.mynakama.web.id` back to VPS IP:
+If Pages breaks, just change DNS `mynakama.web.id` back to VPS IP:
 ```bash
 # In Cloudflare DNS:
-# app.mynakama.web.id → A 43.134.33.222 (was CNAME → pages.dev)
+# mynakama.web.id → A 43.134.33.222 (was CNAME → pages.dev)
 ```
 
 The VPS container stays running until Pages is verified stable.

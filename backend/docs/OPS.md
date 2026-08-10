@@ -1,14 +1,14 @@
 # Nakama production ops (VPS)
 
 ## URLs
-- API: https://app.mynakama.web.id
+- API: https://api.mynakama.web.id
 - API alias: https://api.mynakama.web.id
-- Frontend: https://app.mynakama.web.id
-- Status UI: https://app.mynakama.web.id/status
-- BFF proxy: https://app.mynakama.web.id/api/backend/<path>
-- Source health JSON: https://app.mynakama.web.id/sources/health
-- Docs: https://app.mynakama.web.id/docs
-- Liveness: https://app.mynakama.web.id/health (public)
+- Frontend: https://mynakama.web.id
+- Status UI: https://mynakama.web.id/status
+- BFF proxy: https://mynakama.web.id/api/backend/<path>
+- Source health JSON: https://api.mynakama.web.id/sources/health
+- Docs: https://api.mynakama.web.id/docs
+- Liveness: https://api.mynakama.web.id/health (public)
 
 ## Secrets (this machine)
 - API key file: `/home/ubuntu/.config/nakama/api-key`
@@ -25,9 +25,9 @@
 
 ```bash
 KEY=$(cat /home/ubuntu/.config/nakama/api-key)
-curl -H "X-API-Key: $KEY" 'https://app.mynakama.web.id/anime/otakudesu/home'
+curl -H "X-API-Key: $KEY" 'https://api.mynakama.web.id/anime/otakudesu/home'
 # or via BFF (no key in browser):
-curl 'https://app.mynakama.web.id/api/backend/anime/otakudesu/home'
+curl 'https://mynakama.web.id/api/backend/anime/otakudesu/home'
 ```
 
 Public without key: `/`, `/health`, `/docs`, `/redoc`, `/openapi.json`, `/stats`, `/sources/health`.
@@ -46,7 +46,7 @@ docker compose --env-file .env.production -f docker-compose.prod.yml logs -f api
 | `GET /sources/health` | Passive scoreboard (fast) |
 | `GET /sources/health?probe=true` | Active probe all sources (slow) |
 | `GET /sources/health/{name}?probe=true` | Probe one source |
-| UI | https://app.mynakama.web.id/status |
+| UI | https://mynakama.web.id/status |
 
 API runs **1 uvicorn worker** so in-process health counters stay consistent.
 

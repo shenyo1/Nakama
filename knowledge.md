@@ -23,7 +23,7 @@
 
 - **Total Adventurers' Power Sources**: 21 ⚡ (bertahap bertambah)
 - **Successful Magic Tests**: 328 ✨ (semua hijau, 49.5s)
-- **Castle Status**: Online di `mynakama.web.id` & `app.mynakama.web.id`
+- **Castle Status**: Online di `mynakama.web.id` & `mynakama.web.id`
 - **The Guardian Barrier**: Ping setiap 60 detik (watchdog aktif)
 - **Latest Adventurer**: v2.8.5 — regen openapi + otakudesu inline player
 - **Audit**: `audit/2026-08-09-total-audit.md` — .venv sklearn/strawberry fixed, wibuku 5555 firewalled
@@ -141,14 +141,14 @@ Menggunakan `mnemosyne_remember` dengan importance ≥ 0.6 untuk:
 
 ## 🌐 Domain Sacred Names
 
-> 👑 **Domain utama & satu-satunya yang dipromosikan**: `mynakama.web.id` (frontend portal) + `app.mynakama.web.id` (backend API).
+> 👑 **Domain utama & satu-satunya yang dipromosikan**: `mynakama.web.id` (frontend portal) + `api.mynakama.web.id` (backend API).
 > `*.pages.dev` adalah domain bawaan Cloudflare yang **tidak bisa dihapus**, hanya untuk preview internal — JANGAN dipakai sebagai link publik/SEO.
 
 | Domain | Isekai Name | Purpose |
 |---|---|---|
 | `mynakama.web.id` | **The Grand Library** | Frontend portal (Next.js) — domain utama |
 | `www.mynakama.web.id` | **The Grand Library Annex** | Redirect/www alias frontend |
-| `app.mynakama.web.id` | **The Summoning Gate** | Backend API (FastAPI) — domain utama |
+| `api.mynakama.web.id` | **The Summoning Gate** | Backend API (FastAPI) — domain utama |
 | `api.mynakama.web.id` | **The Summoning Gate Annex** | Alias backend API |
 | `nakama-frontend.pages.dev` | **The Mirror Dimension** | Bawaan CF Pages (tidak bisa dihapus) — preview internal saja |
 | `mynakama.pages.dev` | **The Celestial Mirror** | Bawaan CF Worker — preview internal saja |

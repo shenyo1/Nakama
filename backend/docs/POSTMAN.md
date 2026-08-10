@@ -10,19 +10,19 @@ Auto-generated Postman collection for the Nakama REST API. 52 endpoints across 1
 
 1. Import the collection into Postman
 2. Set the `api_key` variable (top-right of Postman → Variables)
-3. Optionally override `base_url` (default: `https://app.mynakama.web.id`)
+3. Optionally override `base_url` (default: `https://api.mynakama.web.id`)
 
 ## Production
 
-- **Base URL**: `https://app.mynakama.web.id`
+- **Base URL**: `https://api.mynakama.web.id`
 - **Auth header**: `X-API-Key: <your-key>`
-- **Docs**: `https://app.mynakama.web.id/docs` (Swagger UI)
-- **OpenAPI spec**: `https://app.mynakama.web.id/openapi.json`
+- **Docs**: `https://api.mynakama.web.id/docs` (Swagger UI)
+- **OpenAPI spec**: `https://api.mynakama.web.id/openapi.json`
 
 ## Regenerating
 
 ```bash
-curl -sS https://app.mynakama.web.id/openapi.json | python3 scripts/postman_gen.py
+curl -sS https://api.mynakama.web.id/openapi.json | python3 scripts/postman_gen.py
 ```
 
 (or any equivalent converter — e.g. `openapi-2-postmanv2`)
