@@ -191,7 +191,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 mcp = FastApiMCP(
     app,
     name="Nakama API",
-    description="Nakama API v2.8.0 — 21 sources, 93+ endpoints, GraphQL, AI, Community",
+    description="Nakama API v2.8.5 — 21 sources, 93+ endpoints, GraphQL, AI, Community",
 )
 mcp.mount(mount_path="/mcp")  # AI agents connect to /mcp (mount_http in 0.4.0+)
 

@@ -80,13 +80,6 @@ async def _save_upload(file: UploadFile) -> str:
     return f"/uploads/creator/{filename}"
 
 
-async def _get_creator(user) -> CreatorProfile:
-    """Resolve the CreatorProfile for the authenticated user. Raises 404 if not registered."""
-    # user is the ORM User object from current_user_required
-    # We need to fetch the profile via a session
-    return user  # We'll resolve in each endpoint
-
-
 async def _get_or_create_creator_profile(
     user, session: AsyncSession
 ) -> CreatorProfile:

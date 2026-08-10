@@ -23,6 +23,7 @@ from sqlalchemy import (
     Boolean,
     func,
     UniqueConstraint,
+    JSON,
     Index,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -71,7 +72,7 @@ class ActivityEvent(Base):  # noqa: E701 - forward-ref kept string like communit
     source: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     content_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     ref_user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # e.g. followed user
-    payload: Mapped[Optional[dict]] = mapped_column(__import__("sqlalchemy").JSON, nullable=True)
+    payload: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

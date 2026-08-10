@@ -130,6 +130,13 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     if (saved === "en" || saved === "id") setLangState(saved);
   }, []);
 
+  // Update <html lang> attribute for screen readers / a11y when language changes
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = lang;
+    }
+  }, [lang]);
+
   function setLang(l: Lang) {
     setLangState(l);
     if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY, l);

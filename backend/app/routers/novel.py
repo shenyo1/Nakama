@@ -12,7 +12,6 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from fastapi import APIRouter, HTTPException, Query, Request
 
 from ..config import get_settings
 from ..ratelimit import limiter

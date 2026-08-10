@@ -11,7 +11,7 @@
  * This gives users basic offline support without disrupting live data.
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE_SHELL = `nakama-shell-${VERSION}`;
 const CACHE_RUNTIME = `nakama-runtime-${VERSION}`;
 const SHELL_URLS = ['/offline', '/manifest.json', '/icon-192.png', '/icon-512.png'];
