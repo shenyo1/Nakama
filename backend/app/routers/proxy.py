@@ -32,10 +32,11 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import httpx
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, Response
 
 from ..config import get_settings
+from ..ratelimit import limiter
 from ..http import get_client
 
 router = APIRouter(tags=["proxy"])
@@ -176,7 +177,9 @@ def _pick_referer(url: str, explicit: Optional[str] = None) -> Optional[str]:
 
 
 @router.get("/image", summary="Proxy a remote image with SSRF protection")
+@limiter.limit(get_settings().rate_limit)
 async def image_proxy(
+    request: Request,
     url: str = Query(..., description="Absolute http(s) URL of the image to fetch."),
     referer: Optional[str] = Query(None, description="Optional Referer header to send upstream (hotlink bypass)."),
 ):

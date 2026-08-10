@@ -1,4 +1,6 @@
-"use client";
+"use client"
+
+import Link from "next/link";
 
 import { useId, useRef, useState } from "react";
 import { PUBLIC_API_BASE } from "../../lib/api";
@@ -163,9 +165,9 @@ export default function RegisterPage() {
 
       <p className="text-center text-xs text-ink-500">
         Already have an account?{" "}
-        <a href="/login" className="text-sakura-400 hover:underline">
+        <Link href="/login" className="text-sakura-400 hover:underline">
           Login
-        </a>
+        </Link>
       </p>
     </div>
   );

@@ -253,6 +253,7 @@ _METERED_PREFIXES = (
     "/lists",
     "/community",
     "/preferences",
+    "/creator",
     "/mcp",  # AI-agent tool surface — gate behind auth unless MCP_ALLOW_PUBLIC=1
 )
 

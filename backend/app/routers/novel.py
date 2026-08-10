@@ -5,8 +5,12 @@ Mirrors the anime router shape (home/search/detail/chapter/genres/genre) plus a
 images, so the chapter endpoint returns a ``ChapterText`` body (paragraphs).
 """
 from __future__ import annotations
+import logging
 import time
 from typing import Optional
+
+logger = logging.getLogger(__name__)
+
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi import APIRouter, HTTPException, Query, Request
 
@@ -96,7 +100,8 @@ async def home(
             data = await src.home(page or 1)
             return ApiResponse(source=source, data=paginate(data, None, page_size)).model_dump()
         except SourceError as e:
-            raise HTTPException(status_code=502, detail=str(e))
+            logger.warning("%s upstream error: %s", source, e)
+            raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
     from ..response_cache import cached_response
     return await cached_response(request, _fetch, ttl_seconds=300)
@@ -132,7 +137,8 @@ async def search(
             pass
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="novel", source=source))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get(
@@ -149,7 +155,8 @@ async def detail(source: str, slug: str, request: Request):
         data = enrich_detail(data, "novel", source)
         return ApiResponse(source=source, data=data)
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get(
@@ -163,7 +170,8 @@ async def chapter(source: str, slug: str, request: Request):
     try:
         return ApiResponse(source=source, data=await src.chapter(slug))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get(
@@ -183,7 +191,8 @@ async def genres(
         data = await src.genres()
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="novel", source=source))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get(
@@ -209,7 +218,8 @@ async def genre(
         data = await src.genre(slug, page or 1)
         return ApiResponse(source=source, data=paginate(data, None, page_size))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get(
@@ -229,4 +239,5 @@ async def popular(
         data = await src.popular()
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="novel", source=source))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")

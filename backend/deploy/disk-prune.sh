@@ -40,6 +40,13 @@ docker volume prune -f >>"$LOG" 2>&1 || log "volume prune failed (non-fatal)"
 # 3c. Remove unused Docker networks
 docker network prune -f >>"$LOG" 2>&1 || log "network prune failed (non-fatal)"
 
+# 3d. Alert if Camoufox memory usage is excessive (M-11: Camoufox can spike
+#     to 400MB+ during SPA rendering). This is informational only.
+CAMOUFOX_MEM=$(ps aux | grep camoufox-bin | grep -v grep | awk '{sum+=$6} END {print sum/1024}' 2>/dev/null || echo "0")
+if (( $(echo "$CAMOUFOX_MEM > 500" | bc -l 2>/dev/null || echo 0) )); then
+    log "WARN: Camoufox using ${CAMOUFOX_MEM}MB — consider restarting API if memory pressure"
+fi
+
 # 4. Apt cache (apt-get clean needs root; skip silently if not root)
 if [ -d /var/cache/apt ] && [ "$(id -u)" = "0" ]; then
     apt-get clean >>"$LOG" 2>&1 || log "apt clean failed (non-fatal)"

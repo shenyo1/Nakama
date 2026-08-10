@@ -50,10 +50,11 @@ class Settings:
         # (production). Set MCP_ALLOW_PUBLIC=1 to keep it open (e.g. for a
         # trusted-network MCP client that can't send the key header).
         self.mcp_allow_public: bool = _env_bool("MCP_ALLOW_PUBLIC", False)
-        # Allowed CORS origins. "*" = any (dev default). Production should set
-        # ALLOW_ORIGINS="https://mynakama.web.id,https://www.mynakama.web.id" (the frontend portal).
+        # Allowed CORS origins. Empty = no CORS (secure default). Production
+        # should set ALLOW_ORIGINS="https://mynakama.web.id,https://www.mynakama.web.id".
+        # "*" is intentionally NOT the default — it allows any site to call the API.
         self.allow_origins: list[str] = [
-            o.strip() for o in os.getenv("ALLOW_ORIGINS", "*").split(",") if o.strip()
+            o.strip() for o in os.getenv("ALLOW_ORIGINS", "").split(",") if o.strip()
         ]
         # JWT signing secret. Falls back to API_KEY when unset.
         self.jwt_secret: str | None = os.getenv("JWT_SECRET") or None

@@ -1,7 +1,10 @@
 """Comic endpoints: /comic/..."""
 from __future__ import annotations
 
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
@@ -45,7 +48,8 @@ async def home(source: str, request: Request, cursor: Optional[str] = Query(None
             data = await src.home()
             return ApiResponse(source=source, data=paginate(data, page, page_size, kind="comic", source=source, cursor=cursor)).model_dump()
         except SourceError as e:
-            raise HTTPException(status_code=502, detail=str(e))
+            logger.warning("%s upstream error: %s", source, e)
+            raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
     from ..response_cache import cached_response
     return await cached_response(request, _fetch, ttl_seconds=300)
@@ -59,7 +63,8 @@ async def search(source: str, query: str, request: Request, page: Optional[int] 
         data = await src.search(query)
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="comic", source=source))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get("/{source}/manga/{slug}", response_model=ApiResponse[ComicDetail], summary="Comic detail + chapter list")
@@ -86,7 +91,8 @@ async def chapter(source: str, slug: str, request: Request):
     try:
         return ApiResponse(source=source, data=await src.chapter(slug))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get("/{source}/popular", response_model=ApiResponse, summary="Popular comics")
@@ -97,7 +103,8 @@ async def popular(source: str, request: Request, page: Optional[int] = Query(Non
         data = await src.popular()
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="comic", source=source))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get("/{source}/genre/{slug}", response_model=ApiResponse, summary="Comics in a genre")
@@ -108,7 +115,8 @@ async def genre(source: str, slug: str, request: Request, page: Optional[int] = 
         data = await src.genre(slug)
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="comic", source=source))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get("/{source}/latest", response_model=ApiResponse, summary="Recently updated comics")
@@ -119,4 +127,5 @@ async def latest(source: str, request: Request, page: Optional[int] = Query(None
         data = await src.latest()
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="comic", source=source))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")

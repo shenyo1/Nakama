@@ -84,7 +84,7 @@ export default async function AnimePage({
 async function UnifiedAnimeContent() {
   try {
     const items = await fetchUnifiedHome("anime");
-    if (items.length === 0) return <GridSkeleton count={8} />;
+    if (items.length === 0) return <UnifiedGrid items={[]} empty="No home items available." kind="anime" />;
     return <UnifiedGrid items={items} empty="No home items available." kind="anime" />;
   } catch (e) {
     // Aggregate endpoint failed (e.g. all sources down) — fall back to the

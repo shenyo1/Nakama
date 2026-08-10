@@ -1,4 +1,6 @@
-"use client";
+"use client"
+
+import Link from "next/link";
 
 import { useEffect, useState } from "react";
 
@@ -168,9 +170,9 @@ export function CommentSection({ source, slug, kind }: CommentSectionProps) {
         </form>
       ) : (
         <div className="card text-sm text-ink-400">
-          <a href="/login" className="text-sakura-400 hover:underline">
+          <Link href="/login" className="text-sakura-400 hover:underline">
             Log in
-          </a>{" "}
+          </Link>{" "}
           to join the discussion.
         </div>
       )}

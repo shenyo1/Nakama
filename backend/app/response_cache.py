@@ -236,4 +236,15 @@ async def cache_stats_async() -> dict:
 
 def clear_cache() -> None:
     """Clear the response cache (memory backend: synchronous; Redis: async-safe)."""
-    _cache.clear()
+    result = _cache.clear()
+    # For async backends (Redis), .clear() returns a coroutine — if we're
+    # inside a running event loop, schedule it; otherwise await is not needed
+    # because the memory backend's .clear() is synchronous.
+    import asyncio
+    if asyncio.iscoroutine(result):
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(result)
+        except RuntimeError:
+            # No running loop — run synchronously (best effort)
+            asyncio.run(result)

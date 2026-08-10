@@ -1,9 +1,12 @@
 """Anime endpoints: /anime/..."""
 from __future__ import annotations
 import asyncio
+import logging
 import re
 import time
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
@@ -125,7 +128,8 @@ async def home(source: str, request: Request, cursor: Optional[str] = Query(None
             data = await src.home()
             return ApiResponse(source=source, data=paginate(data, page, page_size, kind="anime", source=source, cursor=cursor)).model_dump()
         except SourceError as e:
-            raise HTTPException(status_code=502, detail=str(e))
+            logger.warning("%s upstream error: %s", source, e)
+            raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
     from ..response_cache import cached_response
     return await cached_response(request, _fetch, ttl_seconds=300)
@@ -153,7 +157,8 @@ async def search(source: str, query: str, request: Request, page: Optional[int] 
             pass
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="anime", source=source))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get("/{source}/detail/{slug}", response_model=ApiResponse[AnimeDetail], summary="Anime detail")
@@ -166,7 +171,8 @@ async def detail(source: str, slug: str, request: Request):
         data = enrich_detail(data, "anime", source)
         return ApiResponse(source=source, data=data)
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get("/{source}/episode/{slug}", summary="Stream/download links for an episode")
@@ -176,7 +182,8 @@ async def episode(source: str, slug: str, request: Request):
     try:
         return ApiResponse(source=source, data=await src.episode(slug))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get("/{source}/genres", response_model=ApiResponse, summary="All genres")
@@ -187,7 +194,8 @@ async def genres(source: str, request: Request, page: Optional[int] = Query(None
         data = await src.genres()
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="anime", source=source))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
 @router.get("/{source}/genre/{slug}", response_model=ApiResponse, summary="Anime in a genre")
@@ -198,4 +206,5 @@ async def genre(source: str, slug: str, request: Request, page: Optional[int] = 
         data = await src.genre(slug)
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="anime", source=source))
     except SourceError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")

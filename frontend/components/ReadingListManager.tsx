@@ -1,4 +1,6 @@
-"use client";
+"use client"
+
+import Link from "next/link";
 
 import { useEffect, useState } from "react";
 
@@ -175,9 +177,9 @@ export function ReadingListManager() {
   if (!token) {
     return (
       <div className="card text-sm text-ink-400">
-        <a href="/login" className="text-sakura-400 hover:underline">
+        <Link href="/login" className="text-sakura-400 hover:underline">
           Log in
-        </a>{" "}
+        </Link>{" "}
         to manage reading lists.
       </div>
     );

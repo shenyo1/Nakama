@@ -1,4 +1,6 @@
-"use client";
+"use client"
+
+import Link from "next/link";
 
 import { useState } from "react";
 import { PUBLIC_API_BASE } from "../../lib/api";
@@ -73,9 +75,9 @@ export default function ForgotPasswordPage() {
 
         <p className="text-xs text-ink-500">
           Remembered it?{" "}
-          <a href="/login" className="text-sakura-400 underline">
+          <Link href="/login" className="text-sakura-400 underline">
             Back to login
-          </a>
+          </Link>
         </p>
       </form>
     </div>
