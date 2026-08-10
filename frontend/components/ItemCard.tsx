@@ -1,4 +1,5 @@
 import { imageProxyUrl } from "@/lib/api";
+import { IconBooks } from "@tabler/icons-react";
 
 type Props = {
   title: string;
@@ -37,8 +38,8 @@ export function ItemCard({ title, subtitle, thumbnail, href, badge, source, kind
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-ink-500">
-            <span className="text-2xl opacity-30">📚</span>
+          <div className="flex h-full items-center justify-center text-ink-500">
+            <IconBooks size={32} stroke={1.5} className="opacity-30" />
           </div>
         )}
         {/* Gradient overlay on hover */}

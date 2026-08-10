@@ -4,22 +4,35 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LanguageToggle } from "../lib/i18n";
+import {
+  IconHome,
+  IconDeviceTv,
+  IconBooks,
+  IconBook,
+  IconSparkles,
+  IconBrush,
+  IconSearch,
+  IconHeartbeat,
+  IconClockHour4,
+  IconChartBar,
+  IconPencil,
+} from "@tabler/icons-react";
 
 const publicLinks = [
-  { href: "/", label: "Home", icon: "🏠" },
-  { href: "/anime", label: "Anime", icon: "📺" },
-  { href: "/comic", label: "Comic", icon: "📚" },
-  { href: "/novel", label: "Novel", icon: "📖" },
-  { href: "/originals", label: "Originals", icon: "✨" },
-  { href: "/ai-comic", label: "AI Comic", icon: "🎨" },
-  { href: "/search", label: "Search", icon: "🔍" },
-  { href: "/status", label: "Status", icon: "💚" },
+  { href: "/", label: "Home", Icon: IconHome },
+  { href: "/anime", label: "Anime", Icon: IconDeviceTv },
+  { href: "/comic", label: "Comic", Icon: IconBooks },
+  { href: "/novel", label: "Novel", Icon: IconBook },
+  { href: "/originals", label: "Originals", Icon: IconSparkles },
+  { href: "/ai-comic", label: "AI Comic", Icon: IconBrush },
+  { href: "/search", label: "Search", Icon: IconSearch },
+  { href: "/status", label: "Status", Icon: IconHeartbeat },
 ];
 
 const authedExtraLinks = [
-  { href: "/history", label: "History", icon: "📜" },
-  { href: "/dashboard", label: "Dashboard", icon: "📊" },
-  { href: "/creator", label: "Creator", icon: "⚔️" },
+  { href: "/history", label: "History", Icon: IconClockHour4 },
+  { href: "/dashboard", label: "Dashboard", Icon: IconChartBar },
+  { href: "/creator", label: "Creator", Icon: IconPencil },
 ];
 
 interface UserInfo {
@@ -67,8 +80,8 @@ export function Nav() {
       <div className="container-page flex h-14 items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold tracking-tight shrink-0 group">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-sakura-500 to-sakura-700 text-sm text-white shadow-lg shadow-sakura-500/20 transition-transform group-hover:scale-110">
-            🌸
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-sakura-500 to-sakura-700 text-white shadow-lg shadow-sakura-500/20 transition-transform group-hover:scale-110">
+            <IconSparkles size={16} />
           </span>
           <span className="text-sakura-400">Nakama</span>
         </Link>
@@ -148,7 +161,7 @@ export function Nav() {
                     : "text-ink-200 hover:bg-ink-800"
                 }`}
               >
-                <span className="text-base">{l.icon}</span>
+                <l.Icon size={20} stroke={1.5} />
                 {l.label}
               </Link>
             ))}

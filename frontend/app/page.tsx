@@ -3,6 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ANIME_SOURCES, COMIC_SOURCES, NOVEL_SOURCES, PUBLIC_API_BASE } from "../lib/api";
+import {
+  IconDeviceTv,
+  IconBooks,
+  IconBook,
+  IconSearch,
+  IconWorld,
+  IconBolt,
+  IconBookmark,
+  IconSettings,
+} from "@tabler/icons-react";
+
 
 interface UserInfo {
   id?: number;
@@ -89,10 +100,10 @@ export default function HomePage() {
 
         {/* Quick actions */}
         <section className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-4">
-          <QuickLink href="/anime" label="Browse Anime" sub={`${ANIME_SOURCES.length} sources`} icon="📺" />
-          <QuickLink href="/comic" label="Browse Comics" sub={`${COMIC_SOURCES.length} sources`} icon="📚" />
-          <QuickLink href="/novel" label="Browse Novels" sub={`${NOVEL_SOURCES.length} sources`} icon="📖" />
-          <QuickLink href="/search" label="Cross-Search" sub="All sources" icon="🔍" />
+          <QuickLink href="/anime" label="Browse Anime" sub={`${ANIME_SOURCES.length} sources`} Icon={IconDeviceTv} />
+          <QuickLink href="/comic" label="Browse Comics" sub={`${COMIC_SOURCES.length} sources`} Icon={IconBooks} />
+          <QuickLink href="/novel" label="Browse Novels" sub={`${NOVEL_SOURCES.length} sources`} Icon={IconBook} />
+          <QuickLink href="/search" label="Cross-Search" sub="All sources" Icon={IconSearch} />
         </section>
 
         {/* Quota + Analytics */}
@@ -203,15 +214,15 @@ export default function HomePage() {
 
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <Link href="/anime" className="btn-primary group">
-              <span className="mr-1">📺</span> Browse Anime
+              <IconDeviceTv size={18} stroke={1.5} /> Browse Anime
               <span className="ml-1 transition-transform group-hover:translate-x-0.5">→</span>
             </Link>
             <Link href="/comic" className="btn-primary group">
-              <span className="mr-1">📚</span> Read Manga
+              <IconBooks size={18} stroke={1.5} /> Read Manga
               <span className="ml-1 transition-transform group-hover:translate-x-0.5">→</span>
             </Link>
             <Link href="/novel" className="btn-ghost group">
-              <span className="mr-1">📖</span> Novels
+              <IconBook size={18} stroke={1.5} /> Novels
             </Link>
             <Link href="/register" className="btn-ghost">
               Create Account
@@ -222,10 +233,10 @@ export default function HomePage() {
 
       {/* Stats */}
       <section className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-4">
-        <StatCard label="Total sources" value={totalSources} icon="🌐" />
-        <StatCard label="Anime" value={ANIME_SOURCES.length} icon="📺" />
-        <StatCard label="Manga & Comics" value={COMIC_SOURCES.length} icon="📚" />
-        <StatCard label="Novels" value={NOVEL_SOURCES.length} icon="📖" />
+        <StatCard label="Total sources" value={totalSources} Icon={IconWorld} />
+        <StatCard label="Anime" value={ANIME_SOURCES.length} Icon={IconDeviceTv} />
+        <StatCard label="Manga & Comics" value={COMIC_SOURCES.length} Icon={IconBooks} />
+        <StatCard label="Novels" value={NOVEL_SOURCES.length} Icon={IconBook} />
       </section>
 
       {/* Feature highlights */}
@@ -236,19 +247,19 @@ export default function HomePage() {
           href="/search"
           featured
           className="md:col-span-2 md:row-span-2"
-          icon="🔍"
+          Icon={IconSearch}
         />
         <FeatureCard
           title="Live Updates"
           description="WebSocket streams keep you informed of new chapters and source health in real-time."
           href="/status"
-          icon="⚡"
+          Icon={IconBolt}
         />
         <FeatureCard
           title="Reading History"
           description="Sync bookmarks and track progress across all your devices."
           href="/register"
-          icon="🔖"
+          Icon={IconBookmark}
         />
         <FeatureCard
           title="Developer API"
@@ -256,7 +267,7 @@ export default function HomePage() {
           href="https://api.mynakama.web.id/docs"
           external
           className="md:col-span-2"
-          icon="⚙️"
+          Icon={IconSettings}
         />
       </section>
 
@@ -316,22 +327,22 @@ export default function HomePage() {
   );
 }
 
-function StatCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
+function StatCard({ label, value, Icon }: { label: string; value: string | number; Icon: any }) {
   return (
     <div className="card card-hover group">
       <div className="flex items-center justify-between">
         <p className="text-xs text-ink-400">{label}</p>
-        <span className="text-lg opacity-50 transition group-hover:opacity-100 group-hover:scale-110">{icon}</span>
+        <span className="opacity-50 transition group-hover:opacity-100 group-hover:scale-110"><Icon size={20} stroke={1.5} /></span>
       </div>
       <p className="mt-1 text-2xl font-bold text-ink-50 tabular-nums sm:text-3xl">{value}</p>
     </div>
   );
 }
 
-function QuickLink({ href, label, sub, icon }: { href: string; label: string; sub: string; icon: string }) {
+function QuickLink({ href, label, sub, Icon }: { href: string; label: string; sub: string; Icon: any }) {
   return (
     <Link href={href} className="card card-hover text-center group">
-      <div className="text-2xl mb-1 transition group-hover:scale-110">{icon}</div>
+      <div className="mb-1 flex justify-center"><Icon size={28} stroke={1.5} className="text-sakura-300 transition group-hover:scale-110" /></div>
       <p className="font-semibold text-sm sm:text-base">{label}</p>
       <p className="mt-1 text-xs text-ink-400">{sub}</p>
     </Link>
@@ -344,7 +355,7 @@ function FeatureCard({
   href,
   featured,
   className = "",
-  icon,
+  Icon,
   external,
 }: {
   title: string;
@@ -352,16 +363,16 @@ function FeatureCard({
   href?: string;
   featured?: boolean;
   className?: string;
-  icon?: string;
+  Icon?: any;
   external?: boolean;
 }) {
   const inner = (
     <div
       className={`card card-hover h-full ${featured ? "md:p-8" : ""} ${className}`}
     >
-      {icon && (
-        <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sakura-500/20 to-neon-500/20 text-xl ${featured ? "sm:h-12 sm:w-12 sm:text-2xl" : ""}`}>
-          {icon}
+      {Icon && (
+        <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sakura-500/20 to-neon-500/20 ${featured ? "sm:h-12 sm:w-12" : ""}`}>
+          <Icon size={featured ? 24 : 20} stroke={1.5} className="text-sakura-300" />
         </div>
       )}
       <h3 className={`font-semibold mb-2 ${featured ? "text-lg sm:text-xl" : "text-sm sm:text-base"}`}>

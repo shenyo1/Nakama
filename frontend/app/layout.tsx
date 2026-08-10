@@ -67,7 +67,7 @@ export default function RootLayout({
           <footer className="container-page border-t border-ink-800 py-6 text-center text-xs text-ink-500 sm:py-8">
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-base">🌸</span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-sakura-500 to-sakura-700 text-white text-xs font-bold">N</span>
                 <span className="font-display font-bold text-ink-300">Nakama</span>
               </div>
               <p>
