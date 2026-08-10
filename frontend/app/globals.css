@@ -16,11 +16,9 @@
   a {
     @apply transition-colors;
   }
-  /* Slightly more vivid focus ring everywhere for keyboard nav. */
   :focus-visible {
     @apply outline-none ring-2 ring-sakura-400 ring-offset-2 ring-offset-ink-950;
   }
-  /* Hide scrollbar for nav overflow on mobile */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -38,19 +36,19 @@
     @apply rounded-xl border border-ink-700/60 bg-ink-900/60 p-3 shadow-lg shadow-black/20 backdrop-blur sm:p-4;
   }
   .card-hover {
-    @apply transition hover:border-sakura-400/60 hover:shadow-glow;
+    @apply transition-all duration-200 hover:border-sakura-400/60 hover:shadow-glow hover:-translate-y-0.5;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition sm:px-4;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all sm:px-4;
   }
   .btn-primary {
-    @apply btn bg-sakura-500 text-white hover:bg-sakura-400 disabled:opacity-50;
+    @apply btn bg-gradient-to-r from-sakura-600 to-sakura-500 text-white shadow-lg shadow-sakura-500/20 hover:from-sakura-500 hover:to-sakura-400 hover:shadow-sakura-500/30 disabled:opacity-50;
   }
   .btn-ghost {
-    @apply btn border border-ink-700 bg-ink-900/50 text-ink-100 hover:bg-ink-800;
+    @apply btn border border-ink-700 bg-ink-900/50 text-ink-100 hover:bg-ink-800 hover:border-ink-600;
   }
   .badge {
-    @apply inline-flex items-center gap-1 rounded-full border border-ink-700 bg-ink-800/60 px-2 py-0.5 text-xs text-ink-200;
+    @apply inline-flex items-center gap-1 rounded-full border border-ink-700 bg-ink-800/60 px-2 py-0.5 text-xs text-ink-200 transition-colors;
   }
   .input {
     @apply w-full rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2 text-sm text-ink-100 placeholder:text-ink-400 focus:border-sakura-400 focus:outline-none focus:ring-2 focus:ring-sakura-400/40;

@@ -3,6 +3,9 @@ import "./globals.css";
 import { Nav } from "../components/Nav";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { I18nProvider } from "../lib/i18n";
+import { ANIME_SOURCES, COMIC_SOURCES, NOVEL_SOURCES } from "../lib/api";
+
+const totalSources = ANIME_SOURCES.length + COMIC_SOURCES.length + NOVEL_SOURCES.length;
 
 // Inline service worker registration. Renders on the client after hydration.
 // Avoids a separate /register-sw route and keeps the install lightweight.
@@ -15,9 +18,9 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
 `;
 
 export const metadata: Metadata = {
-  title: "Nakama",
+  title: "Nakama — Anime, Manga & Novel Hub",
   description:
-    "Nakama: multi-source anime, comic, and novel REST API with live WebSocket updates.",
+    "Browse anime, read manga, and devour novels from 21+ sources — all in one place. Powered by a blazing-fast REST API.",
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -62,16 +65,24 @@ export default function RootLayout({
             <ErrorBoundary>{children}</ErrorBoundary>
           </main>
           <footer className="container-page border-t border-ink-800 py-6 text-center text-xs text-ink-500 sm:py-8">
-            Powered by{" "}
-            <a
-              className="text-sakura-400 hover:underline"
-              href="https://github.com/shenyo1/Nakama"
-              target="_blank"
-              rel="noreferrer"
-            >
-              shenyo1/Nakama
-            </a>{" "}
-            · Anime, Comic & Novel Hub
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🌸</span>
+                <span className="font-display font-bold text-ink-300">Nakama</span>
+              </div>
+              <p>
+                Powered by{" "}
+                <a
+                  className="text-sakura-400 hover:underline"
+                  href="https://github.com/shenyo1/Nakama"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  shenyo1/Nakama
+                </a>{" "}
+                · {totalSources} sources · Anime, Manga & Novel Hub
+              </p>
+            </div>
           </footer>
         </I18nProvider>
         <script

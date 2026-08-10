@@ -35,7 +35,6 @@ export default function HomePage() {
       setAuthed(true);
       if (raw) setUser(JSON.parse(raw));
 
-      // Fetch quota + recent history in parallel
       const headers: Record<string, string> = {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
@@ -59,7 +58,6 @@ export default function HomePage() {
 
   const totalSources = ANIME_SOURCES.length + COMIC_SOURCES.length + NOVEL_SOURCES.length;
 
-  // Don't flash wrong content during hydration
   if (!mounted) {
     return (
       <div className="space-y-8 sm:space-y-12">
@@ -75,7 +73,7 @@ export default function HomePage() {
   // ── Logged-in: personal home ──────────────────────────────────────
   if (authed) {
     return (
-      <div className="space-y-6 sm:space-y-8">
+      <div className="space-y-6 sm:space-y-8 animate-fade-in">
         {/* Welcome header */}
         <section className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sakura-400">
@@ -91,10 +89,10 @@ export default function HomePage() {
 
         {/* Quick actions */}
         <section className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-4">
-          <QuickLink href="/anime" label="Browse Anime" sub={`${ANIME_SOURCES.length} sources`} />
-          <QuickLink href="/comic" label="Browse Comics" sub={`${COMIC_SOURCES.length} sources`} />
-          <QuickLink href="/novel" label="Browse Novels" sub={`${NOVEL_SOURCES.length} sources`} />
-          <QuickLink href="/search" label="Cross-Search" sub="All sources" />
+          <QuickLink href="/anime" label="Browse Anime" sub={`${ANIME_SOURCES.length} sources`} icon="📺" />
+          <QuickLink href="/comic" label="Browse Comics" sub={`${COMIC_SOURCES.length} sources`} icon="📚" />
+          <QuickLink href="/novel" label="Browse Novels" sub={`${NOVEL_SOURCES.length} sources`} icon="📖" />
+          <QuickLink href="/search" label="Cross-Search" sub="All sources" icon="🔍" />
         </section>
 
         {/* Quota + Analytics */}
@@ -117,10 +115,9 @@ export default function HomePage() {
                     {quota.used} / {quota.limit}
                   </span>
                 </div>
-                {/* Progress bar */}
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink-800">
                   <div
-                    className="h-full rounded-full bg-sakura-500 transition-all"
+                    className="h-full rounded-full bg-gradient-to-r from-sakura-500 to-neon-500 transition-all"
                     style={{
                       width: `${quota.limit > 0 ? Math.min(100, (quota.used / quota.limit) * 100) : 0}%`,
                     }}
@@ -178,69 +175,112 @@ export default function HomePage() {
 
   // ── Logged-out: marketing landing ─────────────────────────────────
   return (
-    <div className="space-y-8 sm:space-y-12">
+    <div className="space-y-8 sm:space-y-12 animate-fade-in">
       {/* Hero */}
-      <section className="space-y-4 pt-4 sm:space-y-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sakura-400">
-          Multi-source aggregation API
-        </p>
-        <h1 className="max-w-3xl font-display text-3xl font-bold leading-tight sm:text-4xl sm:text-5xl">
-          Browse anime, comics and novels from{" "}
-          <span className="text-sakura-400">{totalSources} sources</span>{" "}
-          through one REST API.
-        </h1>
-        <p className="max-w-2xl text-sm text-ink-300 leading-relaxed sm:text-base">
-          Nakama aggregates {totalSources} public sources ({ANIME_SOURCES.length} anime,
-          {" "}{COMIC_SOURCES.length} comic, {NOVEL_SOURCES.length} novel) behind
-          a consistent JSON interface. Multi-source search with automatic
-          deduplication, offline fixtures, WebSocket live updates, auto-repair
-          circuit breakers, and a generated TypeScript SDK.
-        </p>
-        <div className="flex flex-wrap gap-2 sm:gap-3">
-          <Link href="/anime" className="btn-primary">
-            Browse Anime
-          </Link>
-          <Link href="/comic" className="btn-primary">
-            Browse Comics
-          </Link>
-          <Link href="/register" className="btn-ghost">
-            Create Account
-          </Link>
+      <section className="relative overflow-hidden rounded-2xl">
+        {/* Animated background glow */}
+        <div className="absolute inset-0 bg-hero-gradient opacity-60" />
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-sakura-500/20 blur-3xl animate-pulse" />
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-neon-500/20 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+
+        <div className="relative space-y-5 p-6 sm:p-10 lg:p-12">
+          <div className="inline-flex items-center gap-2 rounded-full border border-sakura-400/30 bg-sakura-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sakura-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-sakura-400 animate-pulse" />
+            {totalSources} sources · 1 API
+          </div>
+
+          <h1 className="max-w-3xl font-display text-3xl font-bold leading-tight sm:text-4xl sm:text-5xl lg:text-6xl">
+            Your universe for{" "}
+            <span className="bg-gradient-to-r from-sakura-400 via-sakura-300 to-neon-400 bg-clip-text text-transparent">
+              anime, manga & novels
+            </span>
+          </h1>
+
+          <p className="max-w-2xl text-sm text-ink-300 leading-relaxed sm:text-base lg:text-lg">
+            Nakama aggregates {totalSources} public sources into one beautiful interface.
+            Watch anime, read manga, devour novels — all in one place, powered by a blazing-fast REST API.
+          </p>
+
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <Link href="/anime" className="btn-primary group">
+              <span className="mr-1">📺</span> Browse Anime
+              <span className="ml-1 transition-transform group-hover:translate-x-0.5">→</span>
+            </Link>
+            <Link href="/comic" className="btn-primary group">
+              <span className="mr-1">📚</span> Read Manga
+              <span className="ml-1 transition-transform group-hover:translate-x-0.5">→</span>
+            </Link>
+            <Link href="/novel" className="btn-ghost group">
+              <span className="mr-1">📖</span> Novels
+            </Link>
+            <Link href="/register" className="btn-ghost">
+              Create Account
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Stats — glassmorphism cards */}
       <section className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-4">
-        <StatCard label="Total sources" value={totalSources} />
-        <StatCard label="Anime sources" value={ANIME_SOURCES.length} />
-        <StatCard label="Comic sources" value={COMIC_SOURCES.length} />
-        <StatCard label="Novel sources" value={NOVEL_SOURCES.length} />
+        <StatCard label="Total sources" value={totalSources} icon="🌐" />
+        <StatCard label="Anime" value={ANIME_SOURCES.length} icon="📺" />
+        <StatCard label="Manga & Comics" value={COMIC_SOURCES.length} icon="📚" />
+        <StatCard label="Novels" value={NOVEL_SOURCES.length} icon="📖" />
       </section>
 
-      {/* Feature highlights — asymmetric bento (1 hero + 3 compact) */}
+      {/* Feature highlights — bento grid */}
       <section className="grid gap-3 sm:gap-6 md:grid-cols-3 md:grid-rows-2">
         <FeatureCard
-          title="Multi-source search"
-          description={`Search across all ${COMIC_SOURCES.length} comic, ${ANIME_SOURCES.length} anime, or ${NOVEL_SOURCES.length} novel sources at once. Results are deduplicated and ranked by coverage.`}
+          title="Unified Search"
+          description={`Search across all ${totalSources} sources simultaneously. Results are automatically deduplicated and ranked by coverage — no more switching between sites.`}
           href="/search"
           featured
           className="md:col-span-2 md:row-span-2"
+          icon="🔍"
         />
         <FeatureCard
-          title="Auto-repair and resilience"
-          description="Circuit breakers, domain rotation, proxy pools, DNS watchdog, and auto-restart keep sources healthy 24/7."
+          title="Live Updates"
+          description="WebSocket streams keep you informed of new chapters and source health in real-time."
           href="/status"
+          icon="⚡"
         />
         <FeatureCard
-          title="Personal reading history"
-          description="Sync bookmarks, track progress, and personalize across devices."
+          title="Reading History"
+          description="Sync bookmarks and track progress across all your devices."
           href="/register"
+          icon="🔖"
         />
         <FeatureCard
-          title="TypeScript SDK"
-          description="Generated from OpenAPI schema. 58 endpoints, 22 schemas."
+          title="Developer API"
+          description="Full REST API with OpenAPI docs, TypeScript SDK, and MCP tools for AI agents."
+          href="https://api.mynakama.web.id/docs"
+          external
           className="md:col-span-2"
+          icon="⚙️"
         />
+      </section>
+
+      {/* Source showcase — animated pills */}
+      <section className="space-y-3">
+        <h2 className="font-display text-lg font-bold sm:text-xl">All Sources</h2>
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          {[...ANIME_SOURCES.map(s => ({ name: s, kind: "anime" })),
+            ...COMIC_SOURCES.map(s => ({ name: s, kind: "comic" })),
+            ...NOVEL_SOURCES.map(s => ({ name: s, kind: "novel" })),
+          ].map((src) => (
+            <Link
+              key={`${src.kind}-${src.name}`}
+              href={`/${src.kind}?source=${src.name}`}
+              className={`badge transition hover:scale-105 hover:border-sakura-400/60 ${
+                src.kind === "anime" ? "hover:bg-sakura-500/20" :
+                src.kind === "comic" ? "hover:bg-neon-500/20" :
+                "hover:bg-purple-500/20"
+              }`}
+            >
+              {src.name}
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/* Footer links */}
@@ -268,7 +308,7 @@ export default function HomePage() {
             target="_blank"
             rel="noreferrer"
           >
-            Health JSON
+            Health Status
           </a>
         </p>
       </section>
@@ -276,18 +316,22 @@ export default function HomePage() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+function StatCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
   return (
-    <div className="card">
-      <p className="text-xs uppercase tracking-wide text-ink-400">{label}</p>
+    <div className="card card-hover group">
+      <div className="flex items-center justify-between">
+        <p className="text-xs uppercase tracking-wide text-ink-400">{label}</p>
+        <span className="text-lg opacity-50 transition group-hover:opacity-100 group-hover:scale-110">{icon}</span>
+      </div>
       <p className="mt-1 text-2xl font-bold text-ink-50 tabular-nums sm:text-3xl">{value}</p>
     </div>
   );
 }
 
-function QuickLink({ href, label, sub }: { href: string; label: string; sub: string }) {
+function QuickLink({ href, label, sub, icon }: { href: string; label: string; sub: string; icon: string }) {
   return (
-    <Link href={href} className="card card-hover text-center">
+    <Link href={href} className="card card-hover text-center group">
+      <div className="text-2xl mb-1 transition group-hover:scale-110">{icon}</div>
       <p className="font-semibold text-sm sm:text-base">{label}</p>
       <p className="mt-1 text-xs text-ink-400">{sub}</p>
     </Link>
@@ -300,17 +344,26 @@ function FeatureCard({
   href,
   featured,
   className = "",
+  icon,
+  external,
 }: {
   title: string;
   description: string;
   href?: string;
   featured?: boolean;
   className?: string;
+  icon?: string;
+  external?: boolean;
 }) {
   const inner = (
     <div
       className={`card card-hover h-full ${featured ? "md:p-8" : ""} ${className}`}
     >
+      {icon && (
+        <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sakura-500/20 to-neon-500/20 text-xl ${featured ? "sm:h-12 sm:w-12 sm:text-2xl" : ""}`}>
+          {icon}
+        </div>
+      )}
       <h3 className={`font-semibold mb-2 ${featured ? "text-lg sm:text-xl" : "text-sm sm:text-base"}`}>
         {title}
       </h3>
@@ -319,9 +372,21 @@ function FeatureCard({
       >
         {description}
       </p>
+      {href && (
+        <span className={`mt-3 inline-block text-xs text-sakura-400 ${featured ? "sm:text-sm" : ""}`}>
+          Learn more →
+        </span>
+      )}
     </div>
   );
   if (href) {
+    if (external) {
+      return (
+        <a href={href} target="_blank" rel="noreferrer" className={`block h-full ${className}`}>
+          {inner}
+        </a>
+      );
+    }
     return (
       <Link href={href} className={`block h-full ${className}`}>
         {inner}
