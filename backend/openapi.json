@@ -4468,14 +4468,14 @@
         }
       }
     },
-    "/ai/summarize": {
+    "/ai/insights/summarize": {
       "post": {
         "tags": [
           "ai-insights"
         ],
         "summary": "Summarize Chapter",
         "description": "Produce a plot summary for a chapter from its page images.\n\nEvenly samples up to ``llm_vision_max_images`` (default 10) images so the\ncost of long chapters stays bounded. Uses the vision model. Cached by an\ninput hash for ``llm_cache_ttl`` seconds.",
-        "operationId": "summarize_chapter_ai_summarize_post",
+        "operationId": "summarize_chapter_ai_insights_summarize_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4510,14 +4510,14 @@
         }
       }
     },
-    "/ai/retag": {
+    "/ai/insights/retag": {
       "post": {
         "tags": [
           "ai-insights"
         ],
         "summary": "Retag Series",
         "description": "Auto-classify genres + mood tags from title/synopsis (strict JSON).\n\nUses standard genre vocabulary so the result can populate a picker without\nextra cleanup. Returns ``{genres: [...], mood_tags: [...], confidence}``.",
-        "operationId": "retag_series_ai_retag_post",
+        "operationId": "retag_series_ai_insights_retag_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4552,14 +4552,14 @@
         }
       }
     },
-    "/ai/translate": {
+    "/ai/insights/translate": {
       "post": {
         "tags": [
           "ai-insights"
         ],
         "summary": "Translate Text",
         "description": "Translate / summarize / mood-tag a text passage.\n\nFalls back to GPT-4o-mini by default; the endpoint is stateless and cost-\nconscious. translate → Indonesian, summarize → short recap, mood_tags →\nlist of short mood phrases.",
-        "operationId": "translate_text_ai_translate_post",
+        "operationId": "translate_text_ai_insights_translate_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4594,14 +4594,14 @@
         }
       }
     },
-    "/ai/insights/status": {
+    "/ai/insights/insights/status": {
       "get": {
         "tags": [
           "ai-insights"
         ],
         "summary": "Ai Status",
         "description": "Diagnostic: is AI configured? which models/cache? Quick health for admins.",
-        "operationId": "ai_status_ai_insights_status_get",
+        "operationId": "ai_status_ai_insights_insights_status_get",
         "responses": {
           "200": {
             "description": "Successful Response",

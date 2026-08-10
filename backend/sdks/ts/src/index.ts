@@ -1044,12 +1044,12 @@ export class Stats {
 
   /**
    * Ai Status
-   * @see GET /ai/insights/status
+   * @see GET /ai/insights/insights/status
    * Diagnostic: is AI configured? which models/cache? Quick health for admins.
    */
   async ai(): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const suffix = "";
-    const url = `${this._client.baseUrl}/ai/insights/status${suffix}`;
+    const url = `${this._client.baseUrl}/ai/insights/insights/status${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json" };
     const init: RequestInit = {
       method: "GET",
@@ -1065,7 +1065,7 @@ export class Stats {
 
   /**
    * Retag Series
-   * @see POST /ai/retag
+   * @see POST /ai/insights/retag
    * Auto-classify genres + mood tags from title/synopsis (strict JSON).
    * 
    * Uses standard genre vocabulary so the result can populate a picker without
@@ -1074,7 +1074,61 @@ export class Stats {
   async retag(params?: { body: { "title": string; "synopsis"?: string; "current_genres"?: Array<string> } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const suffix = "";
-    const url = `${this._client.baseUrl}/ai/retag${suffix}`;
+    const url = `${this._client.baseUrl}/ai/insights/retag${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Summarize Chapter
+   * @see POST /ai/insights/summarize
+   * Produce a plot summary for a chapter from its page images.
+   * 
+   * Evenly samples up to ``llm_vision_max_images`` (default 10) images so the
+   * cost of long chapters stays bounded. Uses the vision model. Cached by an
+   * input hash for ``llm_cache_ttl`` seconds.
+   */
+  async summarize(params?: { body: { "image_urls": Array<string>; "title"?: string; "language"?: string; "save"?: boolean } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/ai/insights/summarize${suffix}`;
+    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
+    const init: RequestInit = {
+      method: "POST",
+      headers: hdrs,
+      body: JSON.stringify(p.body),
+    };
+    const res = await this._client._fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new NakamaApiError(res.status, text || res.statusText);
+    }
+    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
+  }
+
+  /**
+   * Translate Text
+   * @see POST /ai/insights/translate
+   * Translate / summarize / mood-tag a text passage.
+   * 
+   * Falls back to GPT-4o-mini by default; the endpoint is stateless and cost-
+   * conscious. translate → Indonesian, summarize → short recap, mood_tags →
+   * list of short mood phrases.
+   */
+  async translate(params?: { body: { "action"?: string; "title": string; "text": string; "target_lang"?: string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+    const p: any = (params as any) ?? {};
+    const suffix = "";
+    const url = `${this._client.baseUrl}/ai/insights/translate${suffix}`;
     const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
     const init: RequestInit = {
       method: "POST",
@@ -1109,60 +1163,6 @@ export class Stats {
     const init: RequestInit = {
       method: "GET",
       headers: hdrs,
-    };
-    const res = await this._client._fetch(url, init);
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new NakamaApiError(res.status, text || res.statusText);
-    }
-    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
-  }
-
-  /**
-   * Summarize Chapter
-   * @see POST /ai/summarize
-   * Produce a plot summary for a chapter from its page images.
-   * 
-   * Evenly samples up to ``llm_vision_max_images`` (default 10) images so the
-   * cost of long chapters stays bounded. Uses the vision model. Cached by an
-   * input hash for ``llm_cache_ttl`` seconds.
-   */
-  async summarize(params?: { body: { "image_urls": Array<string>; "title"?: string; "language"?: string; "save"?: boolean } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
-    const p: any = (params as any) ?? {};
-    const suffix = "";
-    const url = `${this._client.baseUrl}/ai/summarize${suffix}`;
-    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
-    const init: RequestInit = {
-      method: "POST",
-      headers: hdrs,
-      body: JSON.stringify(p.body),
-    };
-    const res = await this._client._fetch(url, init);
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new NakamaApiError(res.status, text || res.statusText);
-    }
-    return (await res.json()) as { "ok"?: boolean; "source"?: string; "data": unknown };
-  }
-
-  /**
-   * Translate Text
-   * @see POST /ai/translate
-   * Translate / summarize / mood-tag a text passage.
-   * 
-   * Falls back to GPT-4o-mini by default; the endpoint is stateless and cost-
-   * conscious. translate → Indonesian, summarize → short recap, mood_tags →
-   * list of short mood phrases.
-   */
-  async translate(params?: { body: { "action"?: string; "title": string; "text": string; "target_lang"?: string } }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
-    const p: any = (params as any) ?? {};
-    const suffix = "";
-    const url = `${this._client.baseUrl}/ai/translate${suffix}`;
-    const hdrs: Record<string, string> = { ...this._client.headers, "Accept": "application/json", "Content-Type": "application/json" };
-    const init: RequestInit = {
-      method: "POST",
-      headers: hdrs,
-      body: JSON.stringify(p.body),
     };
     const res = await this._client._fetch(url, init);
     if (!res.ok) {
