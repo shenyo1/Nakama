@@ -108,7 +108,7 @@ def email_template(
             <td style="padding:0 40px 32px 40px;">
               <p style="margin:0;font-size:12px;color:#555577;text-align:center;line-height:1.5;">
                 This email was sent by Nakama.<br>
-                <a href="https://app.mynakama.web.id" style="color:#555577;text-decoration:none;">app.mynakama.web.id</a>
+                <a href="https://mynakama.web.id" style="color:#555577;text-decoration:none;">mynakama.web.id</a>
               </p>
             </td>
           </tr>

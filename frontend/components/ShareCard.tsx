@@ -186,7 +186,7 @@ export default function ShareCard({
                     {g}
                   </span>
                 ))}
-                <span className="ml-auto font-mono text-sakura-400">app.mynakama.web.id</span>
+                <span className="ml-auto font-mono text-sakura-400">api.mynakama.web.id</span>
               </div>
             </div>
           </div>
@@ -202,5 +202,5 @@ export default function ShareCard({
  */
 export function getShareImageUrl(title: string, kind: string): string {
   const encoded = encodeURIComponent(title.slice(0, 60));
-  return `https://app.mynakama.web.id/og?title=${encoded}&kind=${kind}`;
+  return `https://api.mynakama.web.id/og?title=${encoded}&kind=${kind}`;
 }

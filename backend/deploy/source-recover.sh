@@ -4,7 +4,7 @@
 # Run on a schedule (e.g. every 30 min) OR trigger from auto-repair.sh.
 set -euo pipefail
 CONF="${NAKAMA_MONITOR_CONF:-/home/ubuntu/.config/nakama/monitor.env}"
-NAKAMA_BASE_URL="${NAKAMA_BASE_URL:-https://app.mynakama.web.id}"
+NAKAMA_BASE_URL="${NAKAMA_BASE_URL:-https://api.mynakama.web.id}"
 NAKAMA_API_KEY="${NAKAMA_API_KEY:-$(cat /home/ubuntu/.config/nakama/api-key 2>/dev/null)}"
 # shellcheck disable=SC1090
 source "$CONF" 2>/dev/null || true

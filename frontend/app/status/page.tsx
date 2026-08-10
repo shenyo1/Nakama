@@ -65,7 +65,7 @@ export default async function StatusPage({
             Active probe
           </Link>
           <a
-            href={`${process.env.NEXT_PUBLIC_API_BASE || "https://app.mynakama.web.id"}/sources/health${probe ? "?probe=true" : ""}`}
+            href={`${process.env.NEXT_PUBLIC_API_BASE || "https://api.mynakama.web.id"}/sources/health${probe ? "?probe=true" : ""}`}
             className="btn-ghost"
             target="_blank"
             rel="noreferrer"

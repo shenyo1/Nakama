@@ -10,7 +10,7 @@ interface BookmarkButtonProps {
   thumbnail?: string;
 }
 
-const API_INTERNAL_URL = process.env.NEXT_PUBLIC_API_BASE || "https://app.mynakama.web.id";
+const API_INTERNAL_URL = process.env.NEXT_PUBLIC_API_BASE || "https://api.mynakama.web.id";
 
 export function BookmarkButton({
   contentType,

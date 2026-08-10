@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Nakama frontend health check.
 #
-# Polls app.mynakama.web.id + api.mynakama.web.id every 5 min. Alerts via
+# Polls api.mynakama.web.id + api.mynakama.web.id every 5 min. Alerts via
 # Telegram if either returns non-200 or takes >2s.
 
 set -euo pipefail
@@ -34,7 +34,7 @@ should_alert() {
     return 0
 }
 
-for URL in "https://app.mynakama.web.id/" "https://app.mynakama.web.id/openapi.json" "https://app.mynakama.web.id/health"; do
+for URL in "https://api.mynakama.web.id/" "https://api.mynakama.web.id/openapi.json" "https://api.mynakama.web.id/health"; do
     T_START=$(date +%s%N)
     HTTP=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$URL" 2>&1) || HTTP=000
     T_END=$(date +%s%N)

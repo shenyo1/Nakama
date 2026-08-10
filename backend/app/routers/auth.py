@@ -451,7 +451,7 @@ async def quota(
                         "You still have some requests left today, but they're running low."
                     ),
                     button_text="View Dashboard",
-                    button_url="https://app.mynakama.web.id/dashboard",
+                    button_url="https://mynakama.web.id/dashboard",
                     footer="This warning is sent once per day. Quota resets daily.",
                 )
                 background.add_task(
@@ -462,7 +462,7 @@ async def quota(
                         f"Hi {db_user.username},\n\n"
                         f"You've used {limit - remaining} of {limit} daily API requests.\n"
                         f"Quota resets daily.\n\n"
-                        f"View dashboard: https://app.mynakama.web.id/dashboard"
+                        f"View dashboard: https://mynakama.web.id/dashboard"
                     ),
                     html=html,
                 )
@@ -512,7 +512,7 @@ def _maybe_send_welcome(user: User, background: BackgroundTasks) -> None:
             "save reading history, and customize your preferences."
         ),
         button_text="Start Browsing",
-        button_url="https://app.mynakama.web.id/anime",
+        button_url="https://mynakama.web.id/anime",
         footer="Thanks for joining Nakama — enjoy your reading!",
     )
     background.add_task(
@@ -522,7 +522,7 @@ def _maybe_send_welcome(user: User, background: BackgroundTasks) -> None:
         body=(
             f"Welcome, {user.username}!\n\n"
             f"Your email is confirmed and your account is ready.\n"
-            f"Start browsing: https://app.mynakama.web.id/anime\n\n"
+            f"Start browsing: https://mynakama.web.id/anime\n\n"
             f"Thanks for joining Nakama!"
         ),
         html=html,

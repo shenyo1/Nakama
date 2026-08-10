@@ -23,7 +23,7 @@ export function LiveHealthTicker() {
 
     function connect() {
       const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const apiBase = (process.env.NEXT_PUBLIC_API_BASE || "https://app.mynakama.web.id")
+      const apiBase = (process.env.NEXT_PUBLIC_API_BASE || "https://api.mynakama.web.id")
         .replace(/^https?:\/\//, "");
       const url = `${proto}//${apiBase}/ws?token=`;
       // Use the configured API key from localStorage or skip (will be unauthorized)

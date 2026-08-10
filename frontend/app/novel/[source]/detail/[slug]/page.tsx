@@ -136,7 +136,7 @@ export default async function NovelDetailPage({
         thumbnail={detail.thumbnail}
         description={detail.synopsis}
         genres={detail.genres}
-        url={`https://app.mynakama.web.id/novel/${source}/detail/${slug}`}
+        url={`https://api.mynakama.web.id/novel/${source}/detail/${slug}`}
       />
 
       {detail.chapters?.length ? (

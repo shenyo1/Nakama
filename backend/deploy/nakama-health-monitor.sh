@@ -58,7 +58,7 @@ ISSUES=""
 # 1. API health
 log "=== health check ==="
 T_START=$(date +%s%N)
-HTTP=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "https://app.mynakama.web.id/health" 2>&1) || HTTP=000
+HTTP=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "https://api.mynakama.web.id/health" 2>&1) || HTTP=000
 T_END=$(date +%s%N)
 LATENCY_MS=$(( (T_END - T_START) / 1000000 ))
 if [ "$HTTP" != "200" ] || [ "$LATENCY_MS" -gt 2000 ]; then

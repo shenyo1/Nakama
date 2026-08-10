@@ -23,7 +23,7 @@ def api_key_multi():
 def cors_strict():
     s = get_settings()
     orig = s.allow_origins
-    s.allow_origins = ["https://app.mynakama.web.id"]
+    s.allow_origins = ["https://mynakama.web.id"]
     yield s
     s.allow_origins = orig
 
@@ -68,16 +68,16 @@ async def test_cors_strict_origin(monkeypatch):
     import app.main as mainmod
     s = get_settings()
     orig = s.allow_origins
-    s.allow_origins = ["https://app.mynakama.web.id"]
+    s.allow_origins = ["https://mynakama.web.id"]
     # Rebuild the app so CORSMiddleware picks up the new origin list.
-    monkeypatch.setenv("ALLOW_ORIGINS", "https://app.mynakama.web.id")
+    monkeypatch.setenv("ALLOW_ORIGINS", "https://mynakama.web.id")
     importlib.reload(mainmod)
     try:
         async with AsyncClient(transport=ASGITransport(app=mainmod.app), base_url="http://test") as c:
             r = await c.get("/health", headers={"Origin": "https://evil.com"})
             assert r.headers.get("access-control-allow-origin") != "https://evil.com"
-            r2 = await c.get("/health", headers={"Origin": "https://app.mynakama.web.id"})
-            assert r2.headers.get("access-control-allow-origin") == "https://app.mynakama.web.id"
+            r2 = await c.get("/health", headers={"Origin": "https://mynakama.web.id"})
+            assert r2.headers.get("access-control-allow-origin") == "https://mynakama.web.id"
     finally:
         s.allow_origins = orig
         importlib.reload(mainmod)

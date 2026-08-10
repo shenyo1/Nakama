@@ -255,7 +255,7 @@ export default function HomePage() {
             GitHub
           </a>
           <a
-            href="https://app.mynakama.web.id/docs"
+            href="https://api.mynakama.web.id/docs"
             className="text-sakura-400 hover:underline"
             target="_blank"
             rel="noreferrer"
@@ -263,7 +263,7 @@ export default function HomePage() {
             API Docs
           </a>
           <a
-            href="https://app.mynakama.web.id/sources/health"
+            href="https://api.mynakama.web.id/sources/health"
             className="text-sakura-400 hover:underline"
             target="_blank"
             rel="noreferrer"

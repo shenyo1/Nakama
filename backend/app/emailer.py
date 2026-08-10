@@ -66,7 +66,7 @@ def send_email(
     # List-Unsubscribe header for GDPR/ESP compliance. Transactional emails
     # don't strictly need an unsubscribe link, but including the header
     # improves deliverability and signals legitimacy to Gmail/Outlook.
-    msg["List-Unsubscribe"] = "<https://app.mynakama.web.id/preferences>"
+    msg["List-Unsubscribe"] = "<https://mynakama.web.id/preferences>"
     msg["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
     msg.set_content(body)
     if html:

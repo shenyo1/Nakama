@@ -275,7 +275,7 @@ export const API_BASE = PUBLIC_API_BASE;
 
 /**
  * Build the proxied image URL. Always points at the API origin
- * (PUBLIC_API_BASE = app.mynakama.web.id) rather than a same-origin path —
+ * (PUBLIC_API_BASE = api.mynakama.web.id) rather than a same-origin path —
  * on Cloudflare Pages the frontend has no `/image` route, so images must be
  * fetched from the API domain directly (its `/image` proxy sends the right
  * hotlink-CDN Referer + browser UA and is reachable cross-origin).

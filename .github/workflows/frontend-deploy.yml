@@ -45,12 +45,12 @@ jobs:
       - name: Build Next.js (standalone)
         run: npm run build
         env:
-          NEXT_PUBLIC_API_BASE: https://app.mynakama.web.id
+          NEXT_PUBLIC_API_BASE: https://api.mynakama.web.id
 
       - name: Build for Cloudflare Pages (next-on-pages)
         run: npx --yes @cloudflare/next-on-pages@1.13.7
         env:
-          NEXT_PUBLIC_API_BASE: https://app.mynakama.web.id
+          NEXT_PUBLIC_API_BASE: https://api.mynakama.web.id
 
       - name: Patch root route (index.html → SSR function)
         run: |

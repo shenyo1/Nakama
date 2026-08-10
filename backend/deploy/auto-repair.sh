@@ -27,7 +27,7 @@ send_telegram() {
 
 PROBE=$(curl -fsS --max-time 60 \
   -H "X-API-Key: *** \
-  "https://app.mynakama.web.id/sources/health?probe=true" 2>&1)
+  "https://api.mynakama.web.id/sources/health?probe=true" 2>&1)
 
 if [ -z "$PROBE" ]; then
   echo "[$(TS)] FAIL: empty response"

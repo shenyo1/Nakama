@@ -71,7 +71,7 @@ export default function RootLayout({
             >
               shenyo1/Nakama
             </a>{" "}
-            · Nakama FastAPI backend
+            · Anime, Comic & Novel Hub
           </footer>
         </I18nProvider>
         <script

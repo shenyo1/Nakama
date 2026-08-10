@@ -149,7 +149,7 @@ export default async function AnimeDetailPage({
         description={detail.synopsis}
         episodes={detail.total_episodes ? String(detail.total_episodes) : undefined}
         genres={detail.genres}
-        url={`https://app.mynakama.web.id/anime/${source}/detail/${slug}`}
+        url={`https://api.mynakama.web.id/anime/${source}/detail/${slug}`}
       />
 
       {detail.episodes?.length ? (

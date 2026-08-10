@@ -154,7 +154,7 @@ export default async function ComicMangaPage({
         description={detail.synopsis}
         episodes={detail.total_chapters ? String(detail.total_chapters) : undefined}
         genres={detail.genres}
-        url={`https://app.mynakama.web.id/comic/${source}/manga/${slug}`}
+        url={`https://api.mynakama.web.id/comic/${source}/manga/${slug}`}
       />
 
       {detail.chapters?.length ? (
