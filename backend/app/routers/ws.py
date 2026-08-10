@@ -13,6 +13,8 @@
 """
 from __future__ import annotations
 
+import hmac
+
 from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
@@ -160,7 +162,7 @@ async def admin_broadcast(
     settings = get_settings()
     if settings.api_key:
         provided = request.headers.get("X-API-Key", "")
-        if provided != settings.api_key:
+        if not hmac.compare_digest(provided, settings.api_key):
             raise HTTPException(
                 status_code=401,
                 detail="Missing or invalid X-API-Key header.",

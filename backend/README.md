@@ -600,6 +600,35 @@ All tests run offline (`OFFLINE_MODE=1` serves local fixtures, no network).
 
 ---
 
+## 📄 Changelog
+
+### v2.8.5 (2026-08-10)
+- Audit fix: `/ai/insights` prefix separated from `/ai` (ai_comic) to prevent route shadowing
+- Security: `hmac.compare_digest` for `/admin/broadcast` API key check (was plain `!=`)
+- Infra: dev compose ports bound to `127.0.0.1` (was `0.0.0.0` — Redis was exposed without auth)
+- Infra: `disk-prune.sh` enhanced with `docker volume prune` + `docker network prune`
+- CI: deploy job re-enabled (`if: false` removed, `workflow_dispatch` added)
+
+### v2.8.4 (2026-08-08)
+- 21/21 sources healthy, sakuranovel probe fixed
+- API workers=1 (anti-OOM on 3.7GB VPS)
+- All 3 external secrets verified valid
+
+### v2.8.0 (2026-07-29)
+- Major upgrade: GraphQL API, AI Recommendations (TF-IDF), CDN Edge Cache
+- Community (reviews/comments/lists), Creator Dashboard, Trending Analytics
+- Nakama Reader 2.0, Reading Goals, Social Sharing, OG Image Generator
+- SDK Generator (TS + Python), Nakama Originals Platform, AI Comic Generator
+
+### v2.7.5 (2026-07-22)
+- 21 sources (7 anime, 9 comic, 5 novel) + SourceMeta
+- 8 resilience layers, Docker + Camoufox + FlareSolverr
+- CF Pages frontend, Telegram alerts, 5 cron jobs
+- JWT auth, rate-limit, Idempotency-Key, ETag + 304
+- MCP server (46 tools), 125 routes
+
+---
+
 ## 📄 License
 
 MIT — see [LICENSE](LICENSE).

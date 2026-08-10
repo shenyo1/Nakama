@@ -136,7 +136,7 @@ export default function OriginalsPage() {
             {series.map((s) => (
               <Link
                 key={s.id}
-                href={`/originals/${s.slug}`}
+                href={`/creator?series=${s.slug}`}
                 className="card card-hover group"
               >
                 {/* Cover */}
@@ -203,7 +203,7 @@ export default function OriginalsPage() {
                 {s.author_bio || `Creator of "${s.title}"`}
               </p>
               <Link
-                href={`/originals/${s.slug}`}
+                href={`/creator?series=${s.slug}`}
                 className="mt-2 inline-block text-xs text-sakura-300 hover:underline"
               >
                 View work →
@@ -252,7 +252,7 @@ export default function OriginalsPage() {
           </li>
         </ul>
         <div className="flex flex-wrap gap-2 sm:gap-3 pt-2">
-          <Link href="/originals/apply" className="btn-primary">
+          <Link href="/creator" className="btn-primary">
             Apply Now
           </Link>
           <a href="#featured" className="btn-ghost">

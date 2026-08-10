@@ -1,12 +1,12 @@
 """AI Insights — Fase 2 (learnings from Sanka/Lovable).
 
-Endpoints under the existing public ``/ai`` prefix:
+Endpoints under the ``/ai/insights`` prefix:
 
-* ``POST /ai/summarize``     — chapter-vision: multimodal plot summary
+* ``POST /ai/insights/summarize``     — chapter-vision: multimodal plot summary
   (up to ``llm_vision_max_images`` images sampled evenly for cost control).
-* ``POST /ai/retag``         — auto genre + mood-tag classification (strict JSON)
-* ``POST /ai/translate``     — translate text to Indonesian (+ summarize)
-* ``GET  /ai/insights/status`` — diagnostic: is AI configured? model, cache.
+* ``POST /ai/insights/retag``         — auto genre + mood-tag classification (strict JSON)
+* ``POST /ai/insights/translate``     — translate text to Indonesian (+ summarize)
+* ``GET  /ai/insights/status``        — diagnostic: is AI configured? model, cache.
 
 Every endpoint is graceful when AI is not configured: returns 503 with a
 clear message instead of crashing. Results are cached keyed on a hash of the
@@ -25,7 +25,7 @@ from ..schemas import ApiResponse
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/ai", tags=["ai-insights"])
+router = APIRouter(prefix="/ai/insights", tags=["ai-insights"])
 
 # Accepted /ai/translate actions (mirrors Sanka's ai-translate).
 _UNKNOWN_MODEL = "gpt-4o-mini"  # fallback token used only for cache-hash stability
