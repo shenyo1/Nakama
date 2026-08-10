@@ -11,6 +11,7 @@ on:
     paths:
       - "backend/**"
       - ".github/workflows/ci.yml"
+  workflow_dispatch:  # allow manual deploy trigger
 
 jobs:
   test:
@@ -79,8 +80,9 @@ jobs:
     name: deploy VPS
     needs: [test]
     runs-on: ubuntu-latest
-    # Disabled until NAKAMA_VPS_* secrets are configured
-    if: false && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Deploy on push to main, or manual trigger.
+    # Requires NAKAMA_VPS_HOST, NAKAMA_VPS_USER, NAKAMA_VPS_SSH_KEY, NAKAMA_VPS_PORT secrets.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 30
     steps:
       - name: Deploy over SSH

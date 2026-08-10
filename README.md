@@ -24,8 +24,9 @@ nakama/
 
 ## 🚀 Quick links
 
-- **Live API**: <https://mynakama.web.id> — OpenAPI docs at `/docs`
-- **Live frontend**: <https://app.mynakama.web.id>
+- **Live API**: <https://app.mynakama.web.id> — OpenAPI docs at `/docs`
+- **API subdomain**: <https://api.mynakama.web.id> (direct origin, bypasses CF Pages)
+- **Live frontend**: <https://mynakama.web.id>
 - **Backend README**: [`backend/README.md`](backend/README.md) — full API docs, architecture, deploy guide
 - **Frontend README**: [`frontend/README.md`](frontend/README.md) — components, pages, deploy guide
 - **Ops guide**: [`backend/deploy/`](backend/deploy/) — cron scripts, watchdog, backup

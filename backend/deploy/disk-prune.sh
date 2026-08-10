@@ -27,10 +27,18 @@ log "before: ${USED_BEFORE} used (${DISK_BEFORE}%)"
 
 # 2. Prune buildx cache (keep last 5GB for rollback). --keep-storage was
 #    renamed to --reserved-space in Docker 26+.
+#    Also try docker builder prune which sometimes catches different cache.
 docker buildx prune -af --reserved-space 5GB >>"$LOG" 2>&1 || log "buildx prune failed (non-fatal)"
+docker builder prune -af >>"$LOG" 2>&1 || log "builder prune failed (non-fatal)"
 
 # 3. Remove dangling + unused images (skip images used by running containers)
 docker image prune -af >>"$LOG" 2>&1 || log "image prune failed (non-fatal)"
+
+# 3b. Remove orphan Docker volumes (not attached to any container)
+docker volume prune -f >>"$LOG" 2>&1 || log "volume prune failed (non-fatal)"
+
+# 3c. Remove unused Docker networks
+docker network prune -f >>"$LOG" 2>&1 || log "network prune failed (non-fatal)"
 
 # 4. Apt cache (apt-get clean needs root; skip silently if not root)
 if [ -d /var/cache/apt ] && [ "$(id -u)" = "0" ]; then

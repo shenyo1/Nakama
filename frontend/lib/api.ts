@@ -87,6 +87,40 @@ export async function fetchSourceHome(
   return [];
 }
 
+/**
+ * Unified home listing: aggregates every provider for `kind` into one
+ * deduplicated list via GET /{kind}/all/home. Each item carries _sources
+ * (provider names), _source_count, and _best_source (the provider to open
+ * by default) so the UI can show one feed instead of a provider picker.
+ * Currently only /anime/all/home exists on the backend; comic/novel will
+ * 404 until those endpoints are added — callers should catch and fall back.
+ */
+export async function fetchUnifiedHome(
+  kind: ApiKind,
+  page = 1
+): Promise<UnifiedItem[]> {
+  const body = await getJson<ApiEnvelope<{ items: UnifiedItem[] } | UnifiedItem[]>>(
+    `/${kind}/all/home?page=${page}`
+  );
+  const data = body.data;
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object" && Array.isArray((data as { items?: UnifiedItem[] }).items)) {
+    return (data as { items: UnifiedItem[] }).items;
+  }
+  return [];
+}
+
+export interface UnifiedItem {
+  title?: string;
+  slug?: string;
+  thumbnail?: string;
+  url?: string;
+  _sources?: string[];
+  _source_count?: number;
+  _best_source?: string;
+  [k: string]: unknown;
+}
+
 export async function fetchSourceSearch(
   kind: ApiKind,
   source: string,
