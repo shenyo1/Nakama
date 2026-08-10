@@ -16,6 +16,9 @@ from ..sources.registry import (
 router = APIRouter(prefix="/sources", tags=["sources"])
 
 
+_komikcast_token_cache: dict = {"data": None, "ts": 0}
+_KOMIKCAST_CACHE_TTL = 300  # 5 minutes
+
 async def _check_komikcast_token() -> dict:
     """Test komikcast chapter-image endpoint accessibility.
 
@@ -29,10 +32,26 @@ async def _check_komikcast_token() -> dict:
     the `auth_required` field will flip to true and the operator must ensure
     KOMIKCAST_TOKEN contains a valid oat_* token.
 
-    Uses a direct httpx call (NOT fetch_json) because fetch_json caches
-    responses — a cached "valid=true" would hide endpoint changes for
-    cache_ttl_seconds (default 900s).
+    Result is cached for 5 minutes to avoid adding 200-500ms to every
+    /sources/health request.
     """
+    import asyncio
+    import time
+    import httpx
+
+    # Return cached result if fresh
+    now = time.time()
+    if _komikcast_token_cache["data"] and (now - _komikcast_token_cache["ts"]) < _KOMIKCAST_CACHE_TTL:
+        return _komikcast_token_cache["data"]
+
+    result = await _check_komikcast_token_uncached()
+    _komikcast_token_cache["data"] = result
+    _komikcast_token_cache["ts"] = time.time()
+    return result
+
+
+async def _check_komikcast_token_uncached() -> dict:
+    """Actual komikcast token check (uncached)."""
     import asyncio
     import time
     import httpx
@@ -163,7 +182,7 @@ async def sources_health(
     else:
         data = await snapshot_async()
     # Always include komikcast token validity check (cheap: 1 HTTP call, ~200ms)
-    data["token_health"] = {"komikcast": await _check_komikcast_token()}
+    data["token_health"] = {"komikcast": await _check_komikcast_token()}  # cached 5min internally
     return ApiResponse(data=data)
 
 

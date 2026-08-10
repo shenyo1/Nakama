@@ -165,11 +165,14 @@ async def search(source: str, query: str, request: Request, page: Optional[int] 
 @limiter.limit(get_settings().rate_limit)
 async def detail(source: str, slug: str, request: Request):
     src = _get(source)
-    try:
+    async def _fetch():
         data = await src.detail(slug)
         from ..enrich import enrich_detail
         data = enrich_detail(data, "anime", source)
         return ApiResponse(source=source, data=data)
+    try:
+        from ..response_cache import cached_response
+        return await cached_response(request, _fetch, ttl_seconds=600)
     except SourceError as e:
         logger.warning("%s upstream error: %s", source, e)
         raise HTTPException(status_code=502, detail="Upstream source unavailable")
@@ -179,8 +182,11 @@ async def detail(source: str, slug: str, request: Request):
 @limiter.limit(get_settings().rate_limit)
 async def episode(source: str, slug: str, request: Request):
     src = _get(source)
-    try:
+    async def _fetch():
         return ApiResponse(source=source, data=await src.episode(slug))
+    try:
+        from ..response_cache import cached_response
+        return await cached_response(request, _fetch, ttl_seconds=600)
     except SourceError as e:
         logger.warning("%s upstream error: %s", source, e)
         raise HTTPException(status_code=502, detail="Upstream source unavailable")
@@ -190,9 +196,12 @@ async def episode(source: str, slug: str, request: Request):
 @limiter.limit(get_settings().rate_limit)
 async def genres(source: str, request: Request, page: Optional[int] = Query(None, ge=1), page_size: Optional[int] = Query(None, ge=1)):
     src = _get(source)
-    try:
+    async def _fetch():
         data = await src.genres()
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="anime", source=source))
+    try:
+        from ..response_cache import cached_response
+        return await cached_response(request, _fetch, ttl_seconds=1800)
     except SourceError as e:
         logger.warning("%s upstream error: %s", source, e)
         raise HTTPException(status_code=502, detail="Upstream source unavailable")
@@ -202,9 +211,12 @@ async def genres(source: str, request: Request, page: Optional[int] = Query(None
 @limiter.limit(get_settings().rate_limit)
 async def genre(source: str, slug: str, request: Request, page: Optional[int] = Query(None, ge=1), page_size: Optional[int] = Query(None, ge=1)):
     src = _get(source)
-    try:
+    async def _fetch():
         data = await src.genre(slug)
         return ApiResponse(source=source, data=paginate(data, page, page_size, kind="anime", source=source))
+    try:
+        from ..response_cache import cached_response
+        return await cached_response(request, _fetch, ttl_seconds=600)
     except SourceError as e:
         logger.warning("%s upstream error: %s", source, e)
         raise HTTPException(status_code=502, detail="Upstream source unavailable")

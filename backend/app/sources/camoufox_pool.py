@@ -36,13 +36,13 @@ _browser: Optional[Any] = None  # AsyncCamoufox instance (launched)
 _browser_obj: Optional[Any] = None  # The underlying playwright Browser object
 _lock = asyncio.Lock()
 _last_used: float = 0.0
-_idle_timeout_s = 300  # close after 5min idle
+_idle_timeout_s = 120  # close after 2min idle (was 5min)
 _total_launches: int = 0
 _concurrent_users: int = 0
 
 # Cap concurrent pages per browser. Firefox can handle a few, but each
 # page is ~150MB RSS; cap to prevent OOM on shared VPS.
-_sem = asyncio.Semaphore(2)
+_sem = asyncio.Semaphore(1)
 
 DISABLED = False  # Set True via env (e.g. for tests/offline mode)
 
@@ -78,8 +78,9 @@ async def fetch_via_camoufox(url: str, timeout: int = 30) -> Optional[str]:
             page = await _browser_obj.new_page()
             try:
                 await page.goto(url, timeout=timeout * 1000)
-                # Settle JS-rendered DOM. 3s covers most static + JS apps.
-                await asyncio.sleep(3)
+                # Settle JS-rendered DOM. Configurable via env, default 1.5s.
+                settle = float(os.getenv("CAMOUFOX_SETTLE_SECONDS", "1.5"))
+                await asyncio.sleep(settle)
                 return await page.content()
             finally:
                 try:
@@ -133,9 +134,14 @@ async def _ensure_browser() -> None:
         logger.info("camoufox: launching browser (~5-10s, persisted as singleton)")
         _browser = AsyncCamoufox(
             headless=True,
-            humanize=True,
+            humanize=False,
             geoip=True,
             locale="en-US",
+            config={
+                "dom.ipc.processCount": 1,
+                "browser.cache.disk.enable": False,
+                "browser.cache.memory.capacity": 8192,
+            },
         )
         await _browser.__aenter__()
         # AsyncCamoufox exposes .browser after start (the underlying Playwright Browser)

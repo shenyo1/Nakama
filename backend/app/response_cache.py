@@ -142,8 +142,12 @@ async def cached_response(
     """
     if request.method != "GET":
         return await fetch()
-    # Per-user content shouldn't be cached.
-    if request.headers.get("authorization") or request.headers.get("x-api-key"):
+    # Per-user content shouldn't be cached — but public browsing endpoints
+    # (anime/comic/novel home, detail, search) are the same for all users.
+    # Only skip cache for explicitly per-user paths.
+    path = request.url.path
+    _PER_USER_PATHS = ("/history", "/preferences", "/auth/", "/user/", "/creator/", "/dashboard")
+    if any(path.startswith(p) for p in _PER_USER_PATHS):
         return await fetch()
 
     ttl = ttl_seconds if ttl_seconds is not None else get_settings().cache_ttl_seconds

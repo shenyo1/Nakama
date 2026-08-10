@@ -270,9 +270,9 @@ _CACHE_RULES = (
     ("/audit", 0, True, True),
     ("/auth", 0, True, True),
     ("/openapi.json", 300, False, False),
-    ("/anime/", 60, False, False),
-    ("/comic/", 60, False, False),
-    ("/novel/", 120, False, False),
+    ("anime/", 300, False, False),
+    ("comic/", 300, False, False),
+    ("novel/", 300, False, False),
     ("/search", 30, False, False),
 )
 
