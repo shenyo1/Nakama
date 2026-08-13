@@ -267,6 +267,8 @@ export const COMIC_SOURCES = [
   "bacakomik",
   "komikstation",
   "westmanga",
+  "asura",
+  "flamecomics",
 ] as const;
 export const NOVEL_SOURCES = ["sakuranovel", "novelbin", "novelfull", "meionovels", "novelhubapp"] as const;
 
