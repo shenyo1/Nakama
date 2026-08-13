@@ -1312,7 +1312,7 @@
           "novel"
         ],
         "summary": "Latest novels (paginated upstream)",
-        "description": "Latest novels.\n\n``page`` here is the *upstream* page (passed to the source's ``home``);\n``page_size`` paginates the returned slice locally.\n\nUses aggressive caching (TTL 10 min) because novel sources are slow\n(some take 15s+). Cached responses make this endpoint fast (<100ms).",
+        "description": "Latest novels.\n\n``page`` here is the *upstream* page (passed to the source's ``home``);\n``page_size`` paginates the returned slice locally.",
         "operationId": "home_novel__source__home_get",
         "parameters": [
           {
@@ -3238,20 +3238,6 @@
               "title": "Probe"
             },
             "description": "If true, actively probe every source home() (slow)."
-          },
-          {
-            "name": "timeout",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "number",
-              "maximum": 30.0,
-              "minimum": 1.0,
-              "description": "Per-source probe timeout",
-              "default": 8.0,
-              "title": "Timeout"
-            },
-            "description": "Per-source probe timeout"
           }
         ],
         "responses": {
@@ -3306,20 +3292,6 @@
               "title": "Probe"
             },
             "description": "Actively probe this source (default true)."
-          },
-          {
-            "name": "timeout",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "number",
-              "maximum": 30.0,
-              "minimum": 1.0,
-              "description": "Probe timeout in seconds",
-              "default": 8.0,
-              "title": "Timeout"
-            },
-            "description": "Probe timeout in seconds"
           }
         ],
         "responses": {

@@ -712,9 +712,6 @@ export class Novel {
    * 
    * ``page`` here is the *upstream* page (passed to the source's ``home``);
    * ``page_size`` paginates the returned slice locally.
-   * 
-   * Uses aggressive caching (TTL 10 min) because novel sources are slow
-   * (some take 15s+). Cached responses make this endpoint fast (<100ms).
    */
   async home(source: string, params?: { "page"?: number; "page_size"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
@@ -2882,11 +2879,10 @@ export class Stats {
    * auth (currently komikcast). This lets dashboards flag expired tokens
    * before users hit empty chapter image lists.
    */
-  async sources(params?: { "probe"?: boolean; "timeout"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async sources(params?: { "probe"?: boolean }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.probe !== undefined) search.set("probe", String(p.probe));
-    if (p.timeout !== undefined) search.set("timeout", String(p.timeout));
     const qs = search.toString();
     const suffix = qs ? `?${qs}` : "";
     const url = `${this._client.baseUrl}/sources/health${suffix}`;
@@ -2907,11 +2903,10 @@ export class Stats {
    * Probe a single source
    * @see GET /sources/health/{name}
    */
-  async source(name: string, params?: { "probe"?: boolean; "timeout"?: number }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
+  async source(name: string, params?: { "probe"?: boolean }): Promise<{ "ok"?: boolean; "source"?: string; "data": unknown }> {
     const p: any = (params as any) ?? {};
     const search = new URLSearchParams();
     if (p.probe !== undefined) search.set("probe", String(p.probe));
-    if (p.timeout !== undefined) search.set("timeout", String(p.timeout));
     const qs = search.toString();
     const suffix = qs ? `?${qs}` : "";
     const url = `${this._client.baseUrl}/sources/health/${name}${suffix}`;
