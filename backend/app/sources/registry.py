@@ -33,6 +33,8 @@ def _build() -> None:
     from .westmanga import WestmangaSource
     from .novelhubapp import NovelhubappSource
     from .anoboy import AnoboySource
+    from .asura import AsuraSource
+    from .flamecomics import FlameComicsSource
 
     _REGISTRY["komiku"] = KomikuSource()
     _REGISTRY["bacakomik"] = BacaKomikSource()
@@ -56,6 +58,8 @@ def _build() -> None:
     _REGISTRY["westmanga"] = WestmangaSource()
     _REGISTRY["novelhubapp"] = NovelhubappSource()
     _REGISTRY["anoboy"] = AnoboySource()
+    _REGISTRY["asura"] = AsuraSource()
+    _REGISTRY["flamecomics"] = FlameComicsSource()
     _INITIALIZED = True
 
 

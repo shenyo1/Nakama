@@ -107,6 +107,20 @@ async def popular(source: str, request: Request, page: Optional[int] = Query(Non
         raise HTTPException(status_code=502, detail="Upstream source unavailable")
 
 
+@router.get("/{source}/genres", response_model=ApiResponse, summary="All comic genres")
+@limiter.limit(get_settings().rate_limit)
+async def genres(source: str, request: Request):
+    src = _get(source)
+    fn = getattr(src, "genres", None)
+    if fn is None:
+        raise HTTPException(status_code=404, detail=f"Source '{source}' has no genre list")
+    try:
+        return ApiResponse(source=source, data=await fn())
+    except SourceError as e:
+        logger.warning("%s upstream error: %s", source, e)
+        raise HTTPException(status_code=502, detail="Upstream source unavailable")
+
+
 @router.get("/{source}/genre/{slug}", response_model=ApiResponse, summary="Comics in a genre")
 @limiter.limit(get_settings().rate_limit)
 async def genre(source: str, slug: str, request: Request, page: Optional[int] = Query(None, ge=1), page_size: Optional[int] = Query(None, ge=1)):
